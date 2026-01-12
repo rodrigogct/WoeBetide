@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<head>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/menu.css' %}">
+</head>
+
+    {% if info.page_key == "about" %}
+        <link rel="stylesheet" type="text/css" href="{% static 'css/about.css' %}">
+        <link rel="stylesheet" type="text/css" href="{% static 'css/menu.css' %}">
+    {% else %}
+        <link rel="stylesheet" type="text/css" href="{% static 'css/about.css' %}">
+        <link rel="stylesheet" type="text/css" href="{% static 'css/menu.css' %}">
+    {% endif %}
+
+    <section class="info-page" style="border-bottom: 1px solid;">
+        <div class="container" style="margin-top: 10px;">
+            <h1>{{ info.title }}</h1>
+
+            {% if info.page_key == "about" %}
+                {% if info.image %}
+                    <img src="{{ info.image.url }}" alt="About image" class="about-image">
+                {% endif %}
+                {% if info.subtitle %}
+                    <h2>{{ info.subtitle }}</h2>
+                {% endif %}
+                {% if info.custom_html %}
+                    {{ info.custom_html|safe }}
+                {% else %}
+                    <p>{{ info.content|linebreaks }}</p>
+                {% endif %}
+            {% else %}
+                <p>{{ info.content|linebreaks }}</p>
+            {% endif %}
+        </div>
+    </section>
+
+    <!-- Display new items catalogue -->
+    {% if new_items %}
+    <div class="catalogue">
+        <a href="{% url 'Catalogue' %}?category=All" class="recents">Just Landed</a>
+        <div class="elements">
+            {% if new_items %}
+                <div class="block container-xxxl" style="border-top: 1px solid; ">
+                    {% for new_item in new_items %}
+                        <div class="col" style="display: flex; flex-direction: column">
+                                <div class="element">
+                                    <div class="element-text">
+                                        <a href="{% url 'Item' new_item.id %}" style="height: 100%;">
+                                            <picture>
+                                                <source srcset="/media/catalogue/webp/{{ new_item.img1.name|cut:'catalogue/original/'|cut:'.jpg'|cut:'.jpeg'|cut:'.png'|cut:'.JPG'|cut:'.JPEG'|cut:'.PNG'  }}.webp" type="image/webp">
+                                                <img src="{{new_item.img1.url}}" alt="" loading="lazy">
+                                            </picture>
+                                        </a>
+                                    </div>
+                                </div>
+                                <div class="element-info">
+                                    <div class="column" style="border-top: 1px solid;">
+                                        <a href="{% url 'Item' new_item.id %}" class="lead"><strong>{{new_item.name}}</strong></a>
+                                    </div> 
+                                    <div class="column" style="border-top: 0; flex-direction: row; justify-content: space-between; padding: 0 10% 0 10%;">
+                                        <a href="{% url 'Item' new_item.id %}" class="lead"><strong>Size: {{new_item.size}}</strong></a>
+                                        <a href="{% url 'Item' new_item.id %}" class="lead"><strong>${{new_item.price}} MXN</strong></a>
+                                    </div>
+                                </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="if-statement" style="display: flex;">
+                    <h3>WOE BETIDE</h3>
+                    <p class="lead">Stay tuned</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+{% endblock %}

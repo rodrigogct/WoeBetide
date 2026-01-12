@@ -1,0 +1,405 @@
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block content %}
+<head>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/menu.css' %}">
+</head>
+
+<body>
+    <div class="menu">
+        <h1 class="hero">WOE BETIDE.</h1>
+        <h1 class="hero">WOE BETIDE.</h1>
+        <h1 class="hero">WOE BETIDE.</h1>
+        <div class="woe">
+            {% for menu in menu %}
+            <div class="image-container {% if not menu.img2 and not menu.img3 %}single-image{% elif not menu.img3 %}two-images{% endif %}">
+                {% if menu.img1 %}
+                <div class="img1">
+                    <picture>
+                        <source srcset="/media/menu/webp/{{ menu.img1.name|cut:'menu/original/'|cut:'.jpg'|cut:'.jpeg'|cut:'.png'|cut:'.JPG'|cut:'.JPEG'|cut:'.PNG' }}.webp" type="image/webp">
+                        <img src="{{menu.img1.url}}" loading="lazy" alt="Image 1" style="border-right: none;">
+                    </picture>
+                </div>
+                {% endif %}
+                {% if menu.img2 or menu.img3 %}
+                <div class="right-column">
+                    {% if menu.img2 %}
+                        <div class="img2">
+                            <img src="{{menu.img2.url}}" loading="lazy" alt="Image 2">
+                        </div>
+                    {% endif %}
+                    {% if menu.img3 %}
+                        <div class="img3">
+                            <img src="{{menu.img3.url}}" loading="lazy" alt="Image 3">
+                        </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>  
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- Display new items catalogue -->
+    {% if new_items %}
+    <div class="catalogue">
+      <a href="{% url 'Catalogue' %}?category=All" class="recents">New arrivals</a>
+    
+    <div class="elements">
+        <div class="wb-scroller-wrap">  {# gives positioning context for the button #}
+          <div class="block container-xxxl" style="border-top: 1px solid;">
+            {% for new_item in new_items %}
+              <div class="col" style="display:flex;flex-direction:column">
+                <div class="element">
+                  <div class="element-text">
+                    <a href="{% url 'Item' new_item.id %}" style="height:100%;">
+                      <picture>
+                        <source srcset="/media/catalogue/webp/{{ new_item.img1.name|cut:'catalogue/original/'|cut:'.jpg'|cut:'.jpeg'|cut:'.png'|cut:'.JPG'|cut:'.JPEG'|cut:'.PNG' }}.webp" type="image/webp">
+                        <img src="{{ new_item.img1.url }}" alt="" loading="lazy">
+                      </picture>
+                    </a>
+                  </div>
+                </div>
+                <div class="element-info">
+                  <div class="column" style="border-top:1px solid;">
+                    <a href="{% url 'Item' new_item.id %}" class="lead"><strong>{{ new_item.name }}</strong></a>
+                  </div>
+                  <div class="column" style="border-top:0;flex-direction:row;justify-content:space-between;padding:0 10%">
+                    <a href="{% url 'Item' new_item.id %}" class="lead"><strong>Size: {{ new_item.size }}</strong></a>
+                    <a href="{% url 'Item' new_item.id %}" class="lead"><strong>{{ new_item.price }} MXN</strong></a>
+                  </div>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+    
+        <!-- Hanging round RIGHT button -->
+        <button class="wb-next-btn wb-mobile-only" type="button" aria-label="Next">
+            <span class="wb-round-icon">
+            <!-- clean, bold right arrow -->
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path fill="currentColor" d="M7 12h8.5l-3.8-3.8a1 1 0 1 1 1.4-1.4l5.5 5.5a1 1 0 0 1 0 1.4l-5.5 5.5a1 1 0 1 1-1.4-1.4l3.8-3.8H7a1 1 0 0 1 0-2z"/>
+            </svg>
+            </span>
+        </button>
+        </div>{# /.wb-scroller-wrap #}
+    </div>
+
+    </div>
+    {% endif %}    
+
+    <!-- All items available -->
+    {% if items %}
+    <div class="vintage">
+        <div class="shop-all">
+            <!-- <h1>VINTAGE</h1> -->
+            <a href="{% url 'Catalogue' %}?category=All">
+                <div class="cat-hero">SHOP ALL</div>
+                {% for shop_all in shop_all %}
+                <div class="image-container {% if not shop_all.img2 and not shop_all.img3 %}single-image{% elif not shop_all.img3 %}two-images{% endif %}">
+                    {% if shop_all.img1 %}
+                    <div class="img1">
+                        <picture>
+                            <source srcset="/media/menu/webp/{{ shop_all.img1.name|cut:'menu/original/'|cut:'.jpg'|cut:'.jpeg'|cut:'.png'|cut:'.JPG'|cut:'.JPEG'|cut:'.PNG'  }}.webp" type="image/webp">
+                            <img src="{{shop_all.img1.url}}" loading="lazy" alt="Image 1">
+                        </picture>
+                    </div>
+                    {% endif %}
+                    {% if shop_all.img2 or shop_all.img3 %}
+                    <div class="right-column">
+                        {% if shop_all.img2 %}
+                            <div class="img2">
+                                <picture>
+                                    <source srcset="/media/menu/webp/{{ shop_all.img2.name|cut:'menu/original/'|cut:'.jpg'|cut:'.jpeg'|cut:'.png'|cut:'.JPG'|cut:'.JPEG'|cut:'.PNG'  }}.webp" type="image/webp">
+                                    <img src="{{shop_all.img2.url}}" loading="lazy" alt="Image 2">
+                                </picture>
+                            </div>
+                        {% endif %}
+                        {% if shop_all.img3 %}
+                            <div class="img3">
+                                <picture>
+                                    <source srcset="/media/menu/webp/{{ shop_all.img3.name|cut:'menu/original/'|cut:'.jpg'|cut:'.jpeg'|cut:'.png'|cut:'.JPG'|cut:'.JPEG'|cut:'.PNG'  }}.webp" type="image/webp">
+                                    <img src="{{shop_all.img3.url}}" loading="lazy" alt="Image 3">
+                                </picture>
+                            </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>  
+                {% endfor %}
+            </a>
+        </div>
+        {% if staff_picks %}
+        <div class="staff-picks">
+            <!-- <h1>VINTAGE</h1> -->
+            <a href="{% url 'StaffPicks' %}">
+                <div class="cat-hero">Staff-picks</div>
+                {% for staff_pick in staff_picks %}
+                <div class="image-container {% if not staff_pick.img2 and not staff_pick.img3 %}single-image{% elif not staff_pick.img3 %}two-images{% endif %}">
+                    {% if staff_pick.img1 %}
+                        <div class="img1">
+                            <picture>
+                                <source srcset="/media/menu/webp/{{ staff_pick.img1.name|cut:'menu/original/'|cut:'.jpg'|cut:'.jpeg'|cut:'.png'|cut:'.JPG'|cut:'.JPEG'|cut:'.PNG'  }}.webp" type="image/webp">
+                                <img src="{{staff_pick.img1.url}}" loading="lazy" alt="Image 1">
+                            </picture>
+                        </div>
+                    {% endif %}
+                    {% if staff_pick.img2 or staff_pick.img3 %}
+                    <div class="right-column">
+                        {% if staff_pick.img2 %}
+                            <div class="img2">
+                                <picture>
+                                    <source srcset="/media/menu/webp/{{ staff_pick.img2.name|cut:'menu/original/'|cut:'.jpg'|cut:'.jpeg'|cut:'.png'|cut:'.JPG'|cut:'.JPEG'|cut:'.PNG'  }}.webp" type="image/webp">
+                                    <img src="{{staff_pick.img2.url}}" loading="lazy" alt="Image 2">
+                               </picture> 
+                            </div>
+                        {% endif %}
+                        {% if staff_pick.img3 %}
+                            <div class="img3">
+                                <picture>
+                                    <source srcset="/media/menu/webp/{{ staff_pick.img3.name|cut:'menu/original/'|cut:'.jpg'|cut:'.jpeg'|cut:'.png'|cut:'.JPG'|cut:'.JPEG'|cut:'.PNG'  }}.webp" type="image/webp">
+                                    <img src="{{staff_pick.img3.url}}" loading="lazy" alt="Image 1">
+                                </picture>
+                            </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>  
+                {% endfor %}
+            </a>
+        </div>
+        {% endif %}
+        {% if tees %}
+        <div class="tees">
+            <!-- <h1>VINTAGE</h1> -->
+            <a href="{% url 'Catalogue' %}? category=Tees">
+                {% for tees in tees %}
+                <div class="cat-hero">Tees</div>
+                <div class="image-container {% if not tees.img2 and not tees.img3 %}single-image{% elif not tees.img3 %}two-images{% endif %}">
+                    {% if tees.img1 %}
+                        <div class="img1">
+                            <picture>
+                                <source srcset="/media/menu/webp/{{ tees.img1.name|cut:'menu/original/'|cut:'.jpg'|cut:'.jpeg'|cut:'.png'|cut:'.JPG'|cut:'.JPEG'|cut:'.PNG'  }}.webp" type="image/webp">
+                                <img src="{{tees.img1.url}}" loading="lazy" alt="Image 1">
+                            </picture>
+                        </div>
+                    {% endif %}
+                    {% if tees.img2 or tees.img3 %}
+                    <div class="right-column">
+                        {% if tees.img2 %}
+                            <div class="img2">
+                                <picture>
+                                    <source srcset="/media/menu/webp/{{ tees.img2.name|cut:'menu/original/'|cut:'.jpg'|cut:'.jpeg'|cut:'.png'|cut:'.JPG'|cut:'.JPEG'|cut:'.PNG'  }}.webp" type="image/webp">
+                                    <img src="{{tees.img2.url}}" loading="lazy" alt="Image 2">
+                               </picture> 
+                            </div>
+                        {% endif %}
+                        {% if tees.img3 %}
+                            <div class="img3">
+                                <picture>
+                                    <source srcset="/media/menu/webp/{{ tees.img3.name|cut:'menu/original/'|cut:'.jpg'|cut:'.jpeg'|cut:'.png'|cut:'.JPG'|cut:'.JPEG'|cut:'.PNG'  }}.webp" type="image/webp">
+                                    <img src="{{tees.img3.url}}" loading="lazy" alt="Image 3">
+                                </picture>
+                            </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>  
+                {% endfor %}
+            </a>
+        </div>
+        {% endif %}
+        {% if sweatshirts %}
+        <div class="sweatshirts">
+            <!-- <h1>VINTAGE</h1>  -->
+            <a href="{% url 'Catalogue' %}?category=Sweatshirts">
+                {% for sweatshirts in sweatshirts %}
+                <div class="cat-hero">Sweatshirts</div>
+                <div class="image-container {% if not sweatshirts.img2 and not sweatshirts.img3 %}single-image{% elif not sweatshirts.img3 %}two-images{% endif %}">
+                    {% if sweatshirts.img1 %}
+                        <div class="img1">
+                            <picture>
+                                <source srcset="/media/menu/webp/{{ sweatshirts.img1.name|cut:'menu/original/'|cut:'.jpg'|cut:'.jpeg'|cut:'.png'|cut:'.JPG'|cut:'.JPEG'|cut:'.PNG' |cut:'.JPG'|cut:'.JPEG'|cut:'.PNG' }}.webp" type="image/webp">
+                                <img src="{{sweatshirts.img1.url}}" loading="lazy" alt="Image 1">
+                            </picture>
+                        </div>
+                    {% endif %}
+                    {% if sweatshirts.img2 or sweatshirts.img3 %}
+                    <div class="right-column">
+                        {% if sweatshirts.img2 %}
+                            <div class="img2">
+                                <picture>
+                                    <source srcset="/media/menu/webp/{{ sweatshirts.img2.name|cut:'menu/original/'|cut:'.jpg'|cut:'.jpeg'|cut:'.png'|cut:'.JPG'|cut:'.JPEG'|cut:'.PNG' |cut:'.JPG'|cut:'.JPEG'|cut:'.PNG' }}.webp" type="image/webp">
+                                    <img src="{{sweatshirts.img2.url}}" loading="lazy" alt="Image 2">
+                                </picture>
+                            </div>
+                        {% endif %}
+                        {% if sweatshirts.img3 %}
+                            <div class="img3">
+                                <picture>
+                                    <source srcset="/media/menu/webp/{{ sweatshirts.img3.name|cut:'menu/original/'|cut:'.jpg'|cut:'.jpeg'|cut:'.png'|cut:'.JPG'|cut:'.JPEG'|cut:'.PNG' |cut:'.JPG'|cut:'.JPEG'|cut:'.PNG' }}.webp" type="image/webp">
+                                    <img src="{{sweatshirts.img3.url}}" loading="lazy" alt="Image 3">
+                                </picture>
+                            </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>  
+                {% endfor %}
+            </a>
+        </div>
+        {% endif %}
+        {% if outerwear %}
+        <div class="outerwear">
+            <!-- <h1>VINTAGE</h1>  -->
+            <a href="{% url 'Catalogue' %}?category=Jackets">
+                {% for outerwear in outerwear %}
+                <div class="cat-hero">Outerwear</div>
+                <div class="image-container {% if not outerwear.img2 and not outerwear.img3 %}single-image{% elif not outerwear.img3 %}two-images{% endif %}">
+                    {% if outerwear.img1 %}
+                        <div class="img1">
+                            <picture>
+                                <source srcset="/media/menu/webp/{{ outerwear.img1.name|cut:'menu/original/'|cut:'.jpg'|cut:'.jpeg'|cut:'.png'|cut:'.JPG'|cut:'.JPEG'|cut:'.PNG' |cut:'.JPG'|cut:'.JPEG'|cut:'.PNG' }}.webp" type="image/webp">
+                                <img src="{{outerwear.img1.url}}" loading="lazy" alt="Image 1">
+                            </picture>
+                        </div>
+                    {% endif %}
+                    {% if outerwear.img2 or outerwear.img3 %}
+                    <div class="right-column">
+                        {% if outerwear.img2 %}
+                            <div class="img2">
+                                <picture>
+                                    <source srcset="/media/menu/webp/{{ outerwear.img2.name|cut:'menu/original/'|cut:'.jpg'|cut:'.jpeg'|cut:'.png'|cut:'.JPG'|cut:'.JPEG'|cut:'.PNG' |cut:'.JPG'|cut:'.JPEG'|cut:'.PNG' }}.webp" type="image/webp">
+                                    <img src="{{outerwear.img2.url}}" loading="lazy" alt="Image 2">
+                                </picture>
+                            </div>
+                        {% endif %}
+                        {% if outerwear.img3 %}
+                            <div class="img3">
+                                <picture>
+                                    <source srcset="/media/menu/webp/{{ outerwear.img3.name|cut:'menu/original/'|cut:'.jpg'|cut:'.jpeg'|cut:'.png'|cut:'.JPG'|cut:'.JPEG'|cut:'.PNG' |cut:'.JPG'|cut:'.JPEG'|cut:'.PNG' }}.webp" type="image/webp">
+                                    <img src="{{outerwear.img3.url}}" loading="lazy" alt="Image 3">
+                                </picture>
+                            </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>  
+                {% endfor %}
+            </a>
+        </div>
+        {% endif %}
+        {% if archive %}
+        <div class="archive">
+            <!-- <h1>VINTAGE</h1>  -->
+            <a href="{% url 'Archive' %}">
+            {% for archive in archive %}
+            <div class="cat-hero">Archive</div>
+            <div class="image-container {% if not archive.img2 and not archive.img3 %}single-image{% elif not archive.img3 %}two-images{% endif %}">
+                {% if archive.img1 %}
+                    <div class="img1">
+                        <picture>
+                            <source srcset="/media/menu/webp/{{ archive.img1.name|cut:'menu/original/'|cut:'.jpg'|cut:'.jpeg'|cut:'.png'|cut:'.JPG'|cut:'.JPEG'|cut:'.PNG' |cut:'.JPG'|cut:'.JPEG'|cut:'.PNG' }}.webp" type="image/webp">
+                            <img src="{{archive.img1.url}}" loading="lazy" alt="Image 1">
+                        </picture>
+                    </div>
+                {% endif %}
+                {% if archive.img2 or archive.img3 %}
+                <div class="right-column">
+                    {% if archive.img2 %}
+                        <div class="img2">
+                            <picture>
+                                <source srcset="/media/menu/webp/{{ archive.img2.name|cut:'menu/original/'|cut:'.jpg'|cut:'.jpeg'|cut:'.png'|cut:'.JPG'|cut:'.JPEG'|cut:'.PNG' |cut:'.JPG'|cut:'.JPEG'|cut:'.PNG' }}.webp" type="image/webp">
+                                <img src="{{archive.img2.url}}" loading="lazy" alt="Image 2" style="height: 600px;">
+                            </picture>
+                        </div>
+                    {% endif %}
+                    {% if archive.img3 %}
+                        <div class="img3">
+                            <picture>
+                                <source srcset="/media/menu/webp/{{ archive.img3.name|cut:'menu/original/'|cut:'.jpg'|cut:'.jpeg'|cut:'.png'|cut:'.JPG'|cut:'.JPEG'|cut:'.PNG' |cut:'.JPG'|cut:'.JPEG'|cut:'.PNG' }}.webp" type="image/webp">
+                                <img src="{{archive.img3.url}}" loading="lazy" alt="Image 3" style="height: 600px;">
+                            </picture>
+                        </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>  
+            {% endfor %}
+            </a>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <div class="extra-info">
+        <!-- {% if archive %}
+        <div class="archive">
+            <h1>VINTAGE</h1> 
+            <a href="{% url 'Archive' %}">Archive</a>
+            {% for archive in archive %}
+            <div class="image-container {% if not archive.img2 and not archive.img3 %}single-image{% elif not archive.img3 %}two-images{% endif %}">
+                {% if archive.img1 %}
+                    <div class="img1">
+                        <picture>
+                            <source srcset="/media/menu/webp/{{ archive.img1.name|cut:'menu/original/'|cut:'.jpg'|cut:'.jpeg'|cut:'.png'|cut:'.JPG'|cut:'.JPEG'|cut:'.PNG' |cut:'.JPG'|cut:'.JPEG'|cut:'.PNG' }}.webp" type="image/webp">
+                            <img src="{{archive.img1.url}}" loading="lazy" alt="Image 1">
+                        </picture>
+                    </div>
+                {% endif %}
+                {% if archive.img2 or archive.img3 %}
+                <div class="right-column">
+                    {% if archive.img2 %}
+                        <div class="img2">
+                            <picture>
+                                <source srcset="/media/menu/webp/{{ archive.img2.name|cut:'menu/original/'|cut:'.jpg'|cut:'.jpeg'|cut:'.png'|cut:'.JPG'|cut:'.JPEG'|cut:'.PNG' |cut:'.JPG'|cut:'.JPEG'|cut:'.PNG' }}.webp" type="image/webp">
+                                <img src="{{archive.img2.url}}" loading="lazy" alt="Image 2" style="height: 600px;">
+                            </picture>
+                        </div>
+                    {% endif %}
+                    {% if archive.img3 %}
+                        <div class="img3">
+                            <picture>
+                                <source srcset="/media/menu/webp/{{ archive.img3.name|cut:'menu/original/'|cut:'.jpg'|cut:'.jpeg'|cut:'.png'|cut:'.JPG'|cut:'.JPEG'|cut:'.PNG' |cut:'.JPG'|cut:'.JPEG'|cut:'.PNG' }}.webp" type="image/webp">
+                                <img src="{{archive.img3.url}}" loading="lazy" alt="Image 3" style="height: 600px;">
+                            </picture>
+                        </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>  
+            {% endfor %}
+        </div>
+        {% endif %} -->
+        {% if about %}
+        <div class="about-us">
+            <h1><a href="{% url 'about' %}">ABOUT US</a></h1>
+                {% if about.image %}
+                <div class="img1">
+                    <picture>
+                        <!-- <source srcset="/media/menu/webp/{{ info.image.url.name|cut:'menu/original/'|cut:'.jpg'|cut:'.jpeg'|cut:'.png'|cut:'.JPG'|cut:'.JPEG'|cut:'.PNG'  }}.webp" type="image/webp"> -->
+                        <img src="{{ about.image.url }}" loading="lazy" alt="Image 1">
+                    </picture>
+                </div>
+                {% endif %}
+        </div>
+        {% endif %}
+    </div> 
+
+    {% if jewerly_items %}
+    <div class="jewerly">
+        <div class="necklaces">
+            <h1>JEWERLY</h1>
+            <a href="">Necklaces</a>
+            <img src="" alt="">
+        </div>
+    </div>
+    {% endif %}
+
+
+    <script src="{% static 'js/menu.js' %}"></script>
+</body>
+
+{% endblock %}

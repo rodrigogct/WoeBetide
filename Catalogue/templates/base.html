@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/gsap/2.1.3/TweenMax.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/gsap/2.1.3/TimelineMax.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/catalogue.css' %}">
+    <link rel="stylesheet" href="{% static 'css/cart.css' %}">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <title>WOE BETIDE — Vintage Clothing based in Mexico City</title>
+    <meta name="description" content="Curated vintage clothing from the 2000s and earlier. Tees, denim & jackets hand-picked in Mexico City.">
+    <meta name="robots" content="index,follow">
+</head>
+
+<body>
+<div class="page-wrapper pt-5">
+  <!-- navbar -->
+  <div class="navbar" style="top: 0; width: 100%; padding: 0; z-index: 1030;">
+    <nav class="navbar navbar-expand fixed-top navbar-light bg-light" 
+        style="font-size: 14px; top: 0; width: 100%; z-index: 1030; border: 1px solid black;">
+      <div class="container-fluid" style="background-color: #D2D1CD;">
+        
+        <!-- Brand -->
+        <a class="navbar-brand" href="{% url 'Menu' %}" style="margin-right: 10px;">
+          <img src="{% static 'images/logo_no_bg.png' %}" loading="lazy" alt="" style="width: 50px;">
+        </a>
+
+        <!-- Nav Items (always visible, no collapse) -->
+        <ul class="navbar-nav me-auto mb-1 mb-lg-0">
+          <li class="nav-item">
+            <a class="nav-link active" aria-current="page" href="{% url 'Menu' %}">MENU</a>
+          </li>
+
+          {% if about %}
+          <li class="nav-item">
+            <a class="nav-link active" href="{% url 'about' %}">ABOUT</a>
+          </li>
+          {% endif %}
+
+          {% if jewerly_items %}
+          <li class="nav-item">
+            <a class="nav-link active" href="{% url 'about' %}">JEWELRY</a>
+          </li>
+          {% endif %}
+
+          <!-- Keep VINTAGE as dropdown -->
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownVintage" 
+              role="button" data-bs-toggle="dropdown" aria-expanded="false" style="color:black">
+              VINTAGE
+            </a>
+            <ul class="dropdown-menu" aria-labelledby="navbarDropdownVintage">
+              <li><a class="dropdown-item" href="{% url 'Catalogue' %}?category=All">SHOP ALL</a></li>
+              <li><a class="dropdown-item" href="{% url 'Catalogue' %}?category=Tees">TEES</a></li>
+              <li><a class="dropdown-item" href="{% url 'Catalogue' %}?category=Sweatshirts">SWEATSHIRTS</a></li>
+              <li><a class="dropdown-item" href="{% url 'Catalogue' %}?category=Jackets">OUTERWEAR</a></li>
+            </ul>
+          </li>
+
+          <li class="nav-item">
+            <a class="nav-link active" href="{% url 'Archive' %}">ARCHIVE</a>
+          </li>
+        </ul>
+
+        <!-- Cart -->
+        <a id="wb-cart-link" class="btn" href="{% url 'Cart' %}">
+          <img src="{% static 'images/shopping-bag.png' %}" loading="lazy" alt="" style="width: 20px;">
+          <span id="wb-cart-count">({{ cart_count }})</span>
+        </a>
+      </div>
+    </nav>
+  </div>
+
+  <!-- changing content -->
+  <div class="page-content">
+    {% block content %} {% endblock %}
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="footer-container">
+    <!-- Brand & Copyright -->
+    <div class="footer-brand">
+      <p>WOE BETIDE</p>
+    </div>
+
+    <!-- Navigation Links -->
+    <div class="footer-links">
+      <div class="footer-column-shop">
+        <ul>
+          <a href="{% url 'Catalogue' %}?category=All">Shop All</a>
+          <a href="{% url 'Catalogue' %}?category=Tees">Tees</a>
+          <a href="{% url 'Catalogue' %}?category=Sweatshirts">Sweatshirts</a>
+          <a href="{% url 'Catalogue' %}?category=Jackets">Outerwear</a>
+        </ul>
+      </div>
+      <div class="footer-column-about">
+        <ul>
+          {% if about %}<a href="{% url 'about' %}">About</a>{% endif %}
+          <a href="{% url 'terms' %}">Terms of Service</a>
+          <a href="{% url 'shipping' %}">Shipping & Returns</a>
+          <a href="{% url 'privacy' %}">Privacy Policy</a>
+        </ul>
+      </div>
+      <div class="footer-column-contact">
+        <ul>
+          <a href="mailto:customer@woebetide.studio">Contact Us</a>
+          <p style="margin:0">customer@woebetide.studio</p>
+          <a href="https://instagram.com/woe.betide" target="_blank">
+            <img src="{% static 'images/pngwing.com.png' %}"  alt="" style="width: 15px;">
+          </a>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Newsletter Signup -->
+    <!-- <div class="footer-newsletter">
+      <h4>Join the Archive</h4>
+      <p>Be the first to access new drops and updates from wB.</p>
+      <form action="#" method="POST">
+        <input type="email" name="email" placeholder="Your email address" required>
+        <button type="submit">Subscribe</button>
+      </form> -->
+    </div>
+</footer>
+
+<!-- scripts  -->  
+  <div class="scripts">
+      <script src="https://scripts.sirv.com/sirvjs/v3/sirv.js"></script>
+      <script src="{% static 'js/transitions.js' %}"></script>
+      <script src="{% static 'js/measurements.js' %}"></script>
+      <script src="{% static 'js/item.js' %}"></script>
+      <script src="{% static 'js/catalogue.js' %}"></script>
+      <script src="{% static 'js/cart.js' %}"></script>
+      <script type="text/javascript" async src="https://tenor.com/embed.js"></script>
+      <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/gsap/2.1.3/TweenMax.min.js"></script>        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/gsap/2.1.3/TimelineMax.min.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+  </div>
+</body>
+</html>

@@ -1,0 +1,377 @@
+/* Start of item.css */
+
+/* General details */
+
+html {
+    height: 100%;
+    overflow: hidden;
+}
+
+body { 
+    height: 100%;
+}
+
+.display-1 {
+    font-size: calc(3.2rem + 4.5vw);
+}
+
+/* Prevent background scroll when overlay is open */
+body.lock-scroll {
+    overflow: hidden;
+    height: 100%;
+    position: fixed;
+    width: 100%;
+  }
+  
+/* Images */
+
+.item {
+    display: grid;
+    grid-template-columns: 1fr 0.65fr;
+    overflow-x: hidden;
+}
+
+.images {
+    display: flex;
+    border: 1px solid black;
+    border-top: none;
+}
+
+.main-images {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+}
+
+.main-images img {
+    width: 100%;
+    height: 100%;
+    min-height: 500px;
+    object-fit: cover;
+    grid-template-columns: 1fr 1fr;
+    cursor: zoom-in;
+}
+
+/* Apply border rules for images in a grid */
+
+
+.main-images picture img {
+    display: block;
+    width: 100%;
+    border: none;
+  }
+
+.main-images .img-1 img {
+    border-right: 1px solid black;
+  }
+  
+.main-images .img-3 img {
+    border-top: 1px solid black;
+    border-right: 1px solid black;
+  }
+  
+.main-images .img-4 img {
+    border-top: 1px solid black;
+  }
+  
+.main-images .img-5 img {
+    border-top: 1px solid black;
+    border-right: 1px solid black;
+  }
+
+.main-images .img-6 img {
+    border-top: 1px solid black;
+  }
+
+/* If there are two images (img-1, img-2) */
+.main-images picture:nth-child(2):nth-last-child(2) img {
+    border-bottom: 1px solid black;
+  }
+
+/* If there are three images (img-1, img-2, img-3) */
+.main-images picture:nth-child(1):nth-last-child(3) img {
+    border-bottom: 1px solid black;
+  }
+
+.main-images picture:nth-child(3):nth-last-child(1) img {
+    border-top: none;
+  }
+
+/* If there are five images (img-1, img-2, img-3, img-4, img-5) */
+.main-images picture:nth-child(4):nth-last-child(2) img {
+    border-bottom: 1px solid black;
+  }
+
+.main-images picture:nth-child(3):nth-last-child(3) img {
+    border-bottom: 1px solid black;
+  }
+
+.main-images picture:nth-child(5):nth-last-child(1) img {
+    border-top: none;
+  }
+
+.secondary-images {
+    display: none;
+    width: 470px;
+}
+
+.carousel img {
+    object-fit: cover;
+    border-top: none;
+}
+
+.secondary-images img {
+    width: 100%;
+    height: 300px;
+}
+
+.item-carousel {
+    display: none;
+}
+
+.item-carousel .main-images img:nth-child(1) {
+    border-bottom: none;
+}
+
+/* Zoomed image view */
+
+.image-selector {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    background-color: black;
+    pointer-events: none;
+    opacity: 0;
+    transition: 1s;
+    transition: opacity 0.3s ease;
+    touch-action: pan-x pan-y;
+    overflow-y: hidden;
+    overscroll-behavior: contain;
+}
+
+.image-selector.active {
+    visibility: visible;
+    opacity: 1;
+}
+
+.image-selector img {
+    max-width: 90%;
+    max-height: 90%;
+    background-attachment: fixed;
+    object-fit: cover;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    cursor: zoom-in;
+}
+
+.close {
+    position: absolute;
+    left: 92%;
+    bottom: 95%;
+    border: none;
+    background:none;
+    padding: none;
+    color: white;
+}
+
+.image-selector .zoomed-carousel-controls {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.image-container {
+    max-height: 90vh;
+    max-width: 90vw;
+    overflow: auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+.photo {
+    display: grid;
+    grid-column: auto;
+    height: 900px;
+    transition: transform 0.3s ease;
+    max-width: none; /* Important */
+    max-height: none; /* Important */
+    position: absolute; /* Important for transform to create overflow */
+    top: 0;
+    left: 0;
+}
+  
+
+/* Garment information */
+
+.information { 
+    display: flex;
+    justify-content: center;
+    text-align: justify;
+    border: 1px solid;
+    border-top: none;
+    border-left: none; 
+    width: 100%;
+    height: 100%;
+}
+
+.information .text {
+    height: 100%;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+
+}
+
+.information .text .section {
+    text-align: justify;
+    padding: 0 20px 0 20px;
+}
+
+h6 {
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.information .text .measurements_information {
+    display: flex;
+    justify-content: center;
+}
+
+.information .text .measurements_information .measurements {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    margin: 20px 0 20px 0;
+}
+
+.information .text .measurements_information .measurements p {
+    margin: 0;
+    margin-right: 20px;
+    text-align: center;
+    font-size: 13px;
+}
+
+.information .text .measurements_information .measurements .info {
+    border: 1px solid;
+}
+
+.information .text .measurements_information .measurements .length,
+.information .text .measurements_information .measurements .width,
+.information .text .measurements_information .measurements .sleeve {
+    position: relative;
+    display: flex;
+    width: 100%;
+    align-items: center;
+    border: 1px solid;
+}
+
+.information .text .measurements_information .measurements .length img,
+.information .text .measurements_information .measurements .width img,
+.information .text .measurements_information .measurements .sleeve img {
+    width: 12px;
+}
+
+.information .text .measurements_information .measurements .length .measurements-img img,
+.information .text .measurements_information .measurements .width .measurements-img img,
+.information .text .measurements_information .measurements .sleeve .measurements-img img {
+    display: none;
+    position: absolute;
+    z-index: 1;
+    width: 200px;
+}
+
+.buy-buttons {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.information .buy-buttons button {
+    padding: 0;
+    display: grid;
+    align-content: center;
+    width: 250px;
+    height: 32px;
+    border: 1px solid black;
+    background-color: #9E9C98;
+}
+
+.disclaimer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 20px 0 20px;
+}
+
+.add-cart {
+    padding: 0 20px 0 20px;
+}
+
+@media (max-width: 1050px) {
+
+    .item {
+        display: block;
+    }
+}
+
+@media (max-width: 700px) {
+
+    .item {
+        display: none;
+    }
+
+    .item-carousel {
+        display: block;
+    }
+
+    .main-images {
+        display: block;
+    }
+
+    .main-images img {
+        width: 100%;
+        height: 750px;
+    }
+
+    .information button {
+        width: 150px;
+    }
+    
+}
+
+@media (max-width: 500px) {
+
+    .main-images img {
+        width: 100%;
+        min-height: 300px;
+        height: 450px;
+    }
+
+    .photo {
+        height: 450px;
+    }
+
+    .image-selector .zoomed-carousel-controls {
+        top: 90%;
+    }
+
+    .information button {
+        width: 150px;
+    }
+    
+}
+
+/* end of item.css */
+
+
+

@@ -1,0 +1,547 @@
+body {
+    text-transform: uppercase;
+}
+
+.menu {
+    border-bottom: 1px solid black;
+    position: relative;
+}
+
+.menu h1 {
+    position: sticky;
+    top: var(--navH);
+    height: var(--heroH);   
+    z-index: 10;
+    font-size: 90px;
+    font-weight: 500;
+    color: black;
+    display: grid;               /* <— easiest centering */
+    /* place-items: center;
+    text-align: center; */
+}
+
+.menu p {
+    font-size: 18px;
+    color: black;
+    padding-top: 60px;
+    margin-left: 50px;
+    position: absolute;
+    margin: 30px 0 16px 50px;
+
+}
+
+/* adjust to your fixed navbar height */
+:root { --navH: 55px; }
+/* how tall the sticky text block is */
+:root { --heroH: 120px; }  /* tweak 100–160px to taste */
+
+/* 2) Pull the images up behind that sticky block (removes blank band) */
+.menu .woe,
+.menu .image-container{
+  margin-top: calc(-1 * var(--heroH));
+}
+
+:root{
+    --navH: 55px;     /* navbar height */
+    --heroH: 110px;   /* one line height */
+    --heroRows: 3;    /* total H1s */
+  }
+  
+  /* each H1 acts like a sticky row */
+  .menu .hero{
+    position: sticky;
+    top: var(--navH);
+    height: var(--heroH);
+    margin: 0;
+    display: grid;
+    font-size: 90px;
+    font-weight: 500;
+    line-height: 1;
+    color: white;
+    z-index: 10;
+  }
+  
+  /* content pulled up by the total hero stack height */
+  .menu .woe,
+  .menu .image-container{
+    margin-top: calc(-1 * var(--heroH) * var(--heroRows));
+  }
+  
+.hero:nth-child(1) { opacity: 0.2; }
+.hero:nth-child(2) { opacity: 0.4; }
+.hero:nth-child(3) { opacity: 0.6; }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+.elements p {
+    margin: 0;
+}
+
+.vintage {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    border: 3px solid #D2D1CD;
+    border-bottom: none;
+    border-right: none;
+}
+
+.catalogue {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    background-color: #D2D1CD;
+}
+
+.vintage
+.shop-all,
+.staff-picks,
+.tees,
+.sweatshirts,
+.outerwear,
+.jewerly, 
+.necklaces,
+.about-us,
+.archive {
+    display: flex;
+    justify-content: center;
+    border-bottom: 3px solid #D2D1CD;
+    /* box-shadow: 0 2px 6px; */
+    position: relative;
+    text-decoration:none;
+    color:inherit;
+    /* let sticky overlap outside its normal box */
+    overflow:visible;
+}
+
+.cat-hero {
+    position: absolute;
+}
+
+.catalogue a.recents {
+    color: black;
+    text-decoration: none;
+    margin-left: 50px;
+    font-size: 24px;
+}
+
+.vintage
+.shop-all a,
+.staff-picks a,
+.tees a,
+.sweatshirts a,
+.outerwear a,
+.archive a {
+    color: white;
+    display: flex;
+    justify-content: center;
+    font-size: 50px;
+    text-decoration: none;
+    font-weight: 500;
+    /* font-weight: 300; */
+}
+
+.catalogue h1,
+.vintage
+.shop-all h1,
+.staff-picks h1,
+.tees h1,
+.sweatshirts h1,
+.outerwear h1,
+.archive h1,
+.about-us h1 {
+    color: black;
+    text-decoration: none;
+    font-size: 48px;
+    margin-top: 30px;
+    margin-left: 50px;
+    position: absolute;
+}
+
+.about-us a {
+    text-decoration: none;
+    color: black;
+}
+
+.jewerly
+.necklaces a {
+    color: black;
+    text-decoration: none;
+    font-size: 28px;
+    margin-left: 50px;
+}
+
+.image-container {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    flex-direction: row;
+    flex-wrap: wrap;
+    width: 100%;
+}
+
+.img1,
+.img2,
+.img3 {
+    box-sizing: border-box;
+}
+
+.img1 img {
+    border-right: 3px solid #D2D1CD;
+    width: 100%;
+    height: 700px;
+    object-fit: cover;
+}
+
+.img2 img,
+.img3 img {
+    width: 100%;
+    height: 300px;
+}
+
+.single-image {
+    display: block;
+}
+
+.single-image .img1 img {
+    width: 100%;
+}
+
+.two-images {
+    grid-template-columns: 0.5fr 1fr;
+}
+
+.two-images .img1 img {
+    height: 600px;
+}
+
+.two-images .right-column {
+    display: flex;
+    flex-direction: column;
+}
+
+.two-images .img2 img {
+    border-left: 1px solid black;
+    object-fit: cover;
+    height: 600px;
+}
+
+.extra-info {
+    border-left: 3px solid #D2D1CD;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+}
+
+
+
+
+/* ===== Mobile-only hanging next button ===== */
+:root {
+    --wbBtn: 100px;   
+    --wbBtnBg: #2f2f2f;       
+  }
+  
+  .wb-scroller-wrap { position: relative; overflow: visible; }
+  
+  /* show only on phones */
+  .wb-mobile-only { display: none; }
+  @media (max-width: 600px) { .wb-mobile-only { display: block; } }
+  
+  /* hang half outside the right edge, centered to the scroller height */
+  .wb-next-btn{
+    position: absolute;
+    right: calc(-0.5 * var(--wbBtn));   /* → exactly half outside */
+    top: 45%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: 0;
+    padding: 0;
+    z-index: 10;
+    line-height: 0;
+    cursor: pointer;
+  }
+  
+  /* the circle */
+  .wb-round-icon{
+    width: var(--wbBtn);
+    height: var(--wbBtn);
+    display: inline-flex;
+    align-items: center;
+    border-radius: 50%;
+    background: var(--wbBtnBg);
+    color: #fff;
+    box-shadow: var(--wbBtnShadow);
+    opacity: 0.4;
+  }
+  
+  /* bigger, crisp arrow */
+  .wb-round-icon svg{
+    width: 60%;
+    display: block;
+  }
+  
+  /* smaller phones: shrink button but keep “half outside” math working */
+  @media (max-width: 420px){
+    :root { --wbBtn: 90px; }
+  }
+  @media (max-width: 360px){
+    :root { --wbBtn: 90px; }
+  }
+  
+@media (max-width: 1050px) {
+
+    .image-container {
+        display: block;
+    }
+
+    .woe .img1 {
+        display: none;
+    }
+
+    .right-column {
+        border-bottom: none !important;
+    }
+    
+    .img1 img {
+        height: 700px;
+    }
+
+    .vintage {
+        grid-template-columns: 1fr 1fr;
+    }
+   
+}
+
+@media (max-width: 800px) {
+
+    .vintage .img1 img,
+    .extra-info .img1 img {
+        height: 500px;
+    }
+
+    .vintage .shop-all a, 
+    .staff-picks a, .tees a, 
+    .sweatshirts a, 
+    .outerwear a, 
+    .archive a {
+        z-index: 1000;
+        font-size: 35px;
+        /* margin-left: 50px;
+        margin-top: 60px; */
+    }
+
+}
+
+@media (max-width: 700px) {
+
+    .image-container {
+        display: flex;
+        flex-direction: column-reverse;
+    }
+
+    :root{
+        --navH: 55px; 
+        --heroH: 80px;  
+        --Gap: 12px;
+        --heroRows: 3; 
+        --Row: 16px;    
+    }
+
+    .image-container .right-column {
+        border-bottom: 1px solid black;
+    }
+
+    .menu .image-container .img1 img {
+        height: 70px !important;
+    }
+      
+    .menu .hero {
+        position: sticky;
+        height: var(--heroH);   /* ensure each row has the same fixed height */
+        line-height: 1;         /* no extra font spacing */
+        margin: 0;              /* remove default h1 margins */
+        font-size: 70px;
+        /* text-align: center; */
+    }
+
+}
+
+@media (max-width: 600px) {
+
+    .menu img {
+        height: 450px !important;
+    }
+
+    :root{
+        --navH: 55px; 
+        --heroH: 60px;  
+        --Gap: 12px;
+        --heroRows: 3; 
+    }
+
+    .menu .hero {
+        position: sticky;
+        height: var(--heroH);   /* ensure each row has the same fixed height */
+        line-height: 1;         /* no extra font spacing */
+        margin: 0;              /* remove default h1 margins */
+        font-size: 50px;
+        /* text-align: center; */
+    }
+
+    .block.container-xxxl .col{
+        border-left: none;
+    }
+    
+    /* Add top border to all .col elements */
+    .block.container-xxxl .col {
+        border-top: 1px solid black;
+    }
+    
+    /* Remove top border if there's another .col element directly below */
+    .block.container-xxxl .col {
+        border-top: none;
+    }
+    
+    .vintage {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .vintage .img1 img,
+    .extra-info .img1 img {
+        height: 450px;
+    }
+
+    .catalogue a.recents {
+        margin-left: 25px;
+        font-size: 18px;
+    }
+
+    .vintage .shop-all a, 
+    .staff-picks a, .tees a, 
+    .sweatshirts a, 
+    .outerwear a, 
+    .archive a {
+        z-index: 1000;
+        font-size: 25px;
+        /* margin-left: 50px;
+        margin-top: 60px; */
+    }
+
+        /* 1) Make sure no wrapper is semi-transparent */
+    .vintage .image-container,
+    .vintage .image-container .img1,
+    .vintage .image-container .img2,
+    .vintage .image-container .img3,
+    .vintage picture {
+    opacity: 1 !important;
+    }
+
+    /* 2) Dim ONLY the images (not text) */
+   .vintage .image-container img {
+    /* choose ONE of these: */
+    opacity: 1;           /* simple */
+    /* filter: brightness(0.9);      often nicer than opacity */
+    transition: filter .25s ease, opacity .25s ease;
+    }
+
+    .extra-info {
+    grid-template-columns: 1fr;
+    }
+
+    /* Horizontal scroller container (unchanged behavior) */
+    .catalogue .block.container-xxxl{
+        display:flex;
+        overflow-x:auto;
+        scroll-snap-type:x mandatory;
+        -webkit-overflow-scrolling:touch;
+    }
+  
+    /* Ensure the media itself controls height proportionally */
+    .catalogue .block.container-xxxl .element,
+    .catalogue .block.container-xxxl .element picture{
+        display:block;
+    }
+    
+    .catalogue .block.container-xxxl .element img{
+        display:block;
+        width:100%;
+        height:auto !important;     
+        /* aspect-ratio: 3 / 4; */
+        object-fit: cover;                
+        max-height:none;  
+    }
+  
+    /* Keep your existing two-line row layout */
+    .catalogue .block.container-xxxl .element-info .column{
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+    }
+    
+    /* Keep your existing border behavior; just avoid legacy mobile overrides */
+    .block.container-xxxl .col{
+        border-left:none;
+        border-top:none;
+    }
+
+    /* 👇 Force each card to 50% of the viewport/container width */
+    .catalogue .block.container-xxxl .col{
+        /* Pretend it's a 2-col grid */
+        --cols: 2;
+        --gap: 0px;
+        flex: 0 0 calc( (100% - (var(--cols) - 1) * var(--gap)) / var(--cols) );
+        scroll-snap-align:start;
+        min-width: 0;
+        display:flex; flex-direction:column;
+    }
+
+    /* Let images size intrinsically like your catalogue */
+    .catalogue .block.container-xxxl .element-text picture,
+    .catalogue .block.container-xxxl .element-text picture img{
+        display:block;
+        width:100% !important;
+        height:auto !important;      /* natural proportions */
+        max-height:none !important;
+        object-fit:cover;          /* or 'cover' if you like the crop look */
+    }
+  
+}
+
+@media (max-width: 599px) {
+
+    .vintage .shop-all a, 
+    .staff-picks a, .tees a, 
+    .sweatshirts a, 
+    .outerwear a, 
+    .archive a {
+        font-size: 35px;
+    }
+
+}
+
+@media (max-width: 530px) {
+
+    .vintage .shop-all a, 
+    .staff-picks a, .tees a, 
+    .sweatshirts a, 
+    .outerwear a, 
+    .archive a {
+        font-size: 25px;
+    }
+
+    .vintage .img1 img,
+    .extra-info .img1 img {
+        height: 350px;
+    }
+
+}

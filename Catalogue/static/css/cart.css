@@ -1,0 +1,155 @@
+.table {
+  border: 0 !important;
+  margin-bottom: 0;
+}
+
+/* 1) Vertically center ALL table cells (Bootstrap 5 override) */
+.table > :not(caption) > * > * { 
+  vertical-align: middle !important; 
+}
+
+.image-section a {
+  text-transform: uppercase;
+}
+
+/* 2) Kill extra margins that make cells look misaligned */
+.price-section p { 
+  margin: 0; 
+}
+
+/* 3) Right-align and keep the Remove cell tight on one line */
+.remove-section { 
+  text-align: left;
+  white-space: nowrap;  
+}
+
+tbody {
+  border-bottom: 1px solid black;
+  border-top: 1px solid black;
+}
+
+.container-xxxl h1 {
+    padding-left: 0;
+    margin-left: 0;
+    width: 100%;
+}
+
+.container-xxxl td, 
+.container-xxxl th {
+    background-color: #D2D1CD;
+}
+
+.btn {
+  border-radius: 0px;
+}
+
+.cellphone {
+  display: none !important;
+}
+
+.quantity-control {
+    display: flex;
+    align-items: center;
+    gap: 2px;   /* reduce the gap */
+  }
+  
+  .quantity-control .qty-input {
+    width: 28px;        /* smaller width */
+    text-align: center;
+    font-size: 16px;
+    padding: 0;         /* remove extra padding */
+    margin: 0;
+  }
+  
+  .quantity-control .btn-qty {
+    background: none;
+    border: none;       /* no border */
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0 4px;
+    border-radius: 0px;     /* smaller padding */
+  }
+  
+/* Remove number input arrows (all browsers) */
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type=number] {
+  -moz-appearance: textfield; /* Firefox */
+  appearance: textfield;
+  background: transparent;    /* remove background */
+  border: none;               /* remove border if you want */
+  text-align: center;         /* center number */
+  font-size: 16px;            /* adjust font size */
+  width: 40px;                /* make it compact */
+}
+
+.check-out {
+  display: grid;
+  justify-items: end;
+  margin-right: 8px;
+}
+
+.check-out a {
+  font-size: 12px;
+}
+
+.text-end {
+  border-bottom: none;
+}
+
+.check-out .btn {
+  border: 1px solid black;
+  width: 250px;
+  background-color: #9E9C98;
+}
+
+@media (max-width: 750px) {
+
+  .container-xxxl p {
+    font-size: 12px;
+  }
+
+  .table {
+    font-size: 12px;
+  }
+
+  .remove-section {
+    display: none !important;
+  }
+
+  .quantity-control .btn-qty,
+  .quantity-control .qty-input {
+    font-size: 12px;
+  }
+
+  .cellphone {
+    display: flex !important;
+  }
+
+  .tablets-laptop {
+    display: none !important;
+  }
+
+  .btn {
+    font-size: 12px;
+  }
+
+  .quantity-title {
+    display: none !important;
+  }
+
+  .quantity-section {
+    display: none !important;
+  }
+
+  .check-out .btn {
+    width: 150px;
+  }
+}
+
+

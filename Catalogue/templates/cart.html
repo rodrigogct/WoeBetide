@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% load static %}
+{% block content %}
+<div class="container-xxxl mt-5" style="margin-top: 25px !important;">
+  <p style="padding-left: 8px; text-align: center;">YOUR CART</p>
+
+  {% if lines %}
+    <form method="post" action="{% url 'CartUpdate' %}">
+      {% csrf_token %}
+      <table class="table" id="cart-table">
+        <thead>
+          <tr>
+            <th class="item-title">Item</th>
+            <th class="quantity-title">Quantity</th>
+            <th class="price-title">Price</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+            {% for line in lines %}
+            <tr style="border-bottom: 1px solid black">
+              <td class="image-section align-middle">
+                <div class="d-flex align-items-center gap-3">
+                  {% if line.image_url %}
+                  <a href="{{ line.url }}">
+                    <picture>
+                      <source srcset="/media/catalogue/webp/{{ line.image_url|cut:'/media/catalogue/original/'|cut:'.jpg'|cut:'.jpeg'|cut:'.png' }}.webp" type="image/webp">
+                      <img src="{{ line.image_url }}" alt="" style="width:64px;height:100%;object-fit:cover;border-radius:8px;" loading="lazy">
+                    </picture>
+                  </a>
+                  {% endif %}
+                  <div>
+                    <a href="{{ line.url }}" style="text-decoration: none; color: black;">{{ line.title }}</a>
+                    <div class="quantity-control d-flex align-items-center cellphone">
+                      <button type="button" class="btn-qty minus">−</button>
+                      <input
+                        type="number" 
+                        name="qty[{{ line.variant_id }}]" 
+                        data-variant-id="{{ line.variant_id }}"
+                        value="{{ line.qty }}" 
+                        min="0" 
+                        class="form-control qty-input">
+                      <button type="button" class="btn-qty plus">+</button>
+                    </div>
+                  </div>
+                </div>
+              </td>
+            
+              <td class="quantity-section align-middle">
+                <div class="quantity-control d-flex align-items-center tablets-laptop">
+                  <button type="button" class="btn-qty minus">−</button>
+                  <input
+                    type="number" 
+                    name="qty[{{ line.variant_id }}]" 
+                    data-variant-id="{{ line.variant_id }}"
+                    value="{{ line.qty }}" 
+                    min="0" 
+                    class="form-control qty-input">
+                  <button type="button" class="btn-qty plus">+</button>
+                </div>
+              </td>
+            
+              <td class="price-section align-middle">
+                {% if line.price %}<p class="m-0">$ {{ line.price|floatformat:2|intcomma }} MXN</p>{% endif %}
+              </td>
+            
+              <td class="remove-section align-middle">
+                <button type="submit" class="btn btn-link text-danger p-0"
+                        formmethod="post" formaction="{% url 'CartRemove' line.variant_id %}">
+                  Remove
+                </button>
+              </td>
+            </tr>            
+            {% endfor %}
+        </tbody>
+        <tfoot>
+            <td colspan="4" class="text-end">
+            <p>SUBTOTAL: $ {{ grand_total|floatformat:2|intcomma }} MXN</p>
+            </td>
+        </tfoot>
+      </table>
+
+      <div class="check-out">
+        <a class="btn btn-light" href="{{ checkout_url }}">CHECK OUT</a>
+      </div>
+    </form>
+  {% else %}
+    <p style="text-align: center;">Your cart is empty.</p>
+  {% endif %}
+</div>
+
+{% endblock %}
+
+
+    
+
+
+

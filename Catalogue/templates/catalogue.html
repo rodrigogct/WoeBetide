@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% load static %}
+ 
+{% block content %}
+    <div class="filter">
+    <div class="container-fluid py-2">
+      <form method="get" class="d-flex justify-content-end align-items-center">
+        {# Preserve all current query params except 'sort' #}
+        {% for key, value in request.GET.items %}
+          {% if key != 'sort' %}
+            <input type="hidden" name="{{ key }}" value="{{ value }}">
+          {% endif %}
+        {% endfor %}
+  
+        <label for="sortSelect" class="me-2 fw-bold">Sort by:</label>
+        <select class="form-select w-auto" id="sortSelect" name="sort"
+                onchange="this.form.submit()"
+                style="background-color:#D2D1CD;border:none;color:black">
+          <option value="date_new"  {% if sort == "date_new"  %}selected{% endif %}>Date: New to Old</option>
+          <option value="price_low" {% if sort == "price_low" %}selected{% endif %}>Price: Low to High</option>
+          <option value="date_old"  {% if sort == "date_old"  %}selected{% endif %}>Date: Old to New</option>
+          <option value="price_high"{% if sort == "price_high"%}selected{% endif %}>Price: High to Low</option>
+        </select>
+      </form>
+    </div>
+    </div>
+  
+    <!-- One catalogue for everything this view returns (shop-all, filtered categories, staff-only, or archive) -->
+    <div class="catalogue">
+        <div class="elements">
+            <div class="block container-xxxl">
+            {% for item in items %}
+                <div class="col" style="display:flex;flex-direction:column;">
+                    <div class="element">
+                    <div class="element-text">
+                        <a href="{% url is_archive|yesno:'ArchiveItem,Item' item.id %}" style="height:100%;">
+                        <picture>
+                            <source srcset="/media/catalogue/webp/{{ item.img1.name|cut:'catalogue/original'|cut:'.jpg'|cut:'.jpeg'|cut:'.png' }}.webp" type="image/webp">
+                            <img src="{{ item.img1.url }}" loading="lazy" alt="">
+                        </picture>
+                        </a>
+                    </div>
+                    </div>
+        
+                    <div class="element-info {% if item.is_sold %}sold{% endif %}">
+                    <div class="column" style="border-top:1px solid;">
+                        <a href="{% url is_archive|yesno:'ArchiveItem,Item' item.id %}" class="lead {% if item.is_sold %}sold-text{% endif %}">
+                        <strong>{{ item.name }}</strong>
+                        </a>
+                    </div>
+                    <div class="column" style="border-top:0;flex-direction:row;justify-content:space-between;padding:0 10% 0 10%;">
+                        <a href="{% url is_archive|yesno:'ArchiveItem,Item' item.id %}" class="lead {% if item.is_sold %}sold-text{% endif %}">
+                        <strong>Size: {{ item.size }}</strong>
+                        </a>
+                        <a href="{% url is_archive|yesno:'ArchiveItem,Item' item.id %}" class="lead">
+                        <strong>
+                            {% if is_archive %}
+                            {% if item.sold_price %}
+                                SOLD · ${{ item.sold_price }} MXN
+                            {% else %}
+                                SOLD
+                            {% endif %}
+                        {% else %}
+                            ${{ item.price }} MXN
+                        {% endif %}                        
+                        </strong>
+                        </a>
+                    </div>
+                    </div>
+                </div>
+            {% empty %}
+            </div>
+            <div class="col">
+                <div class="if-statement">
+                    <h3>WOE BETIDE</h3>
+                    <p class="lead">Stay tuned</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+{% endblock %}

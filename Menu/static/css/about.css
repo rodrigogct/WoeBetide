@@ -1,0 +1,26 @@
+.image1 {
+    padding: 25px;
+    display: flex;
+    height: 100%;
+    width: 100%;
+}
+
+.image2 {
+    padding: 25px;
+    padding-left: 0;
+    display: flex;
+    height: 100%;
+    width: 100%;
+}
+
+.image1 img,
+.image2 img {
+    object-fit: cover;
+    height: 100%;
+    width: 100%;
+    border: 1px solid;
+}
+
+.container {
+    text-transform: none !important;
+}
