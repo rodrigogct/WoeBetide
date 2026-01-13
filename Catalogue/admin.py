@@ -1,12 +1,12 @@
 from django.contrib import admin
 from .models import Item, Jewerly
 from django.contrib import admin
-from django.urls import path
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.conf import settings
-from django.http import HttpResponseRedirect
-from django.http import HttpResponseRedirect, HttpResponseNotAllowed
+from django.http import HttpResponseRedirect, HttpResponseNotAllowed, HttpResponse
+from django.urls import path
+from Catalogue.utils.shopify_export import build_shopify_csv_text
 import csv
 from django.utils import timezone
 from Catalogue.utils.shopify_sync import sync_shopify_variants
@@ -64,11 +64,31 @@ class AdminItem(admin.ModelAdmin):
         model_name = self.model._meta.model_name
         return [
             path(
+                "download-shopify-csv/",
+                self.admin_site.admin_view(self.download_shopify_csv),
+                name=f"{app_label}_{model_name}_download_shopify_csv",
+            ),
+            path(
                 "import-variant-ids/",
                 self.admin_site.admin_view(self.import_variant_ids),
                 name=f"{app_label}_{model_name}_import_variant_ids",
             ),
         ] + urls
+
+    def download_shopify_csv(self, request):
+        # Allow only GET (download)
+        if request.method != "GET":
+            return HttpResponseNotAllowed(["GET"])
+
+        if not self.has_view_permission(request):
+            self.message_user(request, "Permission denied.", level=messages.ERROR)
+            return HttpResponseRedirect("../")
+
+        csv_text = build_shopify_csv_text(include_images=True)
+
+        response = HttpResponse(csv_text, content_type="text/csv; charset=utf-8")
+        response["Content-Disposition"] = 'attachment; filename="shopify_export.csv"'
+        return response
 
     def import_variant_ids(self, request):
         # Allow only POST
@@ -96,6 +116,7 @@ class AdminItem(admin.ModelAdmin):
                 self.message_user(request, f"⚠️ Could not match: {preview}{'...' if len(nf)>5 else ''}", messages.WARNING)
 
         return HttpResponseRedirect("../")
+
 admin.site.register(Item, AdminItem)
 
 class AdminJewerly(admin.ModelAdmin): 

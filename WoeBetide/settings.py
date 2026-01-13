@@ -196,7 +196,6 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 if os.getenv("CLOUDINARY_URL"):
     DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
 
-
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,

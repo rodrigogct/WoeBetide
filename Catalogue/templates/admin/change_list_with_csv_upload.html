@@ -2,6 +2,14 @@
 
 {% block object-tools-items %}
   {{ block.super }}
+
+  <li>
+    <a class="button default"
+       href="{% url 'admin:'|add:cl.opts.app_label|add:'_'|add:cl.opts.model_name|add:'_download_shopify_csv' %}">
+      📦 Download Shopify CSV
+    </a>
+  </li>
+
   <li>
     <form method="post"
           action="{% url 'admin:'|add:cl.opts.app_label|add:'_'|add:cl.opts.model_name|add:'_import_variant_ids' %}">
