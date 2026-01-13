@@ -18,19 +18,19 @@
             <div class="image-container {% if not menu.img2 and not menu.img3 %}single-image{% elif not menu.img3 %}two-images{% endif %}">
                 {% if menu.img1 %}
                 <div class="img1">
-                    <img src="{{ menu.img1.url|cld_auto }}" loading="lazy" alt="Image 1" style="border-right: none;">
+                    <img src="{{ menu.img1.url|cld_webp }}" loading="lazy" alt="Image 1" style="border-right: none;">
                 </div>
                 {% endif %}
                 {% if menu.img2 or menu.img3 %}
                 <div class="right-column">
                     {% if menu.img2 %}
                         <div class="img2">
-                            <img src="{{ menu.img2.url|cld_auto }}" loading="lazy" alt="Image 2">
+                            <img src="{{ menu.img2.url|cld_webp }}" loading="lazy" alt="Image 2">
                         </div>
                     {% endif %}
                     {% if menu.img3 %}
                         <div class="img3">
-                            <img src="{{ menu.img3.url|cld_auto }}" loading="lazy" alt="Image 3">
+                            <img src="{{ menu.img3.url|cld_webp }}" loading="lazy" alt="Image 3">
                         </div>
                     {% endif %}
                 </div>
