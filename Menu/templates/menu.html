@@ -18,19 +18,19 @@
             <div class="image-container {% if not menu.img2 and not menu.img3 %}single-image{% elif not menu.img3 %}two-images{% endif %}">
                 {% if menu.img1 %}
                 <div class="img1">
-                    <img src="{{ menu.img1.url|cld_webp }}" loading="lazy" alt="Image 1" style="border-right: none;">
+                    <img src="{{ menu.img1.url|cld_menu }}" loading="lazy" alt="Image 1" style="border-right: none;">
                 </div>
                 {% endif %}
                 {% if menu.img2 or menu.img3 %}
                 <div class="right-column">
                     {% if menu.img2 %}
                         <div class="img2">
-                            <img src="{{ menu.img2.url|cld_webp }}" loading="lazy" alt="Image 2">
+                            <img src="{{ menu.img2.url|cld_menu }}" loading="lazy" alt="Image 2">
                         </div>
                     {% endif %}
                     {% if menu.img3 %}
                         <div class="img3">
-                            <img src="{{ menu.img3.url|cld_webp }}" loading="lazy" alt="Image 3">
+                            <img src="{{ menu.img3.url|cld_menu }}" loading="lazy" alt="Image 3">
                         </div>
                     {% endif %}
                 </div>
@@ -53,10 +53,7 @@
                 <div class="element">
                   <div class="element-text">
                     <a href="{% url 'Item' new_item.id %}" style="height:100%;">
-                      <picture>
-                        <source srcset="/media/catalogue/webp/{{ new_item.img1.name|cut:'catalogue/original/'|cut:'.jpg'|cut:'.jpeg'|cut:'.png'|cut:'.JPG'|cut:'.JPEG'|cut:'.PNG' }}.webp" type="image/webp">
-                        <img src="{{ new_item.img1.url }}" alt="" loading="lazy">
-                      </picture>
+                      <img src="{{ new_item.img1.url|cld_catalog }}" loading="lazy" alt="Image 1">
                     </a>
                   </div>
                 </div>
@@ -99,28 +96,19 @@
                 <div class="image-container {% if not shop_all.img2 and not shop_all.img3 %}single-image{% elif not shop_all.img3 %}two-images{% endif %}">
                     {% if shop_all.img1 %}
                     <div class="img1">
-                        <picture>
-                            <source srcset="/media/menu/webp/{{ shop_all.img1.name|cut:'menu/original/'|cut:'.jpg'|cut:'.jpeg'|cut:'.png'|cut:'.JPG'|cut:'.JPEG'|cut:'.PNG'  }}.webp" type="image/webp">
-                            <img src="{{shop_all.img1.url}}" loading="lazy" alt="Image 1">
-                        </picture>
+                        <img src="{{ shop_all.img1.url|cld_menu }}" loading="lazy" alt="Image 1">
                     </div>
                     {% endif %}
                     {% if shop_all.img2 or shop_all.img3 %}
                     <div class="right-column">
                         {% if shop_all.img2 %}
                             <div class="img2">
-                                <picture>
-                                    <source srcset="/media/menu/webp/{{ shop_all.img2.name|cut:'menu/original/'|cut:'.jpg'|cut:'.jpeg'|cut:'.png'|cut:'.JPG'|cut:'.JPEG'|cut:'.PNG'  }}.webp" type="image/webp">
-                                    <img src="{{shop_all.img2.url}}" loading="lazy" alt="Image 2">
-                                </picture>
+                                <img src="{{ shop_all.img2.url|cld_menu }}" loading="lazy" alt="Image 2">
                             </div>
                         {% endif %}
                         {% if shop_all.img3 %}
                             <div class="img3">
-                                <picture>
-                                    <source srcset="/media/menu/webp/{{ shop_all.img3.name|cut:'menu/original/'|cut:'.jpg'|cut:'.jpeg'|cut:'.png'|cut:'.JPG'|cut:'.JPEG'|cut:'.PNG'  }}.webp" type="image/webp">
-                                    <img src="{{shop_all.img3.url}}" loading="lazy" alt="Image 3">
-                                </picture>
+                                <img src="{{ shop_all.img3.url|cld_menu }}" loading="lazy" alt="Image 3">
                             </div>
                         {% endif %}
                     </div>
@@ -138,28 +126,19 @@
                 <div class="image-container {% if not staff_pick.img2 and not staff_pick.img3 %}single-image{% elif not staff_pick.img3 %}two-images{% endif %}">
                     {% if staff_pick.img1 %}
                         <div class="img1">
-                            <picture>
-                                <source srcset="/media/menu/webp/{{ staff_pick.img1.name|cut:'menu/original/'|cut:'.jpg'|cut:'.jpeg'|cut:'.png'|cut:'.JPG'|cut:'.JPEG'|cut:'.PNG'  }}.webp" type="image/webp">
-                                <img src="{{staff_pick.img1.url}}" loading="lazy" alt="Image 1">
-                            </picture>
+                            <img src="{{ staff_pick.img1.url|cld_menu }}" loading="lazy" alt="Image 1">
                         </div>
                     {% endif %}
                     {% if staff_pick.img2 or staff_pick.img3 %}
                     <div class="right-column">
                         {% if staff_pick.img2 %}
                             <div class="img2">
-                                <picture>
-                                    <source srcset="/media/menu/webp/{{ staff_pick.img2.name|cut:'menu/original/'|cut:'.jpg'|cut:'.jpeg'|cut:'.png'|cut:'.JPG'|cut:'.JPEG'|cut:'.PNG'  }}.webp" type="image/webp">
-                                    <img src="{{staff_pick.img2.url}}" loading="lazy" alt="Image 2">
-                               </picture> 
+                                <img src="{{ staff_pick.img2.url|cld_menu }}" loading="lazy" alt="Image 2">
                             </div>
                         {% endif %}
                         {% if staff_pick.img3 %}
                             <div class="img3">
-                                <picture>
-                                    <source srcset="/media/menu/webp/{{ staff_pick.img3.name|cut:'menu/original/'|cut:'.jpg'|cut:'.jpeg'|cut:'.png'|cut:'.JPG'|cut:'.JPEG'|cut:'.PNG'  }}.webp" type="image/webp">
-                                    <img src="{{staff_pick.img3.url}}" loading="lazy" alt="Image 1">
-                                </picture>
+                                <img src="{{ staff_pick.img3.url|cld_menu }}" loading="lazy" alt="Image 3">
                             </div>
                         {% endif %}
                     </div>
@@ -178,28 +157,19 @@
                 <div class="image-container {% if not tees.img2 and not tees.img3 %}single-image{% elif not tees.img3 %}two-images{% endif %}">
                     {% if tees.img1 %}
                         <div class="img1">
-                            <picture>
-                                <source srcset="/media/menu/webp/{{ tees.img1.name|cut:'menu/original/'|cut:'.jpg'|cut:'.jpeg'|cut:'.png'|cut:'.JPG'|cut:'.JPEG'|cut:'.PNG'  }}.webp" type="image/webp">
-                                <img src="{{tees.img1.url}}" loading="lazy" alt="Image 1">
-                            </picture>
+                            <img src="{{ tees.img1.url|cld_menu }}" loading="lazy" alt="Image 1">
                         </div>
                     {% endif %}
                     {% if tees.img2 or tees.img3 %}
                     <div class="right-column">
                         {% if tees.img2 %}
                             <div class="img2">
-                                <picture>
-                                    <source srcset="/media/menu/webp/{{ tees.img2.name|cut:'menu/original/'|cut:'.jpg'|cut:'.jpeg'|cut:'.png'|cut:'.JPG'|cut:'.JPEG'|cut:'.PNG'  }}.webp" type="image/webp">
-                                    <img src="{{tees.img2.url}}" loading="lazy" alt="Image 2">
-                               </picture> 
+                                <img src="{{ tees.img2.url|cld_menu }}" loading="lazy" alt="Image 2">
                             </div>
                         {% endif %}
                         {% if tees.img3 %}
                             <div class="img3">
-                                <picture>
-                                    <source srcset="/media/menu/webp/{{ tees.img3.name|cut:'menu/original/'|cut:'.jpg'|cut:'.jpeg'|cut:'.png'|cut:'.JPG'|cut:'.JPEG'|cut:'.PNG'  }}.webp" type="image/webp">
-                                    <img src="{{tees.img3.url}}" loading="lazy" alt="Image 3">
-                                </picture>
+                                <img src="{{ tees.img3.url|cld_menu }}" loading="lazy" alt="Image 3">
                             </div>
                         {% endif %}
                     </div>
@@ -218,28 +188,19 @@
                 <div class="image-container {% if not sweatshirts.img2 and not sweatshirts.img3 %}single-image{% elif not sweatshirts.img3 %}two-images{% endif %}">
                     {% if sweatshirts.img1 %}
                         <div class="img1">
-                            <picture>
-                                <source srcset="/media/menu/webp/{{ sweatshirts.img1.name|cut:'menu/original/'|cut:'.jpg'|cut:'.jpeg'|cut:'.png'|cut:'.JPG'|cut:'.JPEG'|cut:'.PNG' |cut:'.JPG'|cut:'.JPEG'|cut:'.PNG' }}.webp" type="image/webp">
-                                <img src="{{sweatshirts.img1.url}}" loading="lazy" alt="Image 1">
-                            </picture>
+                            <img src="{{ sweatshirts.img1.url|cld_menu }}" loading="lazy" alt="Image 1">
                         </div>
                     {% endif %}
                     {% if sweatshirts.img2 or sweatshirts.img3 %}
                     <div class="right-column">
                         {% if sweatshirts.img2 %}
                             <div class="img2">
-                                <picture>
-                                    <source srcset="/media/menu/webp/{{ sweatshirts.img2.name|cut:'menu/original/'|cut:'.jpg'|cut:'.jpeg'|cut:'.png'|cut:'.JPG'|cut:'.JPEG'|cut:'.PNG' |cut:'.JPG'|cut:'.JPEG'|cut:'.PNG' }}.webp" type="image/webp">
-                                    <img src="{{sweatshirts.img2.url}}" loading="lazy" alt="Image 2">
-                                </picture>
+                                <img src="{{ sweatshirts.img2.url|cld_menu }}" loading="lazy" alt="Image 2">
                             </div>
                         {% endif %}
                         {% if sweatshirts.img3 %}
                             <div class="img3">
-                                <picture>
-                                    <source srcset="/media/menu/webp/{{ sweatshirts.img3.name|cut:'menu/original/'|cut:'.jpg'|cut:'.jpeg'|cut:'.png'|cut:'.JPG'|cut:'.JPEG'|cut:'.PNG' |cut:'.JPG'|cut:'.JPEG'|cut:'.PNG' }}.webp" type="image/webp">
-                                    <img src="{{sweatshirts.img3.url}}" loading="lazy" alt="Image 3">
-                                </picture>
+                                <img src="{{ sweatshirts.img3.url|cld_menu }}" loading="lazy" alt="Image 3">
                             </div>
                         {% endif %}
                     </div>
@@ -258,28 +219,19 @@
                 <div class="image-container {% if not outerwear.img2 and not outerwear.img3 %}single-image{% elif not outerwear.img3 %}two-images{% endif %}">
                     {% if outerwear.img1 %}
                         <div class="img1">
-                            <picture>
-                                <source srcset="/media/menu/webp/{{ outerwear.img1.name|cut:'menu/original/'|cut:'.jpg'|cut:'.jpeg'|cut:'.png'|cut:'.JPG'|cut:'.JPEG'|cut:'.PNG' |cut:'.JPG'|cut:'.JPEG'|cut:'.PNG' }}.webp" type="image/webp">
-                                <img src="{{outerwear.img1.url}}" loading="lazy" alt="Image 1">
-                            </picture>
+                            <img src="{{ outerwear.img1.url|cld_menu }}" loading="lazy" alt="Image 1">
                         </div>
                     {% endif %}
                     {% if outerwear.img2 or outerwear.img3 %}
                     <div class="right-column">
                         {% if outerwear.img2 %}
                             <div class="img2">
-                                <picture>
-                                    <source srcset="/media/menu/webp/{{ outerwear.img2.name|cut:'menu/original/'|cut:'.jpg'|cut:'.jpeg'|cut:'.png'|cut:'.JPG'|cut:'.JPEG'|cut:'.PNG' |cut:'.JPG'|cut:'.JPEG'|cut:'.PNG' }}.webp" type="image/webp">
-                                    <img src="{{outerwear.img2.url}}" loading="lazy" alt="Image 2">
-                                </picture>
+                                <img src="{{ outerwear.img2.url|cld_menu }}" loading="lazy" alt="Image 2">
                             </div>
                         {% endif %}
                         {% if outerwear.img3 %}
                             <div class="img3">
-                                <picture>
-                                    <source srcset="/media/menu/webp/{{ outerwear.img3.name|cut:'menu/original/'|cut:'.jpg'|cut:'.jpeg'|cut:'.png'|cut:'.JPG'|cut:'.JPEG'|cut:'.PNG' |cut:'.JPG'|cut:'.JPEG'|cut:'.PNG' }}.webp" type="image/webp">
-                                    <img src="{{outerwear.img3.url}}" loading="lazy" alt="Image 3">
-                                </picture>
+                                <img src="{{ outerwear.img3.url|cld_menu }}" loading="lazy" alt="Image 3">
                             </div>
                         {% endif %}
                     </div>
@@ -298,28 +250,19 @@
             <div class="image-container {% if not archive.img2 and not archive.img3 %}single-image{% elif not archive.img3 %}two-images{% endif %}">
                 {% if archive.img1 %}
                     <div class="img1">
-                        <picture>
-                            <source srcset="/media/menu/webp/{{ archive.img1.name|cut:'menu/original/'|cut:'.jpg'|cut:'.jpeg'|cut:'.png'|cut:'.JPG'|cut:'.JPEG'|cut:'.PNG' |cut:'.JPG'|cut:'.JPEG'|cut:'.PNG' }}.webp" type="image/webp">
-                            <img src="{{archive.img1.url}}" loading="lazy" alt="Image 1">
-                        </picture>
+                        <img src="{{ archive.img1.url|cld_menu }}" loading="lazy" alt="Image 1">
                     </div>
                 {% endif %}
                 {% if archive.img2 or archive.img3 %}
                 <div class="right-column">
                     {% if archive.img2 %}
                         <div class="img2">
-                            <picture>
-                                <source srcset="/media/menu/webp/{{ archive.img2.name|cut:'menu/original/'|cut:'.jpg'|cut:'.jpeg'|cut:'.png'|cut:'.JPG'|cut:'.JPEG'|cut:'.PNG' |cut:'.JPG'|cut:'.JPEG'|cut:'.PNG' }}.webp" type="image/webp">
-                                <img src="{{archive.img2.url}}" loading="lazy" alt="Image 2" style="height: 600px;">
-                            </picture>
+                            <img src="{{ archive.img2.url|cld_menu }}" loading="lazy" alt="Image 2">
                         </div>
                     {% endif %}
                     {% if archive.img3 %}
                         <div class="img3">
-                            <picture>
-                                <source srcset="/media/menu/webp/{{ archive.img3.name|cut:'menu/original/'|cut:'.jpg'|cut:'.jpeg'|cut:'.png'|cut:'.JPG'|cut:'.JPEG'|cut:'.PNG' |cut:'.JPG'|cut:'.JPEG'|cut:'.PNG' }}.webp" type="image/webp">
-                                <img src="{{archive.img3.url}}" loading="lazy" alt="Image 3" style="height: 600px;">
-                            </picture>
+                            <img src="{{ archive.img3.url|cld_menu }}" loading="lazy" alt="Image 3">
                         </div>
                     {% endif %}
                 </div>

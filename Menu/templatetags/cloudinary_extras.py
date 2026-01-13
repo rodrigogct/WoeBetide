@@ -1,19 +1,15 @@
 from django import template
-
 register = template.Library()
 
+def _cld(url, transform):
+    if not url or "/upload/" not in url:
+        return url
+    return url.replace("/upload/", f"/upload/{transform}/", 1)
+
 @register.filter
-def cld_webp(url: str):
-    """
-    Force Cloudinary delivery as WebP with automatic quality.
-    Deterministic, small files, no header negotiation issues.
-    """
-    if not url:
-        return url
+def cld_menu(url):
+    return _cld(url, "f_webp,q_auto,a_auto,w_1400,c_limit")
 
-    marker = "/upload/"
-    if marker not in url:
-        return url
-
-    return url.replace(marker, f"{marker}f_webp,q_auto/", 1)
-
+@register.filter
+def cld_catalog(url):
+    return _cld(url, "f_webp,q_auto,a_auto,w_640,c_limit")

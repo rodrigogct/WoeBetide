@@ -12,12 +12,7 @@
             <div class="main-images">
               {% for img in images %}
                 <picture class="img-{{ forloop.counter }}">
-                  <source srcset="/media/catalogue/webp/{{ img.name|cut:'catalogue/original'|cut:'.jpg'|cut:'.jpeg'|cut:'.png'|cut:'.JPG'|cut:'.JPEG'|cut:'.PNG' }}.webp" type="image/webp">
-                  <img 
-                    src="{{ img.url }}" 
-                    data-webp="/media/catalogue/webp/{{ img.name|cut:'catalogue/original'|cut:'.jpg'|cut:'.jpeg'|cut:'.png'|cut:'.JPG'|cut:'.JPEG'|cut:'.PNG' }}.webp" 
-                    loading="lazy" 
-                    alt="{{ item.name }}">
+                  <img src="{{ item.url|cld_item }}" loading="lazy" alt="Image 1">
                 </picture>              
               {% endfor %} 
             </div>
@@ -197,10 +192,7 @@
                 <div class="carousel-inner">
                   {% for img in images %}
                   <div class="carousel-item {% if forloop.first %}active{% endif %}">
-                    <picture>
-                      <source srcset="/media/catalogue/webp/{{ img.name|cut:'catalogue/original/'|cut:'.jpg'|cut:'.jpeg'|cut:'.png'|cut:'.JPG'|cut:'.JPEG'|cut:'.PNG' }}.webp" type="image/webp">
-                      <img src="{{ img.url }}" class="d-block w-100" alt="{{ item.name }} image {{ forloop.counter }}">
-                    </picture>
+                    <img src="{{ item.url|cld_item }}" loading="lazy" alt="Image 1">
                   </div>
                   {% endfor %}
                 </div>

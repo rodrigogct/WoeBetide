@@ -34,10 +34,7 @@
                     <div class="element">
                     <div class="element-text">
                         <a href="{% url is_archive|yesno:'ArchiveItem,Item' item.id %}" style="height:100%;">
-                        <picture>
-                            <source srcset="/media/catalogue/webp/{{ item.img1.name|cut:'catalogue/original'|cut:'.jpg'|cut:'.jpeg'|cut:'.png' }}.webp" type="image/webp">
-                            <img src="{{ item.img1.url }}" loading="lazy" alt="">
-                        </picture>
+                        <img src="{{ item.img1.url|cld_catalog }}" loading="lazy" alt="Image 1">
                         </a>
                     </div>
                     </div>
@@ -54,7 +51,7 @@
                         </a>
                         <a href="{% url is_archive|yesno:'ArchiveItem,Item' item.id %}" class="lead">
                         <strong>
-                            {% if is_archive %}
+                        {% if is_archive %}
                             {% if item.sold_price %}
                                 SOLD · ${{ item.sold_price }} MXN
                             {% else %}
