@@ -1,10 +1,6 @@
 from django.db import models
-import os
-from io import BytesIO
-from PIL import Image, ExifTags
 from django.core.files.base import ContentFile
 from django.db import models
-from django.conf import settings
 
 # Create your models here.
 
@@ -115,7 +111,7 @@ class HomepageSection(models.Model):
 
         for field_name in ['img1', 'img2', 'img3']:
             image_field = getattr(self, field_name)
-            if image_field and hasattr(image_field, 'path') and os.path.isfile(image_field.path):
+            if image_field and getattr(image_field, "name", ""):
                 try:
                     image_field.open()
                     img = Image.open(image_field)
