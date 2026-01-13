@@ -190,7 +190,10 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-if not DEBUG and os.getenv("CLOUDINARY_URL"):
+# if not DEBUG and os.getenv("CLOUDINARY_URL"):
+#     DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
+
+if os.getenv("CLOUDINARY_URL"):
     DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
 
 
