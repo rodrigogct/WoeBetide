@@ -48,13 +48,13 @@ class Item(models.Model):
     sleeve = models.CharField(max_length=50, default='NA', help_text="Sleeve length in inches")
 
     # 5. Images
-    img1 = models.ImageField(upload_to='catalogue/original', null=True, blank=True, help_text="Catalogue image")
-    img2 = models.ImageField(upload_to='catalogue/original', null=True, blank=True, editable=False, help_text="Auto-generated (front-part)")
-    img3 = models.ImageField(upload_to='catalogue/original', null=True, blank=True, help_text="Back")
-    img4 = models.ImageField(upload_to='catalogue/original', null=True, blank=True, help_text="Zoom-in 1")
-    img5 = models.ImageField(upload_to='catalogue/original', null=True, blank=True, help_text="Zoom-in 2")
-    img6 = models.ImageField(upload_to='catalogue/original', null=True, blank=True, help_text="Zoom-in 3")
-    img7 = models.ImageField(upload_to='catalogue/original', null=True, blank=True, help_text="Zoom-in 4")
+    img1 = models.ImageField(upload_to='catalogue/original', null=True, blank=True, max_length=500, help_text="Catalogue image")
+    img2 = models.ImageField(upload_to='catalogue/original', null=True, blank=True, editable=False, max_length=500, help_text="Auto-generated (front-part)")
+    img3 = models.ImageField(upload_to='catalogue/original', null=True, blank=True, max_length=500, help_text="Back")
+    img4 = models.ImageField(upload_to='catalogue/original', null=True, blank=True, max_length=500, help_text="Zoom-in 1")
+    img5 = models.ImageField(upload_to='catalogue/original', null=True, blank=True, max_length=500, help_text="Zoom-in 2")
+    img6 = models.ImageField(upload_to='catalogue/original', null=True, blank=True, max_length=500, help_text="Zoom-in 3")
+    img7 = models.ImageField(upload_to='catalogue/original', null=True, blank=True, max_length=500, help_text="Zoom-in 4")
 
     # 6. ID variant for each item
     shopify_variant_id = models.CharField(max_length=50, blank=True, null=True, help_text="Shopify Variant ID used for direct checkout")
