@@ -27,7 +27,10 @@
                 <div class="right-column">
                     {% if menu.img2 %}
                         <div class="img2">
-                            <img src="{{menu.img2.url}}" loading="lazy" alt="Image 2">
+                            <picture>
+                                <source srcset="/media/menu/webp/{{ menu.img2.name|cut:'menu/original/'|cut:'.jpg'|cut:'.jpeg'|cut:'.png'|cut:'.JPG'|cut:'.JPEG'|cut:'.PNG' }}.webp" type="image/webp">
+                                <img src="{{menu.img2.url}}" loading="lazy" alt="Image 2" style="border-right: none;">
+                            </picture>
                         </div>
                     {% endif %}
                     {% if menu.img3 %}
