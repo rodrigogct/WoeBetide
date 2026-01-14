@@ -193,7 +193,7 @@
                 <div class="carousel-inner">
                   {% for img in images %}
                   <div class="carousel-item {% if forloop.first %}active{% endif %}">
-                    <img src="{{ item.url|cld_item }}" loading="lazy" alt="Image 1">
+                    <img src="{{ img.url|cld_item }}" loading="lazy" alt="Image 1">
                   </div>
                   {% endfor %}
                 </div>
@@ -452,11 +452,8 @@
                                         <!-- Item related-item image-->
                                         {% if related_item %}
                                         <a href="{% url 'Item' related_item.id %}" style="height:100%;">
-                                          <picture>
-                                              <source srcset="/media/catalogue/webp/{{ related_item.img1.name|cut:'catalogue/original'|cut:'.jpg'|cut:'.jpeg'|cut:'.png' }}.webp" type="image/webp">
-                                              <img src="{{related_item.img1.url}}" loading="lazy" alt="">
-                                          </picture>
-                                          </a>
+                                          <img src="{{ related_item.img1.url|cld_catalog }}" loading="lazy" alt="Image 1">
+                                        </a>
                                         {% endif %}                                     
                                     </div>
                                 </div>
