@@ -151,7 +151,7 @@
         {% if tees %}
         <div class="tees">
             <!-- <h1>VINTAGE</h1> -->
-            <a href="{% url 'Catalogue' %}? category=Tees">
+            <a href="{% url 'Catalogue' %}?category=Tees">
                 {% for tees in tees %}
                 <div class="cat-hero">Tees</div>
                 <div class="image-container {% if not tees.img2 and not tees.img3 %}single-image{% elif not tees.img3 %}two-images{% endif %}">
