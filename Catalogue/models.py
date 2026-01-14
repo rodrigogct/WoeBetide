@@ -93,6 +93,7 @@ class Item(models.Model):
         except ValueError:
             return 'NA'  # Handle non-numeric input  
     
+    # This save includes code to manually adjust image orientation, color and size. It's discarded due to cloudinary's ability to do so.
     # def save(self, *args, **kwargs):
     #     from slugify import slugify
     #     from PIL import Image, ExifTags, ImageCms
