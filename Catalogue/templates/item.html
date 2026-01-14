@@ -12,7 +12,9 @@
           {% if item %}
             <div class="main-images">
               {% for img in images %}
-                <img src="{{ img.url|cld_item }}" loading="lazy" alt="Image {{ forloop.counter }}">          
+                <picture class="img-{{ forloop.counter }}">
+                  <img src="{{ img.url|cld_item }}" loading="lazy" alt="Image {{ forloop.counter }}">
+                </picture>          
               {% endfor %} 
             </div>
           {% endif %}
