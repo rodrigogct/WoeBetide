@@ -12,4 +12,4 @@ def cld_catalog(url):
 
 @register.filter
 def cld_item(url):
-    return _cld(url, "f_webp,q_auto,a_auto,w_940,c_limit")
+    return _cld(url, "f_webp,q_auto,a_auto,w_740,c_limit")

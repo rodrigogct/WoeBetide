@@ -52,10 +52,7 @@ class AdminItem(admin.ModelAdmin):
             # reset derived images so your pipeline regenerates them
             if obj.img2:
                 obj.img2.delete(save=False)
-            if obj.img3:
-                obj.img3.delete(save=False)
             obj.img2 = None
-            obj.img3 = None
         super().save_model(request, obj, form, change)
 
     def get_urls(self):
