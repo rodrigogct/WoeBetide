@@ -457,7 +457,7 @@
                                     <div class="element-text">
                                         <!-- Item related-item image-->
                                         {% if related_item %}
-                                        <a href="{% url 'Item' related_item.id %}">
+                                        <a href="{% url 'Item' related_item.id %}" style="height:100%;">
                                           <img src="{{ related_item.img1.url|cld_catalog }}" loading="lazy" alt="Image 1">
                                         </a>
                                         {% endif %}                                     
