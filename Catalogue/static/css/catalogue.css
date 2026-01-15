@@ -175,14 +175,12 @@ body {
     position: relative;
     transition: all 1s ease-out;
     overflow: hidden;
-    height: 100%;
 }
 
 .element .element-text {
     display: flex; 
     justify-content: center; 
     align-items: center;
-    height: 100%;
     overflow: hidden;
 }
 
@@ -198,7 +196,6 @@ body {
 /* The image fills it */
 .element .element-text img{
     width: 100%;
-    height: 100%;
     object-fit: cover;
     display: block;
   }
@@ -227,13 +224,13 @@ body {
     font-size: 10px;
 }
 
-#catalogue .element {
+/* #catalogue .element {
     height: auto;              /* stop stretching */
-  }
+ */
   
   #catalogue .element .element-text {
     display: block;            /* disable flex-centering */
-    height: auto;
+    height: auto !important;
   }
   
   #catalogue .element .element-text > a {
@@ -243,8 +240,7 @@ body {
   #catalogue .element .element-text img {
     display: block;
     width: 100%;
-    height: auto;              /* natural image height */
-    vertical-align: top;       /* kills mobile Safari gaps */
+    height: auto !important;              /* natural image height */
   }
 
 .if-statement {
