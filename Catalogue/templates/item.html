@@ -4,7 +4,8 @@
 {% load catalog_cloudinary %}
 
 {% block content %}
-    <link rel="stylesheet" type="text/css" href="{% static 'css/item.css' %}">
+    <link rel="stylesheet" href="{% static 'css/item.css' %}">
+    <link rel="stylesheet" href="{% static 'css/catalogue.css' %}">
 
     <div class="item">
       <!-- images -->
@@ -193,7 +194,7 @@
                 <div class="carousel-inner">
                   {% for img in images %}
                   <div class="carousel-item {% if forloop.first %}active{% endif %}">
-                    <img src="{{ img.url|cld_item }}" loading="lazy" alt="Image {{ forloop.counter }}" 
+                    <img src="{{ img.url|cld_item }}" alt="Image {{ forloop.counter }}" 
                       {% if forloop.first %}
                       loading="eager" fetchpriority="high"
                       {% else %}
