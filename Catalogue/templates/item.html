@@ -193,7 +193,13 @@
                 <div class="carousel-inner">
                   {% for img in images %}
                   <div class="carousel-item {% if forloop.first %}active{% endif %}">
-                    <img src="{{ img.url|cld_item }}" loading="lazy" alt="Image 1">
+                    <img src="{{ img.url|cld_item }}" loading="lazy" alt="Image {{ forloop.counter }}" 
+                      {% if forloop.first %}
+                      loading="eager" fetchpriority="high"
+                      {% else %}
+                        loading="eager"
+                      {% endif %}
+                    >
                   </div>
                   {% endfor %}
                 </div>
@@ -388,7 +394,6 @@
                 <p><strong>Contact us via Instagram at @woe.betide for more information.</strong></p>
                 </div>
             </div>
-
             <div class="buy-buttons">
               {% if item.is_archive or item.is_sold %}
               <p class="mt-2" style="text-align: center;">SOLD OUT</p>
