@@ -227,6 +227,27 @@ body {
     font-size: 10px;
 }
 
+#catalogue .element {
+    height: auto;              /* stop forcing a tall box */
+  }
+  
+#catalogue .element .element-text {
+    height: auto;              /* let it size to the image */
+    display: block;            /* remove flex centering */
+  }
+  
+#catalogue .element .element-text > a {
+    display: block;
+  }
+  
+#catalogue .element .element-text img {
+    display: block;
+    width: 100%;
+    height: auto;              /* prevent stretch gaps */
+    object-fit: cover;         /* okay here, but doesn't do much if height auto */
+    vertical-align: top;       /* kills Safari baseline gaps */
+  }
+
 .if-statement {
     margin-top: 300px;
     margin-bottom: 300px;
