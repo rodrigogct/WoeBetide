@@ -228,24 +228,23 @@ body {
 }
 
 #catalogue .element {
-    flex: 0 0 auto;
+    height: auto;              /* stop stretching */
   }
   
-#catalogue .element .element-text {
-    height: auto;              /* let it size to the image */
-    display: block;            /* remove flex centering */
+  #catalogue .element .element-text {
+    display: block;            /* disable flex-centering */
+    height: auto;
   }
   
-#catalogue .element .element-text > a {
+  #catalogue .element .element-text > a {
     display: block;
   }
   
-#catalogue .element .element-text img {
+  #catalogue .element .element-text img {
     display: block;
     width: 100%;
-    height: auto;              /* prevent stretch gaps */
-    object-fit: cover;         /* okay here, but doesn't do much if height auto */
-    vertical-align: top;       /* kills Safari baseline gaps */
+    height: auto;              /* natural image height */
+    vertical-align: top;       /* kills mobile Safari gaps */
   }
 
 .if-statement {
