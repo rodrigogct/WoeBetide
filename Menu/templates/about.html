@@ -49,10 +49,7 @@
                                 <div class="element">
                                     <div class="element-text">
                                         <a href="{% url 'Item' new_item.id %}" style="height: 100%;">
-                                            <picture>
-                                                <source srcset="/media/catalogue/webp/{{ new_item.img1.name|cut:'catalogue/original/'|cut:'.jpg'|cut:'.jpeg'|cut:'.png'|cut:'.JPG'|cut:'.JPEG'|cut:'.PNG'  }}.webp" type="image/webp">
-                                                <img src="{{new_item.img1.url}}" alt="" loading="lazy">
-                                            </picture>
+                                            <img src="{{ new_item.img1.url|cld_catalog }}" loading="lazy" alt="Image">
                                         </a>
                                     </div>
                                 </div>
