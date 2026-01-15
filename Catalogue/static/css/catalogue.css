@@ -227,33 +227,26 @@ body {
     font-size: 10px;
 }
 
-/* RELATED ITEMS: make tiles consistent */
-#catalogue .col{
-    display: flex;
-    flex-direction: column;
+#catalogue .element {
+    flex: 0 0 auto;
   }
   
-  /* image box has a fixed ratio */
-  #catalogue .element .element-text{
+#catalogue .element .element-text {
+    height: auto;              /* let it size to the image */
+    display: block;            /* remove flex centering */
+  }
+  
+#catalogue .element .element-text > a {
     display: block;
-    aspect-ratio: 1 / 1;      /* try 4/5 if you want taller */
-    overflow: hidden;
   }
   
-  /* image fills that box */
-  #catalogue .element .element-text img{
+#catalogue .element .element-text img {
+    display: block;
     width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-    vertical-align: top;
+    height: auto;              /* prevent stretch gaps */
+    object-fit: cover;         /* okay here, but doesn't do much if height auto */
+    vertical-align: top;       /* kills Safari baseline gaps */
   }
-  
-  /* info strip stays consistent */
-  #catalogue .element-info{
-    min-height: 64px;         /* tweak if your titles wrap */
-  }
-  
 
 .if-statement {
     margin-top: 300px;
