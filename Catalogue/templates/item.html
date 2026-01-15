@@ -450,19 +450,19 @@
         <div class="elements">
             {% if related_items %}
                 <div class="block container-xxxl">
-                        {% for related_item in related_items %}
-                            <div class="col" style="background-color: white; display: flex; flex-direction: column; padding: 0;">
-                                <div class="element" >
+                      {% for related_item in related_items %}
+                        <div class="col" style="display: flex; flex-direction: column; padding: 0;">
+                            <div class="element" >
                                     <div class="element-text">
                                         <!-- Item related-item image-->
                                         {% if related_item %}
-                                        <a href="{% url 'Item' related_item.id %}" style="height:100%;">
+                                        <a href="{% url 'Item' related_item.id %}">
                                           <img src="{{ related_item.img1.url|cld_catalog }}" loading="lazy" alt="Image 1">
                                         </a>
                                         {% endif %}                                     
                                     </div>
-                                </div>
-                                <div class="element-info">
+                            </div>
+                            <div class="element-info">
                                     <div class="column" style="border-top: 1px solid; padding: 0;">
                                         <!-- Item related-item image-->
                                         {% if related_item %}
@@ -479,9 +479,9 @@
                                         <a href="{% url 'Item' related_item.id %}" class="lead"><strong>${{related_item.price}} MXN</strong></a>
                                         {% endif %}                                      
                                     </div>
-                                </div>
                             </div>
-                        {% endfor %}
+                        </div>
+                      {% endfor %}
                 </div>
             {% endif %}
         <!-- related items for staff-picks -->

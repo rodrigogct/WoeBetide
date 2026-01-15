@@ -336,7 +336,6 @@ footer a {
 }
 
   
-
 @media (max-width: 1200px) {
     .block{
         grid-template-columns: repeat(4, 1fr);
