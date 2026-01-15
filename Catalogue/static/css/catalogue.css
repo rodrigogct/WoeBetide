@@ -183,7 +183,6 @@ body {
     justify-content: center; 
     align-items: center;
     height: 100%;
-    aspect-ratio: 4 / 5;
     overflow: hidden;
 }
 
@@ -197,12 +196,12 @@ body {
 }
 
 /* The image fills it */
-/* .element .element-text img{
+.element .element-text img{
     width: 100%;
     height: 100%;
     object-fit: cover;
     display: block;
-  } */
+  }
 
 .element:hover img{
     pointer-events: none;
