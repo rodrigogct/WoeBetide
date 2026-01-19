@@ -26,10 +26,7 @@
                 <div class="d-flex align-items-center gap-3">
                   {% if line.image_url %}
                   <a href="{{ line.url }}">
-                    <picture>
-                      <source srcset="/media/catalogue/webp/{{ line.image_url|cut:'/media/catalogue/original/'|cut:'.jpg'|cut:'.jpeg'|cut:'.png' }}.webp" type="image/webp">
-                      <img src="{{ line.image_url }}" alt="" style="width:64px;height:100%;object-fit:cover;border-radius:8px;" loading="lazy">
-                    </picture>
+                    <img src="{{ line.image_url|cld_item }}" loading="lazy" alt="" style="width:64px;height:100%;object-fit:cover;border-radius:8px;">
                   </a>
                   {% endif %}
                   <div>
