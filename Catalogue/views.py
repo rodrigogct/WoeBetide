@@ -77,55 +77,131 @@ def catalogue(request):
         "sort": sort,
     })
 
+# def item(request, item_id):
+#     view_name = request.resolver_match.view_name
+
+#     # 1. Get the item or 404
+#     item = get_object_or_404(Item, pk=item_id)
+    
+#     # 2. Get category from query param or fallback to item's own category
+#     category = request.GET.get('category', item.category)
+
+#     # 3. Build related items list
+#     related_items = Item.objects.filter(is_sold=False).exclude(pk=item_id)
+
+#     if category != 'All':
+#         related_items = related_items.filter(category=category, id__gt=item_id)
+
+#     related_items = related_items.order_by('-id')[:4]
+
+#     # If fewer than 4 related items, backfill from top
+#     if len(related_items) < 4:
+#         remaining = 4 - len(related_items)
+#         additional_items = (
+#             Item.objects.filter(is_sold=False)
+#             .exclude(pk=item_id)
+#             .exclude(pk__in=[item.pk for item in related_items])
+#             .filter(category=category if category != 'All' else None)
+#             .order_by('id')[:remaining]
+#         )
+#         related_items = list(related_items) + list(additional_items)
+
+#     # 4. Adjust related items to recommend only staff_picks
+#     related_staff_items =  Item.objects.filter(is_sold=False, staff_pick=True).exclude(pk=item_id).order_by('-id')[:4]
+
+#     # 5. Adjust related items to recommend only archive_items
+#     related_archive_items =  Item.objects.filter(is_sold=True, is_archive=True).exclude(pk=item_id).order_by('-id')[:4]
+
+#     # Loop to create a list of different images for a specific item 
+#     images = []
+#     for i in range(2, 8):  # img2 to img7
+#         img = getattr(item, f"img{i}", None)
+#         if img:
+#             images.append(img)
+
+
+#     return render(request, 'item.html', {
+#         "item": item,
+#         "images": images,
+#         "related_items": related_items if view_name != 'StaffItem' else None,
+#         "related_staff_items": related_staff_items if view_name == 'StaffItem' else None,
+#         "related_archive_items": related_archive_items if view_name == 'ArchiveItem' else None,
+#     })
+
 def item(request, item_id):
     view_name = request.resolver_match.view_name
-
-    # 1. Get the item or 404
     item = get_object_or_404(Item, pk=item_id)
-    
-    # 2. Get category from query param or fallback to item's own category
-    category = request.GET.get('category', item.category)
 
-    # 3. Build related items list
-    related_items = Item.objects.filter(is_sold=False).exclude(pk=item_id)
+    category = request.GET.get("category", item.category)
 
-    if category != 'All':
-        related_items = related_items.filter(category=category, id__gt=item_id)
+    # Base queryset: match your catalogue visibility rules if you want
+    base_qs = Item.objects.filter(is_sold=False, is_archive=False).exclude(pk=item.pk)
 
-    related_items = related_items.order_by('-id')[:4]
+    if category != "All":
+        base_qs = base_qs.filter(category=category)
 
-    # If fewer than 4 related items, backfill from top
+    # 1) "Following" = released BEFORE this item (closest previous first)
+    related_items = list(
+        base_qs
+        .filter(created__lt=item.created)
+        .order_by("-created", "-id")[:4]
+    )
+
+    # 2) Optional wrap-around: if not enough older items, fill with newer ones
     if len(related_items) < 4:
         remaining = 4 - len(related_items)
-        additional_items = (
-            Item.objects.filter(is_sold=False)
-            .exclude(pk=item_id)
-            .exclude(pk__in=[item.pk for item in related_items])
-            .filter(category=category if category != 'All' else None)
-            .order_by('id')[:remaining]
+        fill = list(
+            base_qs
+            .exclude(pk__in=[x.pk for x in related_items])
+            .filter(created__gt=item.created)
+            .order_by("-created", "-id")[:remaining]
         )
-        related_items = list(related_items) + list(additional_items)
+        related_items += fill
 
-    # 4. Adjust related items to recommend only staff_picks
-    related_staff_items =  Item.objects.filter(is_sold=False, staff_pick=True).exclude(pk=item_id).order_by('-id')[:4]
+    # Staff picks (same idea, if you want “previous staff picks”)
+    related_staff_items = None
+    if view_name == "StaffItem":
+        staff_base = Item.objects.filter(is_sold=False, is_archive=False, staff_pick=True).exclude(pk=item.pk)
+        if category != "All":
+            staff_base = staff_base.filter(category=category)
 
-    # 5. Adjust related items to recommend only archive_items
-    related_archive_items =  Item.objects.filter(is_sold=True, is_archive=True).exclude(pk=item_id).order_by('-id')[:4]
+        related_staff_items = list(
+            staff_base.filter(created__lt=item.created).order_by("-created", "-id")[:4]
+        )
+        if len(related_staff_items) < 4:
+            remaining = 4 - len(related_staff_items)
+            related_staff_items += list(
+                staff_base.exclude(pk__in=[x.pk for x in related_staff_items])
+                .filter(created__gt=item.created)
+                .order_by("-created", "-id")[:remaining]
+            )
 
-    # Loop to create a list of different images for a specific item 
+    # Archive items: you probably want to use sold_at (or created) depending on your “date”
+    related_archive_items = None
+    if view_name == "ArchiveItem":
+        archive_base = Item.objects.filter(is_sold=True, is_archive=True).exclude(pk=item.pk)
+
+        # use sold_at if that's the timeline you care about
+        pivot = item.sold_at or item.created
+        related_archive_items = list(
+            archive_base
+            .filter(sold_at__lt=pivot)
+            .order_by("-sold_at", "-id")[:4]
+        )
+
+    # images loop unchanged...
     images = []
-    for i in range(2, 8):  # img2 to img7
+    for i in range(2, 8):
         img = getattr(item, f"img{i}", None)
         if img:
             images.append(img)
 
-
-    return render(request, 'item.html', {
+    return render(request, "item.html", {
         "item": item,
         "images": images,
-        "related_items": related_items if view_name != 'StaffItem' else None,
-        "related_staff_items": related_staff_items if view_name == 'StaffItem' else None,
-        "related_archive_items": related_archive_items if view_name == 'ArchiveItem' else None,
+        "related_items": related_items if view_name != "StaffItem" else None,
+        "related_staff_items": related_staff_items if view_name == "StaffItem" else None,
+        "related_archive_items": related_archive_items if view_name == "ArchiveItem" else None,
     })
 
 MAX_QTY_PER_ITEM = 1  # one-off vintage pieces
