@@ -18,7 +18,7 @@
             <div class="image-container {% if not menu.img2 and not menu.img3 %}single-image{% elif not menu.img3 %}two-images{% endif %}">
                 {% if menu.img1 %}
                 <div class="img1">
-                    <img src="{{ menu.img1.url|cld_menu }}" loading="lazy" alt="Image 1" style="border-right: none;">
+                    <img src="{{ menu.img1.url|cld_menu }}" loading="eager" alt="Image 1" style="border-right: none;">
                 </div>
                 {% endif %}
                 {% if menu.img2 or menu.img3 %}
@@ -53,7 +53,7 @@
                 <div class="element">
                   <div class="element-text">
                     <a href="{% url 'Item' new_item.id %}" style="height:100%;">
-                      <img src="{{ new_item.img1.url|cld_catalog }}" loading="lazy" alt="Image 1">
+                      <img src="{{ new_item.img1.url|cld_catalog }}" loading="eager" alt="Image 1">
                     </a>
                   </div>
                 </div>
