@@ -48,6 +48,9 @@ class Item(models.Model):
     sleeve = models.CharField(max_length=50, default='NA', help_text="Sleeve length in inches")
 
     # 5. Images
+    img1_w = models.PositiveIntegerField(null=True, blank=True, editable=False)
+    img1_h = models.PositiveIntegerField(null=True, blank=True, editable=False)
+
     img1 = models.ImageField(upload_to='catalogue/original', null=True, blank=True, max_length=500, help_text="Catalogue image")
     img2 = models.ImageField(upload_to='catalogue/original', null=True, blank=True, editable=False, max_length=500, help_text="Auto-generated (front-part)")
     img3 = models.ImageField(upload_to='catalogue/original', null=True, blank=True, max_length=500, help_text="Back")

@@ -36,16 +36,21 @@
                     <div class="element">
                     <div class="element-text">
                         <a href="{% url is_archive|yesno:'ArchiveItem,Item' item.id %}" style="height:100%;">
-                        {% with n_eager=8 %}
-                            <img src="{{ item.img1.url|cld_catalog }}" alt="Image 1"
-                            loading="{% if forloop.counter <= n_eager %}eager{% else %}lazy{% endif %}"
-                            {% if forloop.counter <= 2 %}fetchpriority="high"
-                            {% elif forloop.counter <= n_eager %}fetchpriority="auto"
-                            {% else %}fetchpriority="low"{% endif %}
-                            decoding="async"
-                            >
-                        {% endwith %}
-                        </a>
+                            <div class="img-ratio" style="aspect-ratio: {{ item.img1_w|default:4 }} / {{ item.img1_h|default:5 }};">
+                              {% with n_eager=8 %}
+                                <img
+                                  src="{{ item.img1.url|cld_catalog }}"
+                                  alt="Image 1"
+                                  loading="{% if forloop.counter <= n_eager %}eager{% else %}lazy{% endif %}"
+                                  {% if forloop.counter <= 2 %}fetchpriority="high"
+                                  {% elif forloop.counter <= n_eager %}fetchpriority="auto"
+                                  {% else %}fetchpriority="low"{% endif %}
+                                  decoding="async"
+                                  onload="this.classList.add('is-loaded')"
+                                >
+                              {% endwith %}
+                            </div>
+                          </a>
                     </div>
                     </div>
         
