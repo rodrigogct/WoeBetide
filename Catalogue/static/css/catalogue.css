@@ -227,6 +227,28 @@ body {
     font-size: 10px;
 }
 
+.img-ratio{
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    background: #E3E2DE; /* placeholder so it never looks empty */
+  }
+  
+  .img-ratio img{
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    opacity: 0;
+    transition: opacity .25s ease;
+  }
+  
+  .img-ratio img.is-loaded{
+    opacity: 1;
+  }  
+
 .if-statement {
     margin-top: 300px;
     margin-bottom: 300px;
@@ -245,7 +267,6 @@ body {
     grid-column: span 1 !important;  /* one column, period */
   }
   
-
 .staff-pickups {
     overflow: hidden;
     border-bottom: 1px solid black;
