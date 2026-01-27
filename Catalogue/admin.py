@@ -29,7 +29,6 @@ class AdminItem(admin.ModelAdmin):
                 "size", "width", "length", "sleeve",
                 ("img1", "img2"),
                 "img3", "img4", "img5", "img6", "img7",
-                "img1_w","img1_h",
                 "shopify_variant_id", "shopify_handle",
                 "created", "updated",
             )
