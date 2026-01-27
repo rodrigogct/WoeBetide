@@ -52,7 +52,18 @@
                         {% if new_item.size %}
                         <h6>{{new_item.size}}</h6>
                         {% endif %}
-                    </div>
+                      </div>
+                      <div class="item_price">
+                        {% if item.price %}
+                        <h6 style="font-size: 1.5rem;">{{item.price}}</h6>
+                        {% endif %}
+                        {% if staff_item.price %}
+                        <h6 style="font-size: 1.5rem;">{{staff_item.price}}</h6>
+                        {% endif %}
+                        {% if new_item.price %}
+                        <h6 style="font-size: 1.5rem;">{{new_item.price}}</h6>
+                        {% endif %}
+                      </div>
                       <div class="item_description">
                           <!-- catalogue description -->
                           {% if item.description %}
