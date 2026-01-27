@@ -47,21 +47,13 @@
                       </div>
                       <div class="item_price">
                         {% if item.price %}
-                        <h6>${{item.price}} MXN</h6>
+                        <p>Price: <strong>${{item.price}}</strong> MXN</p>
                         {% endif %}
                       </div>
                       <div class="item_description">
                           <!-- catalogue description -->
                           {% if item.description %}
                           <p>{{item.description}}</p>
-                          {% endif %}
-                          <!-- staff-pickups description -->
-                          {% if staff_item.description %}
-                          <p>{{staff_item.description}}</p>
-                          {% endif %}
-                          <!-- new item description -->
-                          {% if new_item.description %}
-                          <p>{{new_item.description}}</p>
                           {% endif %}                          
                       </div>
                   </div>
@@ -71,70 +63,39 @@
 
                       <div class="width" style="border-bottom: none; border-right: none;">
                         <p>Width</p>
-                        <img
-                          class="measure-info"
-                          data-target="width"
-                          src="{% static 'images/misc/information-logotype-in-a-circle.png' %}"
-                          loading="lazy"
-                          alt=""
-                        >
+                        <img class="measure-info" data-target="width" src="{% static 'images/misc/information-logotype-in-a-circle.png' %}" loading="lazy" alt="">
                         <div class="measurements-img" data-img="width">
-                          <img src="{% static 'images/misc/width.png' %}" loading="lazy" alt="">
+                          <img src="{% static 'images/misc/width.png' %}" loading="eager" alt="">
                         </div>
                       </div>
                       <!-- catalogue items width -->
                       {% if item.width_in_cm %}
                         <p class="info" style="border-bottom: none;">{{ item.width_in_cm }} cm / {{ item.width }} in</p>
                       {% endif %}
-                      <!-- staff-pickups items width -->
-                      {% if staff_item.width_in_cm %}
-                        <p class="info" style="border-bottom: none;">{{ staff_item.width_in_cm }} cm / {{ staff_item.width }} in</p>
-                      {% endif %}
 
                       <div class="length" style="border-bottom: none; border-right: none;">
                         <p style="border-right: none; border-bottom: none;">Length</p>
-                        <img
-                          class="measure-info"
-                          data-target="length"
-                          src="{% static 'images/misc/information-logotype-in-a-circle.png' %}"
-                          loading="lazy"
-                          alt=""
-                        >
+                        <img class="measure-info" data-target="length" src="{% static 'images/misc/information-logotype-in-a-circle.png' %}" loading="lazy" alt="">
                         <div class="measurements-img" data-img="length">
-                          <img src="{% static 'images/misc/length.png' %}" loading="lazy" alt="">
+                          <img src="{% static 'images/misc/length.png' %}" loading="eager" alt="">
                         </div>
                       </div>
                       <!-- catalogue items lenght -->
                       {% if item.length_in_cm %}
                         <p class="info" style="border-bottom: none;">{{ item.length_in_cm }} cm / {{ item.length }} in</p>
                       {% endif %}
-                      <!-- staff-pickups items length -->
-                      {% if staff_item.length_in_cm %}
-                        <p class="info" style="border-bottom: none;">{{ staff_item.length_in_cm }} cm / {{ staff_item.length }} in</p>
-                      {% endif %}
 
                       <div class="sleeve" style="border-right: none;">
                         <p style="border-right: none;">Sleeve</p>
-                        <img
-                          class="measure-info"
-                          data-target="sleeve"
-                          src="{% static 'images/misc/information-logotype-in-a-circle.png' %}"
-                          loading="lazy"
-                          alt=""
-                        >
+                        <img class="measure-info" data-target="sleeve" src="{% static 'images/misc/information-logotype-in-a-circle.png' %}" loading="lazy" alt="">
                         <div class="measurements-img" data-img="sleeve">
-                          <img src="{% static 'images/misc/sleeve.png' %}" loading="lazy" alt="">
+                          <img src="{% static 'images/misc/sleeve.png' %}" loading="eager" alt="">
                         </div>
                       </div>
                       <!-- catalogue items sleeve lenght -->
                       {% if item.sleeve_in_cm %}
                         <p class="info">{{ item.sleeve_in_cm }} cm / {{ item.sleeve }} in</p>
                       {% endif %}
-                      <!-- staff-pickups items sleeve lenght -->
-                      {% if staff_item.sleeve_in_cm %}
-                        <p class="info">{{ staff_item.sleeve_in_cm }} cm / {{ staff_item.sleeve }} in</p>
-                      {% endif %}
-
                     </div>
                   </div>
               </div>
