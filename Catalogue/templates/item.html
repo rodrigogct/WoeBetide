@@ -42,7 +42,7 @@
                       </div>
                       <div class="item_size">
                         {% if item.size %}
-                        <p>Size</p><h6>{{item.size}}</h6>
+                        <p>Size:<h6>{{item.size}}</h6></p>
                         {% endif %}
                         <!-- staff-pickups name -->
                         {% if staff_item.size %}
@@ -55,13 +55,13 @@
                       </div>
                       <div class="item_price">
                         {% if item.price %}
-                        <h6 style="font-size: 1.5rem;">{{item.price}}</h6>
+                        <h6>{{item.price}}</h6>
                         {% endif %}
                         {% if staff_item.price %}
-                        <h6 style="font-size: 1.5rem;">{{staff_item.price}}</h6>
+                        <h6>{{staff_item.price}}</h6>
                         {% endif %}
                         {% if new_item.price %}
-                        <h6 style="font-size: 1.5rem;">{{new_item.price}}</h6>
+                        <h6>{{new_item.price}}</h6>
                         {% endif %}
                       </div>
                       <div class="item_description">
