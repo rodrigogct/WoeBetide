@@ -37,13 +37,18 @@
                         <div class="element-text">
                             <a href="{% url is_archive|yesno:'ArchiveItem,Item' item.id %}" style="height:100%;">
                             {% with n_eager=8 %}
-                                <img src="{{ item.img1.url|cld_catalog }}" alt="Image 1"
+                                <img
+                                src="{{ item.img1.url|cld_catalog }}"
+                                alt="{{ item.name }}"
+                                width="{{ item.img1_w }}"
+                                height="{{ item.img1_h }}"
+                                style="width:100%; height:auto; display:block;"
                                 loading="{% if forloop.counter <= n_eager %}eager{% else %}lazy{% endif %}"
                                 {% if forloop.counter <= 2 %}fetchpriority="high"
                                 {% elif forloop.counter <= n_eager %}fetchpriority="auto"
                                 {% else %}fetchpriority="low"{% endif %}
                                 decoding="async"
-                                >
+                                />
                             {% endwith %}
                             </a>
                         </div>
