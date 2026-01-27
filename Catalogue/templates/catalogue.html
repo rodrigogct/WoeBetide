@@ -42,7 +42,7 @@
                                 alt="{{ item.name }}"
                                 width="{{ item.img1_w }}"
                                 height="{{ item.img1_h }}"
-                                style="width:100%; height:auto; display:block;"
+                                style="width:100%; display:block;"
                                 loading="{% if forloop.counter <= n_eager %}eager{% else %}lazy{% endif %}"
                                 {% if forloop.counter <= 2 %}fetchpriority="high"
                                 {% elif forloop.counter <= n_eager %}fetchpriority="auto"
