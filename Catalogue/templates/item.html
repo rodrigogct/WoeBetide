@@ -14,7 +14,7 @@
             <div class="main-images">
               {% for img in images %}
                 <picture class="img-{{ forloop.counter }}">
-                  <img src="{{ img.url|cld_item }}" loading="lazy" alt="Image {{ forloop.counter }}">
+                  <img src="{{ img.url|cld_item }}" loading="eager" alt="Image {{ forloop.counter }}">
                 </picture>          
               {% endfor %} 
             </div>
