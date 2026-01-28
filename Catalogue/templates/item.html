@@ -27,17 +27,9 @@
                   <!-- title and subtitle of the text. -->
                   <div class="section row">
                     <!-- item´s name -->
-                      <div class="item_name">
+                      <div class="item_name" style="text-transform: uppercase;">
                           {% if item.name %}
                           <h6 style="font-size: 1.5rem;">{{item.name}}</h6>
-                          {% endif %}
-                          <!-- staff-pickups name -->
-                          {% if staff_item.name %}
-                          <h6 style="font-size: 1.5rem;">{{staff_item.name}}</h6>
-                          {% endif %}
-                          <!-- new item name -->
-                          {% if new_item.name %}
-                          <h6 style="font-size: 1.5rem;">{{new_item.name}}</h6>
                           {% endif %}
                       </div>
                       <div class="item_size">

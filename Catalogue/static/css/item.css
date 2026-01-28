@@ -236,6 +236,10 @@ body.lock-scroll {
     padding: 0 20px 0 20px;
 }
 
+.information .text .section .item-name {
+    text-transform: uppercase;
+}
+
 h6 {
     margin-top: 10px;
     margin-bottom: 10px;
