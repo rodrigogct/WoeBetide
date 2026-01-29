@@ -56,41 +56,45 @@
                   </div>
                   <!-- measurements information -->
                   <div class="measurements_information">
-                    <div class="measurements row">
-                      <div class="width" style="border-bottom: none; border-right: none;">
-                        <p>Width</p>
-                        <img class="measure-info" data-target="width" src="{% static 'images/misc/information-logotype-in-a-circle.png' %}" loading="lazy" alt="">
-                        <div class="measurements-img" data-img="width">
-                          <img src="{% static 'images/misc/width.png' %}" loading="eager" alt="">
+                    {% if not item.is_sold %}
+                      {% if item.size %}
+                        <div class="measurements row">
+                          <div class="width" style="border-bottom: none; border-right: none;">
+                            <p>Width</p>
+                            <img class="measure-info" data-target="width" src="{% static 'images/misc/information-logotype-in-a-circle.png' %}" loading="lazy" alt="">
+                            <div class="measurements-img" data-img="width">
+                              <img src="{% static 'images/misc/width.png' %}" loading="eager" alt="">
+                            </div>
+                          </div>
+                          <!-- catalogue items width -->
+                          {% if item.width_in_cm %}
+                            <p class="info" style="border-bottom: none;">{{ item.width_in_cm }} cm / {{ item.width }} in</p>
+                          {% endif %}
+                          <div class="length" style="border-bottom: none; border-right: none;">
+                            <p style="border-right: none; border-bottom: none;">Length</p>
+                            <img class="measure-info" data-target="length" src="{% static 'images/misc/information-logotype-in-a-circle.png' %}" loading="lazy" alt="">
+                            <div class="measurements-img" data-img="length">
+                              <img src="{% static 'images/misc/length.png' %}" loading="eager" alt="">
+                            </div>
+                          </div>
+                          <!-- catalogue items lenght -->
+                          {% if item.length_in_cm %}
+                            <p class="info" style="border-bottom: none;">{{ item.length_in_cm }} cm / {{ item.length }} in</p>
+                          {% endif %}
+                          <div class="sleeve" style="border-right: none;">
+                            <p style="border-right: none;">Sleeve</p>
+                            <img class="measure-info" data-target="sleeve" src="{% static 'images/misc/information-logotype-in-a-circle.png' %}" loading="lazy" alt="">
+                            <div class="measurements-img" data-img="sleeve">
+                              <img src="{% static 'images/misc/sleeve.png' %}" loading="eager" alt="">
+                            </div>
+                          </div>
+                          <!-- catalogue items sleeve lenght -->
+                          {% if item.sleeve_in_cm %}
+                            <p class="info">{{ item.sleeve_in_cm }} cm / {{ item.sleeve }} in</p>
+                          {% endif %}
                         </div>
-                      </div>
-                      <!-- catalogue items width -->
-                      {% if item.width_in_cm %}
-                        <p class="info" style="border-bottom: none;">{{ item.width_in_cm }} cm / {{ item.width }} in</p>
                       {% endif %}
-                      <div class="length" style="border-bottom: none; border-right: none;">
-                        <p style="border-right: none; border-bottom: none;">Length</p>
-                        <img class="measure-info" data-target="length" src="{% static 'images/misc/information-logotype-in-a-circle.png' %}" loading="lazy" alt="">
-                        <div class="measurements-img" data-img="length">
-                          <img src="{% static 'images/misc/length.png' %}" loading="eager" alt="">
-                        </div>
-                      </div>
-                      <!-- catalogue items lenght -->
-                      {% if item.length_in_cm %}
-                        <p class="info" style="border-bottom: none;">{{ item.length_in_cm }} cm / {{ item.length }} in</p>
-                      {% endif %}
-                      <div class="sleeve" style="border-right: none;">
-                        <p style="border-right: none;">Sleeve</p>
-                        <img class="measure-info" data-target="sleeve" src="{% static 'images/misc/information-logotype-in-a-circle.png' %}" loading="lazy" alt="">
-                        <div class="measurements-img" data-img="sleeve">
-                          <img src="{% static 'images/misc/sleeve.png' %}" loading="eager" alt="">
-                        </div>
-                      </div>
-                      <!-- catalogue items sleeve lenght -->
-                      {% if item.sleeve_in_cm %}
-                        <p class="info">{{ item.sleeve_in_cm }} cm / {{ item.sleeve }} in</p>
-                      {% endif %}
-                    </div>
+                    {% endif %}
                   </div>
               </div>
               <div style="display: flex; flex-direction: column; justify-content: center;">
