@@ -26,8 +26,7 @@
               <div style="display: flex; flex-direction: column; border-bottom: 1px solid; justify-content: center;">
                   <!-- title and subtitle of the text. -->
                   <div class="section row">
-                    <!-- item´s name -->
-                      <div class="item_name" style="text-transform: uppercase;">
+                      <div class="item_name">
                           {% if item.name %}
                           <h6 style="font-size: 1.5rem;">{{item.name}}</h6>
                           {% endif %}
@@ -52,7 +51,6 @@
                   <!-- measurements information -->
                   <div class="measurements_information">
                     <div class="measurements row">
-
                       <div class="width" style="border-bottom: none; border-right: none;">
                         <p>Width</p>
                         <img class="measure-info" data-target="width" src="{% static 'images/misc/information-logotype-in-a-circle.png' %}" loading="lazy" alt="">
@@ -64,7 +62,6 @@
                       {% if item.width_in_cm %}
                         <p class="info" style="border-bottom: none;">{{ item.width_in_cm }} cm / {{ item.width }} in</p>
                       {% endif %}
-
                       <div class="length" style="border-bottom: none; border-right: none;">
                         <p style="border-right: none; border-bottom: none;">Length</p>
                         <img class="measure-info" data-target="length" src="{% static 'images/misc/information-logotype-in-a-circle.png' %}" loading="lazy" alt="">
@@ -76,7 +73,6 @@
                       {% if item.length_in_cm %}
                         <p class="info" style="border-bottom: none;">{{ item.length_in_cm }} cm / {{ item.length }} in</p>
                       {% endif %}
-
                       <div class="sleeve" style="border-right: none;">
                         <p style="border-right: none;">Sleeve</p>
                         <img class="measure-info" data-target="sleeve" src="{% static 'images/misc/information-logotype-in-a-circle.png' %}" loading="lazy" alt="">
@@ -137,8 +133,8 @@
     <div class="item-carousel">
       <!-- images -->
       <div class="images">
-          {% if item %}
-          <div class="main-images">
+        {% if item %}
+        <div class="main-images">
               <!-- first carousel -->
               <div id="carouselExampleAutoplaying" class="carousel slide" data-bs-ride="carousel">
                 <div class="carousel-inner">
@@ -176,9 +172,9 @@
                         <span class="visually-hidden">Next</span>
                 </button>
               </div>
-          </div>
-          {% endif %}
-          <div class="secondary-images">
+        </div>
+        {% endif %}
+        <div class="secondary-images">
               <!-- second carousel -->
                   <div id="carouselExampleSlidesOnly" class="carousel slide" data-bs-ride="carousel">
                       <div class="carousel-inner">
@@ -234,7 +230,7 @@
                     {% endif %}
                       </div>
                   </div>
-          </div>
+        </div>
       </div>
       <!-- product information -->
       <div class="information">
@@ -242,7 +238,6 @@
             <div style="display: flex; flex-direction: column; border-bottom: 1px solid; justify-content: center;">
                 <!-- title and subtitle of the text. -->
                 <div class="section row">
-                  <!-- item´s name -->
                     <div class="item_name">
                         {% if item.name %}
                         <h6>{{item.name}}</h6>
@@ -255,6 +250,16 @@
                         {% if new_item.name %}
                         <h6>{{new_item.name}}</h6>
                         {% endif %}
+                    </div>
+                    <div class="item_size">
+                      {% if item.size %} 
+                      <p>Size: <strong>{{item.size}}</strong></p>
+                      {% endif %}
+                    </div>
+                    <div class="item_price">
+                      {% if item.price %}
+                      <p>Price: <strong>${{item.price}}</strong> MXN</p>
+                      {% endif %}
                     </div>
                     <div class="item_description">
                         <!-- catalogue description -->
@@ -511,8 +516,7 @@
           ensureSrc(e.relatedTarget?.nextElementSibling?.querySelector('img'));
         });
       });
-    </script>  
-      
+    </script>       
 {% endblock %}
 
 
