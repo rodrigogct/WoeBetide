@@ -32,8 +32,10 @@
                           {% endif %}
                       </div>
                       <div class="item_size">
-                        {% if item.size %} 
-                        <p>Size: <strong>{{item.size}}</strong></p>
+                        {% if not item.is_sold %}
+                          {% if item.size %}
+                            <p>Size: <strong>{{ item.size }}</strong></p>
+                          {% endif %}
                         {% endif %}
                       </div>
                       <div class="item_price">
