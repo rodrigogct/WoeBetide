@@ -39,9 +39,7 @@
                         {% endif %}
                       </div>
                       <div class="item_price">
-                        {% if item.is_sold %}
-                        <p><strong>SOLD</strong></p>
-                        {% else %}
+                        {% if not item.is_sold%}
                           {% if item.price %}
                             <p>Price: <strong>${{ item.price }}</strong> MXN</p>
                           {% endif %}
