@@ -37,8 +37,12 @@
                         {% endif %}
                       </div>
                       <div class="item_price">
-                        {% if item.price %}
-                        <p>Price: <strong>${{item.price}}</strong> MXN</p>
+                        {% if item.is_sold %}
+                        <p><strong>SOLD</strong></p>
+                        {% else %}
+                          {% if item.price %}
+                            <p>Price: <strong>${{ item.price }}</strong> MXN</p>
+                          {% endif %}
                         {% endif %}
                       </div>
                       <div class="item_description">
@@ -239,17 +243,9 @@
                 <!-- title and subtitle of the text. -->
                 <div class="section row">
                     <div class="item_name">
-                        {% if item.name %}
-                        <h6>{{item.name}}</h6>
-                        {% endif %}
-                        <!-- staff-pickups name -->
-                        {% if staff_item.name %}
-                        <h6>{{staff_item.name}}</h6>
-                        {% endif %}
-                        <!-- new item name -->
-                        {% if new_item.name %}
-                        <h6>{{new_item.name}}</h6>
-                        {% endif %}
+                      {% if item.name %}
+                      <h6>{{item.name}}</h6>
+                      {% endif %}
                     </div>
                     <div class="item_size">
                       {% if item.size %} 
