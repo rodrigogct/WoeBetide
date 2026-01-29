@@ -36,7 +36,7 @@
                     <div class="element">
                         <div class="element-text">
                             <a href="{% url is_archive|yesno:'ArchiveItem,Item' item.id %}" style="height:100%;">
-                            {% with n_eager=8 %}
+                            {% with n_eager=6 %}
                                 <img
                                 src="{{ item.img1.url|cld_catalog }}"
                                 alt="{{ item.name }}"
