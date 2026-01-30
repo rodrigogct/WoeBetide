@@ -15,4 +15,4 @@ def cld_item(url):
     return _cld(url, "f_webp,q_auto,a_auto,w_840,c_limit")
 
 def cld_cart_thumb(url):
-    return _cld(url, "f_auto,q_auto,c_fill,g_auto,w_128,h_128")
+    return _cld(url, "f_auto,q_auto,ca_auto,w_128,c_limit")
