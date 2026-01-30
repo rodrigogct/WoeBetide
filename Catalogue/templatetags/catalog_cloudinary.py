@@ -14,5 +14,6 @@ def cld_catalog(url):
 def cld_item(url):
     return _cld(url, "f_webp,q_auto,a_auto,w_840,c_limit")
 
+@register.filter
 def cld_cart_thumb(url):
     return _cld(url, "f_auto,q_auto,ca_auto,w_128,c_limit")
