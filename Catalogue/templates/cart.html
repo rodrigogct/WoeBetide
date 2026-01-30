@@ -26,7 +26,7 @@
                 <div class="d-flex align-items-center gap-3">
                   {% if line.image_url %}
                   <a href="{{ line.url }}">
-                    <img src="{{ line.image_url|cld_item }}" loading="lazy" alt="" style="width:64px;height:100%;object-fit:cover;border-radius:8px;">
+                    <img src="{{ line.image_url|cld_item }}" loading="eager" alt="" style="width:64px;height:100%;object-fit:cover;border-radius:8px;">
                   </a>
                   {% endif %}
                   <div>
