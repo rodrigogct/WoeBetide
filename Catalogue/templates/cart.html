@@ -25,8 +25,9 @@
               <td class="image-section align-middle">
                 <div class="d-flex align-items-center gap-3">
                   {% if line.image_url %}
+                  <img src="{{ line.image_url|cld_cart_thumb }}" loading="eager" alt="" style="width:64px;height:100%;object-fit:cover;border-radius:8px;">
                   <a href="{{ line.url }}">
-                    <img src="{{ line.image_url|cld_cart_thumb }}" loading="eager" alt="" style="width:64px;height:100%;object-fit:cover;border-radius:8px;">
+                    
                   </a>
                   {% endif %}
                   <div>
