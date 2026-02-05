@@ -84,6 +84,14 @@
         <a class="btn btn-light" href="{{ checkout_url }}">CHECK OUT</a>
       </div>
     </form>
+
+    <script id="cart-config" type="application/json">
+      {
+        "cartCountUrl": "{% url 'cart_count_api' %}",
+        "updateCartUrl": "{% url 'update_cart' %}",
+        "removeFromCartTmpl": "{% url 'remove_from_cart' 'VID' %}"
+      }
+      </script>      
   {% else %}
     <p style="text-align: center;">Your cart is empty.</p>
   {% endif %}
