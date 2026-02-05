@@ -20,7 +20,18 @@
     }
     return c;
   }
-  const CSRF = () => ({ "X-CSRFToken": getCookie("csrftoken") });
+  
+  function getCsrfToken() {
+    // 1) Prefer hidden input in the form (works even if CSRF cookie is HttpOnly)
+    const inp = document.querySelector('input[name="csrfmiddlewaretoken"]');
+    if (inp?.value) return inp.value;
+  
+    // 2) Fallback to cookie (default Django setup)
+    return getCookie("csrftoken");
+  }
+  
+  const CSRF = () => ({ "X-CSRFToken": getCsrfToken() });
+  
 
   async function postQty(variantId, value) {
     const fd = new FormData();
@@ -104,7 +115,7 @@
     const input = e.target.closest(".quantity-control .qty-input");
     if (!input) return;
   
-    const row = input.closest("tr.cart-line");
+    const row = removeBtn?.closest("tr.cart-line") || minusBtn?.closest("tr.cart-line");
     const vid = row?.dataset?.variantId || input.getAttribute("data-variant-id");
     if (!vid) return;
   
