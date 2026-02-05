@@ -77,57 +77,6 @@ def catalogue(request):
         "sort": sort,
     })
 
-# def item(request, item_id):
-#     view_name = request.resolver_match.view_name
-
-#     # 1. Get the item or 404
-#     item = get_object_or_404(Item, pk=item_id)
-    
-#     # 2. Get category from query param or fallback to item's own category
-#     category = request.GET.get('category', item.category)
-
-#     # 3. Build related items list
-#     related_items = Item.objects.filter(is_sold=False).exclude(pk=item_id)
-
-#     if category != 'All':
-#         related_items = related_items.filter(category=category, id__gt=item_id)
-
-#     related_items = related_items.order_by('-id')[:4]
-
-#     # If fewer than 4 related items, backfill from top
-#     if len(related_items) < 4:
-#         remaining = 4 - len(related_items)
-#         additional_items = (
-#             Item.objects.filter(is_sold=False)
-#             .exclude(pk=item_id)
-#             .exclude(pk__in=[item.pk for item in related_items])
-#             .filter(category=category if category != 'All' else None)
-#             .order_by('id')[:remaining]
-#         )
-#         related_items = list(related_items) + list(additional_items)
-
-#     # 4. Adjust related items to recommend only staff_picks
-#     related_staff_items =  Item.objects.filter(is_sold=False, staff_pick=True).exclude(pk=item_id).order_by('-id')[:4]
-
-#     # 5. Adjust related items to recommend only archive_items
-#     related_archive_items =  Item.objects.filter(is_sold=True, is_archive=True).exclude(pk=item_id).order_by('-id')[:4]
-
-#     # Loop to create a list of different images for a specific item 
-#     images = []
-#     for i in range(2, 8):  # img2 to img7
-#         img = getattr(item, f"img{i}", None)
-#         if img:
-#             images.append(img)
-
-
-#     return render(request, 'item.html', {
-#         "item": item,
-#         "images": images,
-#         "related_items": related_items if view_name != 'StaffItem' else None,
-#         "related_staff_items": related_staff_items if view_name == 'StaffItem' else None,
-#         "related_archive_items": related_archive_items if view_name == 'ArchiveItem' else None,
-#     })
-
 def item(request, item_id):
     view_name = request.resolver_match.view_name
     item = get_object_or_404(Item, pk=item_id)
@@ -210,27 +159,6 @@ def _wants_json(request):
     # tiny helper for fetch() calls; keeps HTML form fallback working
     return "application/json" in request.headers.get("Accept", "") or request.headers.get("X-Requested-With") == "XMLHttpRequest"
 
-# @require_POST
-# def add_to_cart(request, item_id):
-#     item = get_object_or_404(Item, pk=item_id)
-#     # clamp requested qty to [0, MAX_QTY_PER_ITEM]
-#     req_qty = max(0, min(int(request.POST.get("qty", 1)), MAX_QTY_PER_ITEM))
-
-#     # merge with existing but cap to MAX_QTY_PER_ITEM
-#     cart = cart_utils.get_cart(request.session)
-#     vid = str(item.shopify_variant_id)
-#     current = int(cart.get(vid, {}).get("qty", 0))
-#     new_qty = min(MAX_QTY_PER_ITEM, current + req_qty)
-
-#     if new_qty <= 0:
-#         cart_utils.remove_item(request.session, vid)
-#     else:
-#         cart_utils.set_qty(request.session, vid, new_qty)
-
-#     if _wants_json(request):
-#         return JsonResponse({"ok": True, "variant_id": vid, "qty": new_qty, "count": cart_utils.get_cart_count(request.session)})
-#     return redirect("Cart")
-
 @require_POST
 def add_to_cart(request, item_id):
     item = get_object_or_404(Item, pk=item_id)
@@ -260,15 +188,22 @@ def add_to_cart(request, item_id):
 
 # @require_POST
 # def update_cart(request):
-#     # Accepts fields like qty[<variant_id>] = N
+#     cart, _ = cart_utils.sanitize_cart_session(request)
+
 #     for key, value in request.POST.items():
 #         if key.startswith("qty[") and key.endswith("]"):
 #             vid = key[4:-1]
+
+#             # If item is sold, force remove
+#             if Item.objects.filter(shopify_variant_id=vid, is_sold=True).exists():
+#                 cart_utils.remove_item(request.session, vid)
+#                 continue
+
 #             try:
 #                 qty = int(value or 0)
 #             except ValueError:
 #                 qty = 0
-#             # clamp to [0, MAX_QTY_PER_ITEM]; 0 will remove via utils.set_qty()
+
 #             qty = max(0, min(qty, MAX_QTY_PER_ITEM))
 #             cart_utils.set_qty(request.session, vid, qty)
 
@@ -284,7 +219,6 @@ def update_cart(request):
         if key.startswith("qty[") and key.endswith("]"):
             vid = key[4:-1]
 
-            # If item is sold, force remove
             if Item.objects.filter(shopify_variant_id=vid, is_sold=True).exists():
                 cart_utils.remove_item(request.session, vid)
                 continue
@@ -295,7 +229,11 @@ def update_cart(request):
                 qty = 0
 
             qty = max(0, min(qty, MAX_QTY_PER_ITEM))
-            cart_utils.set_qty(request.session, vid, qty)
+
+            if qty <= 0:
+                cart_utils.remove_item(request.session, vid)
+            else:
+                cart_utils.set_qty(request.session, vid, qty)
 
     if _wants_json(request):
         return JsonResponse({"ok": True, "count": cart_utils.get_cart_count(request.session)})
@@ -347,6 +285,10 @@ def cart_view(request):
 
     pairs = [f"{l['variant_id']}:{l['qty']}" for l in lines]
     checkout_url = f"{settings.SHOP_URL}/cart/{','.join(pairs)}" if pairs else "#"
+
+    # qty = int(data.get("qty", 0)) if isinstance(data, dict) else int(data)
+    # if qty <= 0:
+    #     continue
 
     return render(request, "cart.html", {
         "lines": lines,
