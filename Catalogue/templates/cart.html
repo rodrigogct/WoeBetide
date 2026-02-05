@@ -21,12 +21,12 @@
         </thead>
         <tbody>
             {% for line in lines %}
-            <tr style="border-bottom: 1px solid black">
+            <tr class="cart-line" data-variant-id="{{ line.variant_id }}" style="border-bottom: 1px solid black">
               <td class="image-section align-middle">
                 <div class="d-flex align-items-center gap-3">
                   {% if line.image_url %}
                   <a href="{{ line.url }}">
-                    <img src="{{ line.image_url|cld_cart_thumb }}" alt="{{item.name}}" loading="eager" fetchpriority="high" style="width:64px;height:85.5px;object-fit:cover;border-radius:8px;">
+                    <img src="{{ line.image_url|cld_cart_thumb }}" alt="{{line.title}}" loading="eager" fetchpriority="high" style="width:64px;height:85.5px;object-fit:cover;border-radius:8px;">
                   </a>
                   {% endif %}
                   <div>
@@ -65,8 +65,8 @@
               </td>
             
               <td class="remove-section align-middle">
-                <button type="submit" class="btn btn-link text-danger p-0"
-                        formmethod="post" formaction="{% url 'CartRemove' line.variant_id %}">
+                <button type="button" class="btn btn-link text-danger p-0 cart-remove"
+                      data-variant-id="{{ line.variant_id }}">
                   Remove
                 </button>
               </td>

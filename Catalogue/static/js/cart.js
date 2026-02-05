@@ -22,6 +22,21 @@
   }
   const CSRF = () => ({ "X-CSRFToken": getCookie("csrftoken") });
 
+  async function postQty(variantId, value) {
+    const fd = new FormData();
+    fd.append(`qty[${variantId}]`, value);
+  
+    const r = await fetch(UPDATE_CART_URL, {
+      method: "POST",
+      body: fd,
+      credentials: "same-origin",
+      headers: { ...CSRF(), "Accept": "application/json", "X-Requested-With": "XMLHttpRequest" },
+    });
+  
+    if (!r.ok) throw new Error("update failed");
+    return r.json(); // your backend currently returns {ok, count}
+  }  
+
   async function refreshCartBadge() {
     try {
       const r = await fetch(CART_COUNT_URL, { credentials: "same-origin" });
@@ -84,69 +99,96 @@
     }
   });
 
-  document.addEventListener("DOMContentLoaded", () => {
-    const controls = document.querySelectorAll(".quantity-control");
-
-    controls.forEach(control => {
-      const minus = control.querySelector(".btn-qty.minus");
-      const plus = control.querySelector(".btn-qty.plus");
-      const input = control.querySelector(".qty-input");
-      const form = control.closest("form"); // the outer update form
-
-      minus.addEventListener("click", () => {
-        let val = parseInt(input.value, 10) || 0;
-        if (val > 0) {
-          val--;
-          input.value = val;
-          form.submit(); // always submit — server will remove if 0
-        }
-      });
-
-      plus.addEventListener("click", () => {
-        let val = parseInt(input.value, 10) || 0;
-        input.value = val + 1;  // visually increments
-        form.submit();          // server clamps back to 1
-      });
-    });
-  });
-
   // Allow manual typing in qty input (cart page)
   document.addEventListener("change", async (e) => {
     const input = e.target.closest(".quantity-control .qty-input");
     if (!input) return;
-    const variantId = input.getAttribute("data-variant-id");
-    const value = parseInt(input.value, 10) || 0;
-
-    const fd = new FormData();
-    fd.append(`qty[${variantId}]`, value);
-    await fetch(UPDATE_CART_URL, {
-      method: "POST",
-      body: fd,
-      credentials: "same-origin",
-      headers: CSRF(),
-    });
-    await refreshCartBadge();
-  });
+  
+    const row = input.closest("tr.cart-line");
+    const vid = row?.dataset?.variantId || input.getAttribute("data-variant-id");
+    if (!vid) return;
+  
+    let v = parseInt(input.value, 10);
+    if (Number.isNaN(v) || v < 0) v = 0;
+  
+    // keep twins visually in sync immediately
+    if (row) row.querySelectorAll(".qty-input").forEach(inp => (inp.value = v));
+  
+    // if user types 0, remove row immediately
+    if (v === 0 && row) row.remove();
+  
+    try {
+      await postQty(vid, v);
+      await refreshCartBadge();
+    } catch (err) {
+      console.error(err);
+      window.location.reload();
+    }
+  });  
 
   // --- Remove line (cart page) ---
   document.addEventListener("click", async (e) => {
-    const link = e.target.closest(".cart-remove"); // give your remove button this class
-    if (!link) return;
-    e.preventDefault();
-    const vid = link.getAttribute("data-variant-id");
+    const minusBtn  = e.target.closest(".btn-qty.minus");
+    const removeBtn = e.target.closest(".cart-remove");
+    if (!minusBtn && !removeBtn) return;
+  
+    const row = e.target.closest("tr.cart-line");
+    const vid =
+      row?.dataset?.variantId ||
+      removeBtn?.dataset?.variantId ||
+      removeBtn?.getAttribute("data-variant-id");
+  
     if (!vid) return;
-
-    await fetch(REMOVE_FROM_CART_TMPL.replace("VID", vid), {
-      method: "POST",
-      credentials: "same-origin",
-      headers: CSRF(),
-    });
-    await refreshCartBadge();
-
-    // optionally remove the row from DOM:
-    const row = link.closest(".cart-line");
-    if (row) row.remove();
-  });
+  
+    // ---- REMOVE: instant UI, then sync server ----
+    if (removeBtn) {
+      e.preventDefault();
+      if (row) row.remove(); // optimistic UI
+  
+      try {
+        await fetch(REMOVE_FROM_CART_TMPL.replace("VID", vid), {
+          method: "POST",
+          credentials: "same-origin",
+          headers: { ...CSRF(), "Accept": "application/json", "X-Requested-With": "XMLHttpRequest" },
+        });
+        await refreshCartBadge();
+      } catch (err) {
+        console.error(err);
+        window.location.reload();
+      }
+      return;
+    }
+  
+    // ---- MINUS: update qty via AJAX, remove row if hits 0 ----
+    if (minusBtn) {
+      e.preventDefault();
+      if (!row) return;
+  
+      // pick the enabled input (your viewport code disables the hidden twin)
+      const input =
+        row.querySelector(".qty-input:not([disabled])") ||
+        row.querySelector(".qty-input");
+  
+      let v = parseInt(input.value, 10) || 0;
+      if (v <= 0) return;
+  
+      v -= 1;
+  
+      // optimistic UI: sync both twins visually
+      row.querySelectorAll(".qty-input").forEach(inp => (inp.value = v));
+  
+      // if it becomes 0, remove row immediately
+      if (v === 0) row.remove();
+  
+      try {
+        await postQty(vid, v);
+        await refreshCartBadge();
+      } catch (err) {
+        console.error(err);
+        window.location.reload();
+      }
+    }
+  });  
 
   document.addEventListener("DOMContentLoaded", () => {
     refreshCartBadge();
@@ -167,36 +209,13 @@
   }
 
   // 2) Keep both inputs in the same row visually in sync
-  function syncTwins(controlEl) {
-    const row = controlEl.closest("tr");
-    if (!row) return;
-    const val = controlEl.querySelector(".qty-input")?.value;
-    if (val == null) return;
-    row.querySelectorAll(".qty-input").forEach(inp => { inp.value = val; });
-  }
-
-  // Hook into your existing plus/minus listeners:
-  document.querySelectorAll(".quantity-control").forEach(control => {
-    const minus = control.querySelector(".btn-qty.minus");
-    const plus  = control.querySelector(".btn-qty.plus");
-    const input = control.querySelector(".qty-input");
-    const form  = control.closest("form");
-
-    if (minus) minus.addEventListener("click", () => {
-      let v = parseInt(input.value, 10) || 0;
-      if (v > 0) {
-        input.value = v - 1;
-        syncTwins(control);
-        form.submit(); // your existing submit
-      }
-    });
-    if (plus) plus.addEventListener("click", () => {
-      let v = parseInt(input.value, 10) || 0;
-      input.value = v + 1;
-      syncTwins(control);
-      form.submit(); // your existing submit
-    });
-  });
+  // function syncTwins(controlEl) {
+  //   const row = controlEl.closest("tr");
+  //   if (!row) return;
+  //   const val = controlEl.querySelector(".qty-input")?.value;
+  //   if (val == null) return;
+  //   row.querySelectorAll(".qty-input").forEach(inp => { inp.value = val; });
+  // }
 
   toggleDisabledByViewport();
   window.addEventListener("resize", toggleDisabledByViewport);
