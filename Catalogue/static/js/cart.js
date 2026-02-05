@@ -133,7 +133,7 @@
       await refreshCartBadge();
     } catch (err) {
       console.error(err);
-      window.location.reload();
+      alert("Request failed — check DevTools Network (likely CSRF 403).");    
     }
   });  
 
