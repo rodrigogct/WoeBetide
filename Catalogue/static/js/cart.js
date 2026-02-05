@@ -6,6 +6,17 @@
   const REMOVE_FROM_CART_TMPL = cfg.removeTmpl;
   const ADD_TO_CART_URL_TMPL = cfg.addTmpl;  
 
+  function reconcileCartEmptyState() {
+    const rows = document.querySelectorAll("tr.cart-line");
+    const cartFilled = document.getElementById("cart-filled");
+    const emptyMsg = document.getElementById("cart-empty-msg");
+  
+    if (rows.length === 0) {
+      if (cartFilled) cartFilled.style.display = "none";
+      if (emptyMsg) emptyMsg.style.display = "block";
+    }
+  }  
+
   // --- Helpers ---
   function getCookie(name) {
     let c = null;
@@ -126,8 +137,11 @@
     if (row) row.querySelectorAll(".qty-input").forEach(inp => (inp.value = v));
   
     // optimistic removal
-    if (v === 0 && row) row.remove();
-  
+    if (v === 0 && row) {
+      row.remove();
+      reconcileCartEmptyState();
+    }
+
     try {
       await postQty(vid, v);
       await refreshCartBadge();
@@ -154,8 +168,11 @@
     // ---- REMOVE: instant UI, then sync server ----
     if (removeBtn) {
       e.preventDefault();
-      if (row) row.remove(); // optimistic UI
-  
+      if (row) {
+        row.remove();
+        reconcileCartEmptyState();
+      }
+
       try {
         await fetch(REMOVE_FROM_CART_TMPL.replace("VID", vid), {
           method: "POST",
@@ -189,8 +206,11 @@
       row.querySelectorAll(".qty-input").forEach(inp => (inp.value = v));
   
       // if it becomes 0, remove row immediately
-      if (v === 0) row.remove();
-  
+      if (v === 0) {
+        row.remove();
+        reconcileCartEmptyState();
+      }
+      
       try {
         await postQty(vid, v);
         await refreshCartBadge();
@@ -233,9 +253,3 @@
   });
 
 })();
-
-
-
-
-
-

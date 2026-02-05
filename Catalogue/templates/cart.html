@@ -92,11 +92,11 @@
         removeTmpl: "{% url 'CartRemove' 'VID' %}",
         addTmpl: "{% url 'CartAdd' 0 %}"
       };
-    </script>
-        
+    </script>    
   {% else %}
-    <p style="text-align: center;">Your cart is empty.</p>
+    <p id="cart-empty-msg" style="text-align: center;">Your cart is empty.</p>
   {% endif %}
+      
 </div>
 
 {% endblock %}
