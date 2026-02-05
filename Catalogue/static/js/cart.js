@@ -30,9 +30,8 @@
     // 2) Fallback to cookie (default Django setup)
     return getCookie("csrftoken");
   }
-  
+
   const CSRF = () => ({ "X-CSRFToken": getCsrfToken() });
-  
 
   async function postQty(variantId, value) {
     const fd = new FormData();
@@ -138,7 +137,6 @@
     }
   });
   
-
   // --- Remove line (cart page) ---
   document.addEventListener("click", async (e) => {
     const minusBtn  = e.target.closest(".btn-qty.minus");
