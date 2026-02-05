@@ -115,17 +115,17 @@
     const input = e.target.closest(".quantity-control .qty-input");
     if (!input) return;
   
-    const row = removeBtn?.closest("tr.cart-line") || minusBtn?.closest("tr.cart-line");
+    const row = input.closest("tr.cart-line");
     const vid = row?.dataset?.variantId || input.getAttribute("data-variant-id");
     if (!vid) return;
   
     let v = parseInt(input.value, 10);
     if (Number.isNaN(v) || v < 0) v = 0;
   
-    // keep twins visually in sync immediately
+    // sync both twins visually
     if (row) row.querySelectorAll(".qty-input").forEach(inp => (inp.value = v));
   
-    // if user types 0, remove row immediately
+    // optimistic removal
     if (v === 0 && row) row.remove();
   
     try {
@@ -133,9 +133,10 @@
       await refreshCartBadge();
     } catch (err) {
       console.error(err);
-      alert("Request failed — check DevTools Network (likely CSRF 403).");    
+      alert("Update failed — check Network tab for status.");
     }
-  });  
+  });
+  
 
   // --- Remove line (cart page) ---
   document.addEventListener("click", async (e) => {
