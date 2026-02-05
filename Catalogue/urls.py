@@ -17,6 +17,7 @@ urlpatterns = [
     
     # Cart endpoints
     path('cart/', views.cart_view, name="Cart"),
+    path('cart/count/', views.cart_count_api, name="CartCount"),
     path('cart/add/<int:item_id>/', views.add_to_cart, name="CartAdd"),
     path('cart/update/', views.update_cart, name="CartUpdate"),
     path('cart/remove/<str:variant_id>/', views.remove_from_cart, name="CartRemove"),

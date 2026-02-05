@@ -1,9 +1,10 @@
 (function () {
   // --- Endpoints (must exist in urls.py) ---
-  const cfg = JSON.parse(document.getElementById("cart-config").textContent);
-  const CART_COUNT_URL = cfg.cartCountUrl;
-  const UPDATE_CART_URL = cfg.updateCartUrl;
-  const REMOVE_FROM_CART_TMPL = cfg.removeFromCartTmpl;  
+  const cfg = window.WB_CART_ENDPOINTS || {};
+  const CART_COUNT_URL = cfg.count;
+  const UPDATE_CART_URL = cfg.update;
+  const REMOVE_FROM_CART_TMPL = cfg.removeTmpl;
+  const ADD_TO_CART_URL_TMPL = cfg.addTmpl;  
 
   // --- Helpers ---
   function getCookie(name) {
@@ -232,19 +233,6 @@
   toggleDisabledByViewport();
   window.addEventListener("resize", toggleDisabledByViewport);
   });
-
-  async function refreshCartBadge() {
-    try {
-      const r = await fetch(CART_COUNT_URL, { credentials: "same-origin" });
-      if (!r.ok) throw new Error(`badge fetch ${r.status}`);
-      const data = await r.json();
-      const span = document.getElementById("wb-cart-count");
-      if (span) span.textContent = `(${data.count || 0})`;
-    } catch (e) {
-      console.warn("cart count fetch failed", e);
-    }
-  }  
-
 
 })();
 
