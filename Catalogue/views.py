@@ -211,6 +211,42 @@ def add_to_cart(request, item_id):
 #         return JsonResponse({"ok": True, "count": cart_utils.get_cart_count(request.session)})
 #     return redirect("Cart")
 
+def _cart_summary(request):
+    cart, _ = cart_utils.sanitize_cart_session(request)
+    items = Item.objects.filter(shopify_variant_id__in=cart.keys())
+    item_map = {str(i.shopify_variant_id): i for i in items}
+
+    lines = []
+    for vid, data in cart.items():
+        item = item_map.get(str(vid))
+        if not item:
+            continue
+
+        qty = int(data.get("qty", 0)) if isinstance(data, dict) else int(data)
+        if qty <= 0:
+            continue
+
+        price = Decimal(str(item.price)) if item.price else Decimal("0.00")
+        lines.append({
+            "variant_id": str(vid),
+            "qty": qty,
+            "price": price,
+        })
+
+    grand_total = sum(l["price"] * l["qty"] for l in lines)
+
+    pairs = [f"{l['variant_id']}:{l['qty']}" for l in lines]
+    checkout_url = (
+        f"{settings.SHOP_URL}/cart/{','.join(pairs)}"
+        if pairs else "#"
+    )
+
+    return {
+        "count": cart_utils.get_cart_count(request.session),
+        "grand_total": str(grand_total),  # string → safe for JSON
+        "checkout_url": checkout_url,
+    }
+
 @require_POST
 def update_cart(request):
     cart, _ = cart_utils.sanitize_cart_session(request)
@@ -236,15 +272,15 @@ def update_cart(request):
                 cart_utils.set_qty(request.session, vid, qty)
 
     if _wants_json(request):
-        return JsonResponse({"ok": True, "count": cart_utils.get_cart_count(request.session)})
-    return redirect("Cart")
+        summary = _cart_summary(request)
+    return JsonResponse({"ok": True, **summary})
 
 @require_POST
 def remove_from_cart(request, variant_id):
     cart_utils.remove_item(request.session, variant_id)
     if _wants_json(request):
-        return JsonResponse({"ok": True, "count": cart_utils.get_cart_count(request.session)})
-    return redirect("Cart")
+        summary = _cart_summary(request)
+        return JsonResponse({"ok": True, **summary})
 
 @require_GET
 def cart_count_api(request):
@@ -295,8 +331,6 @@ def cart_view(request):
         "checkout_url": checkout_url,
         "grand_total": grand_total, 
     })
-
-
 
 
 

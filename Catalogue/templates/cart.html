@@ -7,9 +7,10 @@
 <div class="container-xxxl mt-5" style="margin-top: 25px !important;">
   <p style="padding-left: 8px; text-align: center;">YOUR CART</p>
 
-  {% if lines %}
+  <div id="cart-filled" class="{% if not lines %}d-none{% endif %}">
     <form method="post" action="{% url 'CartUpdate' %}">
       {% csrf_token %}
+
       <table class="table" id="cart-table">
         <thead>
           <tr>
@@ -19,69 +20,73 @@
             <th></th>
           </tr>
         </thead>
+
         <tbody>
-            {% for line in lines %}
-            <tr class="cart-line" data-variant-id="{{ line.variant_id }}" style="border-bottom: 1px solid black">
-              <td class="image-section align-middle">
-                <div class="d-flex align-items-center gap-3">
-                  {% if line.image_url %}
-                  <a href="{{ line.url }}">
-                    <img src="{{ line.image_url|cld_cart_thumb }}" alt="{{line.title}}" loading="eager" fetchpriority="high" style="width:64px;height:85.5px;object-fit:cover;border-radius:8px;">
-                  </a>
-                  {% endif %}
-                  <div>
-                    <a href="{{ line.url }}" style="text-decoration: none; color: black;">{{ line.title }}</a>
-                    <div class="quantity-control d-flex align-items-center cellphone">
-                      <button type="button" class="btn-qty minus">−</button>
-                      <input
-                        type="number" 
-                        name="qty[{{ line.variant_id }}]" 
-                        data-variant-id="{{ line.variant_id }}"
-                        value="{{ line.qty }}" 
-                        min="0" 
-                        class="form-control qty-input">
-                      <!-- <button type="button" class="btn-qty plus">+</button> -->
-                    </div>
+          {% for line in lines %}
+          <tr class="cart-line" data-variant-id="{{ line.variant_id }}" style="border-bottom: 1px solid black">
+            <td class="image-section align-middle">
+              <div class="d-flex align-items-center gap-3">
+                {% if line.image_url %}
+                <a href="{{ line.url }}">
+                  <img src="{{ line.image_url|cld_cart_thumb }}" alt="{{line.title}}" loading="eager" fetchpriority="high" style="width:64px;height:85.5px;object-fit:cover;border-radius:8px;">
+                </a>
+                {% endif %}
+                <div>
+                  <a href="{{ line.url }}" style="text-decoration: none; color: black;">{{ line.title }}</a>
+                  <div class="quantity-control d-flex align-items-center cellphone">
+                    <button type="button" class="btn-qty minus">−</button>
+                    <input
+                      type="number"
+                      name="qty[{{ line.variant_id }}]"
+                      data-variant-id="{{ line.variant_id }}"
+                      value="{{ line.qty }}"
+                      min="0"
+                      class="form-control qty-input">
                   </div>
                 </div>
-              </td>
-            
-              <td class="quantity-section align-middle">
-                <div class="quantity-control d-flex align-items-center tablets-laptop">
-                  <button type="button" class="btn-qty minus">−</button>
-                  <input
-                    type="number" 
-                    name="qty[{{ line.variant_id }}]" 
-                    data-variant-id="{{ line.variant_id }}"
-                    value="{{ line.qty }}" 
-                    min="0" 
-                    class="form-control qty-input">
-                  <!-- <button type="button" class="btn-qty plus">+</button> -->
-                </div>
-              </td>
-            
-              <td class="price-section align-middle">
-                {% if line.price %}<p class="m-0">$ {{ line.price|floatformat:2|intcomma }} MXN</p>{% endif %}
-              </td>
-            
-              <td class="remove-section align-middle">
-                <button type="button" class="btn btn-link text-danger p-0 cart-remove"
-                      data-variant-id="{{ line.variant_id }}">
-                  Remove
-                </button>
-              </td>
-            </tr>            
-            {% endfor %}
-        </tbody>
-        <tfoot>
-            <td colspan="4" class="text-end">
-            <p>SUBTOTAL: $ {{ grand_total|floatformat:2|intcomma }} MXN</p>
+              </div>
             </td>
+
+            <td class="quantity-section align-middle">
+              <div class="quantity-control d-flex align-items-center tablets-laptop">
+                <button type="button" class="btn-qty minus">−</button>
+                <input
+                  type="number"
+                  name="qty[{{ line.variant_id }}]"
+                  data-variant-id="{{ line.variant_id }}"
+                  value="{{ line.qty }}"
+                  min="0"
+                  class="form-control qty-input">
+              </div>
+            </td>
+
+            <td class="price-section align-middle">
+              {% if line.price %}<p class="m-0">$ {{ line.price|floatformat:2|intcomma }} MXN</p>{% endif %}
+            </td>
+
+            <td class="remove-section align-middle">
+              <button type="button" class="btn btn-link text-danger p-0 cart-remove"
+                      data-variant-id="{{ line.variant_id }}">
+                Remove
+              </button>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+
+        <tfoot>
+          <td colspan="4" class="text-end">
+            <p>
+              SUBTOTAL: $
+              <span id="cart-subtotal">{{ grand_total|floatformat:2|intcomma }}</span>
+              MXN
+            </p>
+          </td>
         </tfoot>
       </table>
 
       <div class="check-out">
-        <a class="btn btn-light" href="{{ checkout_url }}">CHECK OUT</a>
+        <a class="btn btn-light" id="cart-checkout-btn" href="{{ checkout_url }}">CHECK OUT</a>
       </div>
     </form>
 
@@ -92,12 +97,14 @@
         removeTmpl: "{% url 'CartRemove' 'VID' %}",
         addTmpl: "{% url 'CartAdd' 0 %}"
       };
-    </script>    
-  {% else %}
-    <p id="cart-empty-msg" style="text-align: center;">Your cart is empty.</p>
-  {% endif %}
-      
+    </script>
+  </div>
+
+  <p id="cart-empty-msg" class="{% if lines %}d-none{% endif %}" style="text-align:center;">
+    Your cart is empty.
+  </p>  
 </div>
+
 
 {% endblock %}
 

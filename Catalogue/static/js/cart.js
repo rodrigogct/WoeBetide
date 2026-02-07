@@ -11,12 +11,11 @@
     const cartFilled = document.getElementById("cart-filled");
     const emptyMsg = document.getElementById("cart-empty-msg");
   
-    if (rows.length === 0) {
-      if (cartFilled) cartFilled.style.display = "none";
-      if (emptyMsg) emptyMsg.style.display = "block";
-    }
-  }  
-
+    const hasItems = rows.length > 0;
+    setVisible(cartFilled, hasItems);
+    setVisible(emptyMsg, !hasItems);
+  }
+  
   // --- Helpers ---
   function getCookie(name) {
     let c = null;
@@ -56,7 +55,7 @@
     });
   
     if (!r.ok) throw new Error("update failed");
-    return r.json(); // your backend currently returns {ok, count}
+    return r.json(); // backend returns {ok,count,grand_total,checkout_url}
   }  
 
   async function refreshCartBadge() {
@@ -70,6 +69,50 @@
     }
   }
 
+  function setVisible(el, show) {
+    if (!el) return;
+    // If you're using Bootstrap d-none approach:
+    el.classList.toggle("d-none", !show);
+  }
+  
+  function formatMXN(n) {
+    // n might come as "400.00" string from backend
+    const num = Number(n);
+    if (!Number.isFinite(num)) return String(n ?? "0.00");
+    return new Intl.NumberFormat("es-MX", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(num);
+  }
+  
+  function applyCartSummary(data) {
+    // 1) badge
+    const span = document.getElementById("wb-cart-count");
+    if (span) span.textContent = `(${data?.count ?? 0})`;
+  
+    // 2) subtotal
+    const subtotalEl = document.getElementById("cart-subtotal");
+    if (subtotalEl && data?.grand_total != null) {
+      subtotalEl.textContent = formatMXN(data.grand_total);
+    }
+  
+    // 3) checkout url
+    const checkoutBtn = document.getElementById("cart-checkout-btn");
+    if (checkoutBtn && typeof data?.checkout_url === "string") {
+      checkoutBtn.href = data.checkout_url;
+    }
+  
+    // 4) empty/filled sections
+    const cartFilled = document.getElementById("cart-filled");
+    const emptyMsg = document.getElementById("cart-empty-msg");
+    const hasItems = (data?.count ?? 0) > 0;
+  
+    // If you kept inline style display="...", replace setVisible with style.display lines.
+    // Recommended: Bootstrap d-none (from previous message)
+    setVisible(cartFilled, hasItems);
+    setVisible(emptyMsg, !hasItems);
+  }
+  
   // --- Add to cart (product/listing pages) ---
   document.addEventListener("click", async (e) => {
     const btn = e.target.closest(".add-to-cart");
@@ -143,12 +186,12 @@
     }
 
     try {
-      await postQty(vid, v);
-      await refreshCartBadge();
+      const data = await postQty(vid, v); // now returns {ok,count,grand_total,checkout_url}
+      applyCartSummary(data);
     } catch (err) {
       console.error(err);
       alert("Update failed — check Network tab for status.");
-    }
+    }    
   });
   
   // --- Remove line (cart page) ---
@@ -174,16 +217,20 @@
       }
 
       try {
-        await fetch(REMOVE_FROM_CART_TMPL.replace("VID", vid), {
+        const res = await fetch(REMOVE_FROM_CART_TMPL.replace("VID", vid), {
           method: "POST",
           credentials: "same-origin",
           headers: { ...CSRF(), "Accept": "application/json", "X-Requested-With": "XMLHttpRequest" },
         });
-        await refreshCartBadge();
+      
+        if (!res.ok) throw new Error("remove failed");
+        const data = await res.json();
+        applyCartSummary(data);
+      
       } catch (err) {
         console.error(err);
         window.location.reload();
-      }
+      }      
       return;
     }
   
@@ -212,17 +259,18 @@
       }
       
       try {
-        await postQty(vid, v);
-        await refreshCartBadge();
+        const data = await postQty(vid, v);
+        applyCartSummary(data);
       } catch (err) {
         console.error(err);
         window.location.reload();
-      }
+      }      
     }
   });  
 
   document.addEventListener("DOMContentLoaded", () => {
     refreshCartBadge();
+    reconcileCartEmptyState();
 
   const table = document.getElementById("cart-table");
   if (!table) return;
