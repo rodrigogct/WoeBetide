@@ -1,4 +1,7 @@
 .env
+.venv/
+.vscode/*
+!.vscode/settings.json
 .env.*
 db.sqlite3
 
@@ -11,3 +14,4 @@ staticfiles/
 .vscode/
 .idea/
 .DS_Store
+
