@@ -142,45 +142,52 @@
       <!-- images -->
       <div class="images">
         {% if item %}
-        <div class="main-images">
-              <!-- first carousel -->
-              <div id="carouselExampleAutoplaying" class="carousel slide" data-bs-ride="carousel">
-                <div class="carousel-inner">
-                  {% for img in images %}
-                  <!-- <div class="carousel-item {% if forloop.first %}active{% endif %}">
-                    <img src="{{ img.url|cld_item }}" alt="Image {{ forloop.counter }}" 
-                      {% if forloop.first %}
-                      loading="eager" fetchpriority="high"
-                      {% else %}
-                      loading="eager"
-                      {% endif %}
-                    >
-                  </div> -->
-                  <div class="carousel-item {% if forloop.first %}active{% endif %}">
-                    <img
-                      {% if forloop.first %}
-                        src="{{ img.url|cld_item }}"
-                        loading="eager" fetchpriority="high"
-                      {% else %}
-                        data-src="{{ img.url|cld_item }}"
-                        loading="lazy" fetchpriority="low"
-                      {% endif %}
-                      alt="Image {{ forloop.counter }}"
-                      decoding="async"
-                    >
-                  </div>                  
-                  {% endfor %}
+          <div class="main-images">
+                <!-- first carousel -->
+                <div id="carouselExampleAutoplaying" class="carousel slide" data-bs-ride="carousel">
+                  <div class="carousel-inner">
+                    {% for img in images %}
+                      <!-- <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                        <img
+                          {% if forloop.first %}
+                            src="{{ img.url|cld_item }}"
+                            loading="eager" fetchpriority="high"
+                          {% else %}
+                            data-src="{{ img.url|cld_item }}"
+                            loading="lazy" fetchpriority="low"
+                          {% endif %}
+                          alt="Image {{ forloop.counter }}"
+                          decoding="async"
+                        >
+                      </div>                   -->
+                      <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                        <img
+                          {% if forloop.first %}
+                            data-src="{{ img.url|cld_item }}"
+                            fetchpriority="high"
+                            loading="eager"
+                          {% else %}
+                            data-src="{{ img.url|cld_item }}"
+                            fetchpriority="low"
+                            loading="lazy"
+                          {% endif %}
+                          class="d-block w-100"
+                          alt="Image {{ forloop.counter }}"
+                          decoding="async"
+                        >
+                      </div>
+                    {% endfor %}
+                  </div>
+                  <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleAutoplaying" data-bs-slide="prev">
+                          <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                          <span class="visually-hidden">Previous</span>
+                  </button>
+                  <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleAutoplaying" data-bs-slide="next">
+                          <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                          <span class="visually-hidden">Next</span>
+                  </button>
                 </div>
-                <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleAutoplaying" data-bs-slide="prev">
-                        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                        <span class="visually-hidden">Previous</span>
-                </button>
-                <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleAutoplaying" data-bs-slide="next">
-                        <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                        <span class="visually-hidden">Next</span>
-                </button>
-              </div>
-        </div>
+          </div>
         {% endif %}
         <!-- <div class="secondary-images">
                 <div id="carouselExampleSlidesOnly" class="carousel slide" data-bs-ride="carousel">
