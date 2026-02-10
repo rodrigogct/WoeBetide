@@ -14,9 +14,18 @@
             <div class="main-images">
               {% for img in images %}
                 <picture class="img-{{ forloop.counter }}">
-                  <img src="{{ img.url|cld_item }}" loading="eager" alt="Image {{ forloop.counter }}">
-                </picture>          
-              {% endfor %} 
+                  <img
+                    data-src="{{ img.url|cld_item }}"
+                    alt="Image {{ forloop.counter }}"
+                    decoding="async"
+                    {% if forloop.first %}
+                      fetchpriority="high"
+                    {% else %}
+                      fetchpriority="low"
+                    {% endif %}
+                  >
+                </picture>
+              {% endfor %}            
             </div>
           {% endif %}
       </div> 
@@ -143,9 +152,9 @@
       <div class="images">
         {% if item %}
           <div class="main-images">
-                <!-- first carousel -->
-                <div id="carouselExampleAutoplaying" class="carousel slide" data-bs-ride="carousel">
-                  <div class="carousel-inner">
+            <!-- first carousel -->
+            <div id="carouselExampleAutoplaying" class="carousel slide" data-bs-ride="carousel">
+                <div class="carousel-inner">
                     {% for img in images %}
                       <!-- <div class="carousel-item {% if forloop.first %}active{% endif %}">
                         <img
@@ -177,16 +186,16 @@
                         >
                       </div>
                     {% endfor %}
-                  </div>
-                  <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleAutoplaying" data-bs-slide="prev">
+                </div>
+                <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleAutoplaying" data-bs-slide="prev">
                           <span class="carousel-control-prev-icon" aria-hidden="true"></span>
                           <span class="visually-hidden">Previous</span>
-                  </button>
-                  <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleAutoplaying" data-bs-slide="next">
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleAutoplaying" data-bs-slide="next">
                           <span class="carousel-control-next-icon" aria-hidden="true"></span>
                           <span class="visually-hidden">Next</span>
-                  </button>
-                </div>
+                </button>
+            </div>
           </div>
         {% endif %}
         <!-- <div class="secondary-images">
@@ -228,7 +237,7 @@
                 <div class="section row">
                     <div class="item_name">
                       {% if item.name %}
-                      <h6 style="text-transform: uppercase">{{item.name}}</h6>
+                      <h6 style="text-transform: uppercase; font-size: 1.5 rem;">{{item.name}}</h6>
                       {% endif %}
                     </div>
                     <div class="item_size">
