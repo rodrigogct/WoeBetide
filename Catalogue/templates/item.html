@@ -362,7 +362,13 @@
                 </button>
                 <form method="post" action="{% url 'CartAdd' item.id %}">
                   {% csrf_token %}
-                  <button class="btn btn-dark mt-2">
+                  <!-- <button class="btn btn-dark mt-2">
+                    Add to Cart
+                  </button> -->
+                  <button class="btn btn-dark mt-2"
+                    data-item-id="{{ item.id }}"
+                    data-quantity="1"
+                    data-max-qty="1">
                     Add to Cart
                   </button>
                 </form>
