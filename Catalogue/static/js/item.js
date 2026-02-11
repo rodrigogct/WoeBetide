@@ -37,7 +37,11 @@ document.addEventListener("DOMContentLoaded", () => {
   
       // Activate first image(s)
       const imgs = Array.from(activeRoot.querySelectorAll(".images img[data-src]"));
-      imgs.slice(0, isMobile ? 1 : 2).forEach(ensureSrc);
+      if (isMobile) {
+        imgs.slice(0, 1).forEach(ensureSrc);
+      } else {
+        imgs.forEach(ensureSrc); // load all on desktop
+      }      
   
       // Carousel lazy-load active + next on slide
       const carousel = activeRoot.querySelector("#carouselExampleAutoplaying");
