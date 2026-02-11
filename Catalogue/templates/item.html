@@ -4,9 +4,12 @@
 {% load catalog_cloudinary %}
 
 {% block content %}
-    <link rel="stylesheet" href="{% static 'css/item.css' %}">
-    <link rel="stylesheet" href="{% static 'css/catalogue.css' %}">
+  <link rel="stylesheet" href="{% static 'css/item.css' %}">
+  <link rel="stylesheet" href="{% static 'css/catalogue.css' %}">
 
+  <div id="item-layout-root"></div>
+
+  <template id="tpl-desktop">  
     <div class="item">
       <!-- images -->
       <div class="images">
@@ -145,7 +148,9 @@
           </div>
       </div>
     </div>  
-    
+  </template>
+  
+  <template id="tpl-mobile">
     <!-- CAROUSEL -->
     <div class="item-carousel">
       <!-- images -->
@@ -380,9 +385,10 @@
         </div>
       </div>
     </div>
-    
-    <!-- Zoomed-in image view -->
-    <main class="image-selector" data-closable>
+  </template>
+
+  <!-- Zoomed-in image view -->
+  <main class="image-selector" data-closable>
         <!-- zoomed carousel buttons -->
             <div class="zoomed-carousel-controls">
                 <button class="zoomed-carousel-prev" type="button" data-bs-target="#carouselExampleAutoplaying" data-bs-slide="prev" onclick="prevImage()" style="background-color: black; border: none;">
@@ -402,10 +408,10 @@
             <button type="button" class="close" aria-label="Close">
             <span aria-hidden="true">&times;</span>
             </button>
-    </main>
+  </main>
 
-    <!-- Related items -->
-    <div class="catalogue" id="catalogue">
+  <!-- Related items -->
+  <div class="catalogue" id="catalogue">
         <!-- title -->
         <div class="item-a" style="grid-area: header; border-bottom: 1px solid;">
             <h4 style="text-align: start; margin-left: 10px; margin-top: 8px;">FOLLOWING GARMENTS</h4>
@@ -487,9 +493,9 @@
                 </div>
             {% endif %}
         </div>
-    </div>
+  </div>
 
-    <script>
+  <!-- <script>
       document.addEventListener('DOMContentLoaded', () => {
         const carousel = document.getElementById('carouselExampleAutoplaying');
         if (!carousel) return;
@@ -511,7 +517,8 @@
           ensureSrc(e.relatedTarget?.nextElementSibling?.querySelector('img'));
         });
       });
-    </script>       
+      
+  </script>        -->
 {% endblock %}
 
 
