@@ -43,6 +43,7 @@ document.addEventListener("DOMContentLoaded", () => {
         imgs.forEach(ensureSrc); // load all on desktop
       }      
   
+      
       // Carousel lazy-load active + next on slide
       const carousel = activeRoot.querySelector("#carouselExampleAutoplaying");
       if (carousel) {
