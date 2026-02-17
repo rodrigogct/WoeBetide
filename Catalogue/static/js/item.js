@@ -13,11 +13,12 @@ document.addEventListener("DOMContentLoaded", () => {
       if (ds) img.setAttribute("src", ds);
     };
   
-    // --- Zoom overlay DOM is OUTSIDE templates, so we can wire it each mount ---
+    // Overlay DOM is OUTSIDE templates
     const overlay = document.querySelector(".image-selector");
-    const overlayImg = overlay?.querySelector("img.photo") || overlay?.querySelector("img");
+    const overlayImg =
+      overlay?.querySelector("img.photo") || overlay?.querySelector("img");
     const closeButton = document.querySelector(".close");
-    const carouselControls = Array.from(document.querySelectorAll(".carousel-control-prev, .carousel-control-next"));
+  
     const catalogue = Array.from(document.querySelectorAll(".catalogue .elements"));
     const navbar = Array.from(document.querySelectorAll(".navbar"));
   
@@ -25,7 +26,7 @@ document.addEventListener("DOMContentLoaded", () => {
   
     const mount = (isMobile) => {
       // cleanup old listeners
-      cleanupFns.forEach(fn => fn());
+      cleanupFns.forEach((fn) => fn());
       cleanupFns = [];
   
       // replace DOM with correct template
@@ -35,25 +36,34 @@ document.addEventListener("DOMContentLoaded", () => {
       const activeRoot = root.querySelector(".item") || root.querySelector(".item-carousel");
       if (!activeRoot) return;
   
+      // IMPORTANT: query carousel arrows AFTER mount (they live inside template)
+      const carouselControls = Array.from(
+        activeRoot.querySelectorAll(".carousel-control-prev, .carousel-control-next")
+      );
+  
       // Activate first image(s)
       const imgs = Array.from(activeRoot.querySelectorAll(".images img[data-src]"));
       if (isMobile) {
         imgs.slice(0, 1).forEach(ensureSrc);
       } else {
         imgs.forEach(ensureSrc); // load all on desktop
-      }      
+      }
   
-      
       // Carousel lazy-load active + next on slide
       const carousel = activeRoot.querySelector("#carouselExampleAutoplaying");
       if (carousel) {
         ensureSrc(carousel.querySelector(".carousel-item.active img"));
-        ensureSrc(carousel.querySelector(".carousel-item.active")?.nextElementSibling?.querySelector("img"));
+        ensureSrc(
+          carousel
+            .querySelector(".carousel-item.active")
+            ?.nextElementSibling?.querySelector("img")
+        );
   
         const onSlide = (e) => {
           ensureSrc(e.relatedTarget?.querySelector("img"));
           ensureSrc(e.relatedTarget?.nextElementSibling?.querySelector("img"));
         };
+  
         carousel.addEventListener("slide.bs.carousel", onSlide);
         cleanupFns.push(() => carousel.removeEventListener("slide.bs.carousel", onSlide));
       }
@@ -72,26 +82,32 @@ document.addEventListener("DOMContentLoaded", () => {
   
       const openOverlay = (index) => {
         if (!overlay) return;
+  
         overlay.style.opacity = 1;
         overlay.style.pointerEvents = "all";
+        overlay.classList.add("active"); // harmless if you keep/ignore it
         document.body.classList.add("lock-scroll");
   
         showImage(index);
   
-        carouselControls.forEach(c => c.style.display = "none");
-        catalogue.forEach(c => c.style.display = "none");
-        navbar.forEach(n => n.style.display = "none");
+        // hide Bootstrap carousel arrows
+        carouselControls.forEach((c) => (c.style.display = "none"));
+        catalogue.forEach((c) => (c.style.display = "none"));
+        navbar.forEach((n) => (n.style.display = "none"));
       };
   
       const closeOverlay = () => {
         if (!overlay) return;
+  
         overlay.style.opacity = 0;
         overlay.style.pointerEvents = "none";
+        overlay.classList.remove("active");
         document.body.classList.remove("lock-scroll");
   
-        carouselControls.forEach(c => c.style.display = "block");
-        catalogue.forEach(c => c.style.display = "block");
-        navbar.forEach(n => n.style.display = "block");
+        // restore arrows (empty string lets CSS decide)
+        carouselControls.forEach((c) => (c.style.display = ""));
+        catalogue.forEach((c) => (c.style.display = ""));
+        navbar.forEach((n) => (n.style.display = ""));
       };
   
       // Keep your inline onclick working
@@ -105,14 +121,17 @@ document.addEventListener("DOMContentLoaded", () => {
       });
   
       if (closeButton) {
-        closeButton.onclick = closeOverlay; // simplest: overwrites safely each mount
+        closeButton.onclick = closeOverlay; // overwrites safely each mount
       }
+  
+      // Optional: close overlay when clicking background (if you want)
+      // if (overlay) overlay.addEventListener("click", closeOverlay);
     };
   
     // initial mount
     mount(mq.matches);
   
-    // remount on breakpoint change (DevTools / orientation change)
+    // remount on breakpoint change
     mq.addEventListener("change", (e) => mount(e.matches));
   });
   
