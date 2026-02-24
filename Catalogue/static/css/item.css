@@ -110,20 +110,22 @@ body.lock-scroll {
     border-top: none;
   }
 
-/* .secondary-images {
-    display: none;
-    width: 470px;
-} */
+.carousel-item {
+    touch-action: pan-y;
+  }
+  
+.carousel {
+    cursor: grab;
+    }
+  
+.carousel:active {
+    cursor: grabbing;
+  }
 
 .carousel img {
     object-fit: cover;
     border-top: none;
 }
-
-/* .secondary-images img {
-    width: 100%;
-    height: 300px;
-} */
 
 .item-carousel {
     display: none;
@@ -131,6 +133,15 @@ body.lock-scroll {
 
 .item-carousel .main-images img:nth-child(1) {
     border-bottom: none;
+}
+
+.carousel-inner {
+    overflow: hidden;
+  }
+  
+.carousel-item img {
+    pointer-events: none;
+    user-select: none;
 }
 
 /* Zoomed image view */
