@@ -140,9 +140,10 @@ body.lock-scroll {
   }
   
 .carousel-item img {
-    pointer-events: none;
+    pointer-events: auto;  
     user-select: none;
-}
+    -webkit-user-drag: none;
+  }
 
 /* Zoomed image view */
 
