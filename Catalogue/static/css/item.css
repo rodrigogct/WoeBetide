@@ -224,6 +224,8 @@ body.lock-scroll {
 }
 
 
+
+/* REMOVE */
 .image-selector { position: fixed; inset: 0; z-index: 9999; }
 
 .zoom-backdrop{
@@ -241,6 +243,12 @@ body.lock-scroll {
   position: relative;
   z-index: 1;
 }
+/* REMOVE */
+
+
+
+
+
   
 /* Garment information */
 
