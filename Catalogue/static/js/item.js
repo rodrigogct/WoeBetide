@@ -1,3 +1,4 @@
+// item-zoom.js
 document.addEventListener("DOMContentLoaded", () => {
     const root = document.getElementById("item-layout-root");
     const tplDesktop = document.getElementById("tpl-desktop");
@@ -8,23 +9,27 @@ document.addEventListener("DOMContentLoaded", () => {
   
     const ensureSrc = (img) => {
       if (!img) return;
+      // If src is already there, do nothing
       if (img.getAttribute("src")) return;
+      // Otherwise promote data-src -> src
       const ds = img.getAttribute("data-src");
       if (ds) img.setAttribute("src", ds);
     };
   
-    // Overlay DOM is OUTSIDE templates
+    // Overlay DOM is OUTSIDE templates (stays in page)
     const overlay = document.querySelector(".image-selector");
-    const overlayImg = overlay?.querySelector("img.photo") || overlay?.querySelector("img");
-    const closeButton = overlay?.querySelector("button.close"); // <-- scope it to overlay
+    const overlayImg =
+      overlay?.querySelector("img.photo") || overlay?.querySelector("img");
+    const closeButton = overlay?.querySelector("button.close");
   
-    // Force a safe initial hidden state so overlay NEVER blocks clicks
+    // Force safe initial hidden state so overlay NEVER blocks clicks
     if (overlay) {
       overlay.style.opacity = "0";
       overlay.style.pointerEvents = "none";
       overlay.style.display = "none";
     }
   
+    // These are outside templates too, so OK to query once
     const catalogue = Array.from(document.querySelectorAll(".catalogue .elements"));
     const navbar = Array.from(document.querySelectorAll(".navbar"));
   
@@ -47,12 +52,12 @@ document.addEventListener("DOMContentLoaded", () => {
         activeRoot.querySelectorAll(".carousel-control-prev, .carousel-control-next")
       );
   
-      // Activate first image(s)
+      // Activate first image(s) (for data-src images)
       const imgsWithDataSrc = Array.from(activeRoot.querySelectorAll("img[data-src]"));
       if (isMobile) {
         imgsWithDataSrc.slice(0, 1).forEach(ensureSrc);
       } else {
-        imgsWithDataSrc.forEach(ensureSrc); // load all on desktop
+        imgsWithDataSrc.forEach(ensureSrc);
       }
   
       // Carousel lazy-load active + next on slide
@@ -74,11 +79,12 @@ document.addEventListener("DOMContentLoaded", () => {
         cleanupFns.push(() => carousel.removeEventListener("slide.bs.carousel", onSlide));
       }
   
-      // Zoom overlay wiring
-      // More robust selector: include carousel images even if markup changed
+      // ===== ZOOM overlay wiring (robust + works on desktop & mobile) =====
+  
+      // Grab ALL images (no filtering—filtering can accidentally remove them)
       const clickableImgs = Array.from(
         activeRoot.querySelectorAll(".carousel-inner img, .images img")
-      ).filter((img) => img && (img.getAttribute("data-src") || img.getAttribute("src")));
+      );
   
       let currentIndex = 0;
   
@@ -86,11 +92,11 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!clickableImgs.length || !overlayImg) return;
   
         currentIndex = (index + clickableImgs.length) % clickableImgs.length;
-  
         const img = clickableImgs[currentIndex];
+  
+        // ensure we have src (promote data-src)
         ensureSrc(img);
   
-        // If you use Cloudinary transformations, src should now exist after ensureSrc
         const src = img.getAttribute("src") || img.getAttribute("data-src") || "";
         overlayImg.src = src;
       };
@@ -102,7 +108,7 @@ document.addEventListener("DOMContentLoaded", () => {
         overlay.style.display = "block";
         overlay.style.opacity = "1";
         overlay.style.pointerEvents = "all";
-        overlay.classList.add("active"); // harmless if you keep/ignore it
+        overlay.classList.add("active");
         document.body.classList.add("lock-scroll");
   
         showImage(index);
@@ -132,41 +138,70 @@ document.addEventListener("DOMContentLoaded", () => {
       window.prevImage = () => showImage(currentIndex - 1);
       window.nextImage = () => showImage(currentIndex + 1);
   
-      // Attach click listeners
-      clickableImgs.forEach((img, i) => {
-        const onClick = (e) => {
-          // Prevent carousel drag/click weirdness
-          e.preventDefault();
-          e.stopPropagation();
-          openOverlay(i);
-        };
-        img.addEventListener("click", onClick, { passive: false });
-        cleanupFns.push(() => img.removeEventListener("click", onClick));
-      });
-  
       // Close button
-      if (closeButton) {
-        closeButton.onclick = closeOverlay; // overwrites safely each mount
-      }
+      if (closeButton) closeButton.onclick = closeOverlay;
   
-      // Optional: ESC to close
+      // ESC to close
       const onKeyDown = (e) => {
         if (e.key === "Escape") closeOverlay();
       };
       document.addEventListener("keydown", onKeyDown);
       cleanupFns.push(() => document.removeEventListener("keydown", onKeyDown));
   
-      // Optional: click outside image to close (only if you want)
-      // Make sure it doesn't close when clicking the image or buttons
+      // Click outside image to close (but not when clicking the image or zoom arrows)
       const onOverlayClick = (e) => {
         if (!overlay) return;
-        const clickedInsideImage = e.target === overlayImg || e.target.closest(".zoomed-carousel-controls");
-        if (!clickedInsideImage) closeOverlay();
+        const clickedInside =
+          e.target === overlayImg || e.target.closest(".zoomed-carousel-controls");
+        if (!clickedInside) closeOverlay();
       };
       if (overlay) {
         overlay.addEventListener("click", onOverlayClick);
         cleanupFns.push(() => overlay.removeEventListener("click", onOverlayClick));
       }
+  
+      // ONE delegated handler that works even if nodes get replaced
+      // Use CAPTURE so Bootstrap carousel doesn't swallow the event first
+      const onRootClick = (e) => {
+        const img = e.target.closest(".carousel-inner img, .images img");
+        if (!img) return;
+  
+        // If overlay is open, ignore clicks behind it
+        if (overlay && overlay.style.display === "block") return;
+  
+        e.preventDefault();
+        e.stopPropagation();
+  
+        // ensure src before we copy it into overlay
+        ensureSrc(img);
+  
+        const index = clickableImgs.indexOf(img);
+        openOverlay(index === -1 ? 0 : index);
+      };
+  
+      activeRoot.addEventListener("click", onRootClick, { capture: true });
+      cleanupFns.push(() =>
+        activeRoot.removeEventListener("click", onRootClick, { capture: true })
+      );
+  
+      // (Optional) Also open on keyboard "Enter" when image focused
+      const onRootKey = (e) => {
+        if (e.key !== "Enter") return;
+        const img = e.target.closest(".carousel-inner img, .images img");
+        if (!img) return;
+  
+        e.preventDefault();
+        e.stopPropagation();
+  
+        ensureSrc(img);
+        const index = clickableImgs.indexOf(img);
+        openOverlay(index === -1 ? 0 : index);
+      };
+  
+      activeRoot.addEventListener("keydown", onRootKey, { capture: true });
+      cleanupFns.push(() =>
+        activeRoot.removeEventListener("keydown", onRootKey, { capture: true })
+      );
     };
   
     // initial mount
@@ -175,6 +210,4 @@ document.addEventListener("DOMContentLoaded", () => {
     // remount on breakpoint change
     mq.addEventListener("change", (e) => mount(e.matches));
   });
-
-
 
