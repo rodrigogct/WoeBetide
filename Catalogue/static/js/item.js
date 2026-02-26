@@ -1,4 +1,5 @@
 // item-zoom.js (drop-in, backdrop-based, works on desktop + mobile)
+
 document.addEventListener("DOMContentLoaded", () => {
     const root = document.getElementById("item-layout-root");
     const tplDesktop = document.getElementById("tpl-desktop");
