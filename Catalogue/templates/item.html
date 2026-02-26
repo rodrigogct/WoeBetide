@@ -389,27 +389,42 @@
 
   <!-- Zoomed-in image view -->
   <main class="image-selector" data-closable>
-        <!-- zoomed carousel buttons -->
-            <div class="zoomed-carousel-controls">
-                <button class="zoomed-carousel-prev" type="button" data-bs-target="#carouselExampleAutoplaying" data-bs-slide="prev" onclick="prevImage()" style="background-color: black; border: none;">
-                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                    <span class="visually-hidden">Previous</span>
-                </button>
-                <button class="zoomed-carousel-next" type="button" data-bs-target="#carouselExampleAutoplaying" data-bs-slide="next" onclick="nextImage()" style="background-color: black; border: none;">
-                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                    <span class="visually-hidden">Next</span>
-                </button>
-            </div>
-        <!-- image container with zoom capability -->
-            <div class="image-container">
-              <img class="photo" src="" alt="">
-            </div>
-        <!-- close button -->
-            <button type="button" class="close" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-            </button>
-  </main>
+    <!-- zoomed carousel buttons -->
+    <div class="zoomed-carousel-controls">
+      <button
+        class="zoomed-carousel-prev"
+        type="button"
+        onclick="prevImage()"
+        style="background-color: black; border: none;"
+        aria-label="Previous image"
+      >
+        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Previous</span>
+      </button>
 
+      <button
+        class="zoomed-carousel-next"
+        type="button"
+        onclick="nextImage()"
+        style="background-color: black; border: none;"
+        aria-label="Next image"
+      >
+        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Next</span>
+      </button>
+    </div>
+
+    <!-- image container with zoom capability -->
+    <div class="image-container">
+      <img class="photo" src="" alt="">
+    </div>
+
+    <!-- close button -->
+    <button type="button" class="close" aria-label="Close">
+      <span aria-hidden="true">&times;</span>
+    </button>
+  </main>
+  
   <!-- Related items -->
   <div class="catalogue" id="catalogue">
         <!-- title -->
