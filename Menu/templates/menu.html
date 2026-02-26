@@ -179,37 +179,6 @@
             </a>
         </div>
         {% endif %}
-        {% if sweatshirts %}
-        <div class="sweatshirts">
-            <!-- <h1>VINTAGE</h1>  -->
-            <a href="{% url 'Catalogue' %}?category=Sweatshirts">
-                {% for sweatshirts in sweatshirts %}
-                <div class="cat-hero">Sweatshirts</div>
-                <div class="image-container {% if not sweatshirts.img2 and not sweatshirts.img3 %}single-image{% elif not sweatshirts.img3 %}two-images{% endif %}">
-                    {% if sweatshirts.img1 %}
-                        <div class="img1">
-                            <img src="{{ sweatshirts.img1.url|cld_menu }}" loading="lazy" alt="Image 1">
-                        </div>
-                    {% endif %}
-                    {% if sweatshirts.img2 or sweatshirts.img3 %}
-                    <div class="right-column">
-                        {% if sweatshirts.img2 %}
-                            <div class="img2">
-                                <img src="{{ sweatshirts.img2.url|cld_menu }}" loading="lazy" alt="Image 2">
-                            </div>
-                        {% endif %}
-                        {% if sweatshirts.img3 %}
-                            <div class="img3">
-                                <img src="{{ sweatshirts.img3.url|cld_menu }}" loading="lazy" alt="Image 3">
-                            </div>
-                        {% endif %}
-                    </div>
-                    {% endif %}
-                </div>  
-                {% endfor %}
-            </a>
-        </div>
-        {% endif %}
         {% if outerwear %}
         <div class="outerwear">
             <!-- <h1>VINTAGE</h1>  -->
@@ -232,6 +201,37 @@
                         {% if outerwear.img3 %}
                             <div class="img3">
                                 <img src="{{ outerwear.img3.url|cld_menu }}" loading="lazy" alt="Image 3">
+                            </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>  
+                {% endfor %}
+            </a>
+        </div>
+        {% endif %}
+        {% if sweatshirts %}
+        <div class="sweatshirts">
+            <!-- <h1>VINTAGE</h1>  -->
+            <a href="{% url 'Catalogue' %}?category=Sweatshirts">
+                {% for sweatshirts in sweatshirts %}
+                <div class="cat-hero">Sweatshirts</div>
+                <div class="image-container {% if not sweatshirts.img2 and not sweatshirts.img3 %}single-image{% elif not sweatshirts.img3 %}two-images{% endif %}">
+                    {% if sweatshirts.img1 %}
+                        <div class="img1">
+                            <img src="{{ sweatshirts.img1.url|cld_menu }}" loading="lazy" alt="Image 1">
+                        </div>
+                    {% endif %}
+                    {% if sweatshirts.img2 or sweatshirts.img3 %}
+                    <div class="right-column">
+                        {% if sweatshirts.img2 %}
+                            <div class="img2">
+                                <img src="{{ sweatshirts.img2.url|cld_menu }}" loading="lazy" alt="Image 2">
+                            </div>
+                        {% endif %}
+                        {% if sweatshirts.img3 %}
+                            <div class="img3">
+                                <img src="{{ sweatshirts.img3.url|cld_menu }}" loading="lazy" alt="Image 3">
                             </div>
                         {% endif %}
                     </div>
