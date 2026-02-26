@@ -222,6 +222,25 @@ body.lock-scroll {
     left: 0;
     z-index: 9999;
 }
+
+
+.image-selector { position: fixed; inset: 0; z-index: 9999; }
+
+.zoom-backdrop{
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,1);
+  cursor: zoom-out;
+  z-index: 0;
+}
+
+/* Make sure your overlay content sits above the backdrop */
+.image-selector .zoomed-carousel-controls,
+.image-selector .image-container,
+.image-selector button.close{
+  position: relative;
+  z-index: 1;
+}
   
 /* Garment information */
 

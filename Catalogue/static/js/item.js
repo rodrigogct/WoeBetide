@@ -1,87 +1,94 @@
-// item-zoom.js
+// item-zoom.js (drop-in, backdrop-based, works on desktop + mobile)
 document.addEventListener("DOMContentLoaded", () => {
     const root = document.getElementById("item-layout-root");
     const tplDesktop = document.getElementById("tpl-desktop");
     const tplMobile = document.getElementById("tpl-mobile");
-    if (!root || !tplDesktop || !tplMobile) return;
+    if (!root || !tplDesktop || !tplMobile) {
+      console.warn("[zoom] missing root/template nodes");
+      return;
+    }
   
-    const mq = window.matchMedia("(max-width: 700px)");
+    const overlay = document.querySelector(".image-selector");
+    if (!overlay) {
+      console.warn("[zoom] missing .image-selector overlay");
+      return;
+    }
+  
+    const overlayImg = overlay.querySelector("img.photo") || overlay.querySelector("img");
+    const closeButton = overlay.querySelector("button.close");
+  
+    // --- HARD GUARANTEE: add a backdrop div that always receives clicks ---
+    let backdrop = overlay.querySelector(".zoom-backdrop");
+    if (!backdrop) {
+      backdrop = document.createElement("div");
+      backdrop.className = "zoom-backdrop";
+      overlay.prepend(backdrop); // behind everything else (CSS will handle z-index)
+    }
+  
+    // Ensure overlay starts fully inactive and never blocks page
+    const setOverlayClosed = () => {
+      overlay.style.display = "none";
+      overlay.style.opacity = "0";
+      overlay.style.pointerEvents = "none";
+      overlay.classList.remove("active");
+      document.body.classList.remove("lock-scroll");
+    };
+  
+    const setOverlayOpen = () => {
+      overlay.style.display = "block";
+      overlay.style.opacity = "1";
+      overlay.style.pointerEvents = "auto";
+      overlay.classList.add("active");
+      document.body.classList.add("lock-scroll");
+    };
+  
+    setOverlayClosed();
   
     const ensureSrc = (img) => {
       if (!img) return;
-      // If src is already there, do nothing
       if (img.getAttribute("src")) return;
-      // Otherwise promote data-src -> src
       const ds = img.getAttribute("data-src");
       if (ds) img.setAttribute("src", ds);
     };
   
-    // Overlay DOM is OUTSIDE templates (stays in page)
-    const overlay = document.querySelector(".image-selector");
-    const overlayImg =
-      overlay?.querySelector("img.photo") || overlay?.querySelector("img");
-    const closeButton = overlay?.querySelector("button.close");
-  
-    // Force safe initial hidden state so overlay NEVER blocks clicks
-    if (overlay) {
-      overlay.style.opacity = "0";
-      overlay.style.pointerEvents = "none";
-      overlay.style.display = "none";
-    }
-  
-    // These are outside templates too, so OK to query once
     const catalogue = Array.from(document.querySelectorAll(".catalogue .elements"));
     const navbar = Array.from(document.querySelectorAll(".navbar"));
   
+    const mq = window.matchMedia("(max-width: 700px)");
     let cleanupFns = [];
   
     const mount = (isMobile) => {
-      // cleanup old listeners
       cleanupFns.forEach((fn) => fn());
       cleanupFns = [];
   
-      // replace DOM with correct template
+      // Swap layout
       root.innerHTML = "";
       root.appendChild((isMobile ? tplMobile : tplDesktop).content.cloneNode(true));
   
       const activeRoot = root.querySelector(".item") || root.querySelector(".item-carousel");
       if (!activeRoot) return;
   
-      // IMPORTANT: query carousel arrows AFTER mount (they live inside template)
+      // Find carousel controls in the mounted template (to hide them during zoom)
       const carouselControls = Array.from(
         activeRoot.querySelectorAll(".carousel-control-prev, .carousel-control-next")
       );
   
-      // Activate first image(s) (for data-src images)
+      // Load initial images
       const imgsWithDataSrc = Array.from(activeRoot.querySelectorAll("img[data-src]"));
-      if (isMobile) {
-        imgsWithDataSrc.slice(0, 1).forEach(ensureSrc);
-      } else {
-        imgsWithDataSrc.forEach(ensureSrc);
-      }
+      if (isMobile) imgsWithDataSrc.slice(0, 1).forEach(ensureSrc);
+      else imgsWithDataSrc.forEach(ensureSrc);
   
-      // Carousel lazy-load active + next on slide
+      // Bootstrap carousel lazy-load
       const carousel = activeRoot.querySelector("#carouselExampleAutoplaying");
       if (carousel) {
-        ensureSrc(carousel.querySelector(".carousel-item.active img"));
-        ensureSrc(
-          carousel
-            .querySelector(".carousel-item.active")
-            ?.nextElementSibling?.querySelector("img")
-        );
-  
         const onSlide = (e) => {
           ensureSrc(e.relatedTarget?.querySelector("img"));
           ensureSrc(e.relatedTarget?.nextElementSibling?.querySelector("img"));
         };
-  
         carousel.addEventListener("slide.bs.carousel", onSlide);
         cleanupFns.push(() => carousel.removeEventListener("slide.bs.carousel", onSlide));
       }
   
-      // ===== ZOOM overlay wiring (robust + works on desktop & mobile) =====
-  
-      // Grab ALL images (no filtering—filtering can accidentally remove them)
       const clickableImgs = Array.from(
         activeRoot.querySelectorAll(".carousel-inner img, .images img")
       );
@@ -90,11 +97,9 @@ document.addEventListener("DOMContentLoaded", () => {
   
       const showImage = (index) => {
         if (!clickableImgs.length || !overlayImg) return;
-  
         currentIndex = (index + clickableImgs.length) % clickableImgs.length;
-        const img = clickableImgs[currentIndex];
   
-        // ensure we have src (promote data-src)
+        const img = clickableImgs[currentIndex];
         ensureSrc(img);
   
         const src = img.getAttribute("src") || img.getAttribute("data-src") || "";
@@ -102,112 +107,69 @@ document.addEventListener("DOMContentLoaded", () => {
       };
   
       const openOverlay = (index) => {
-        if (!overlay) return;
-  
-        // Make visible + clickable
-        overlay.style.display = "block";
-        overlay.style.opacity = "1";
-        overlay.style.pointerEvents = "all";
-        overlay.classList.add("active");
-        document.body.classList.add("lock-scroll");
-  
+        setOverlayOpen();
         showImage(index);
   
-        // Hide Bootstrap carousel arrows + your other UI
+        // Hide UI behind
         carouselControls.forEach((c) => (c.style.display = "none"));
         catalogue.forEach((c) => (c.style.display = "none"));
         navbar.forEach((n) => (n.style.display = "none"));
       };
   
       const closeOverlay = () => {
-        if (!overlay) return;
+        setOverlayClosed();
   
-        overlay.style.opacity = "0";
-        overlay.style.pointerEvents = "none";
-        overlay.style.display = "none";
-        overlay.classList.remove("active");
-        document.body.classList.remove("lock-scroll");
-  
-        // restore arrows (empty string lets CSS decide)
+        // Restore UI behind
         carouselControls.forEach((c) => (c.style.display = ""));
         catalogue.forEach((c) => (c.style.display = ""));
         navbar.forEach((n) => (n.style.display = ""));
       };
   
-      // Keep your inline onclick working
+      // Expose your inline controls
       window.prevImage = () => showImage(currentIndex - 1);
       window.nextImage = () => showImage(currentIndex + 1);
   
-      // Close button
+      // Close mechanisms that cannot fail:
+      // 1) Backdrop click
+      const onBackdropClick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        closeOverlay();
+      };
+      backdrop.addEventListener("click", onBackdropClick);
+      cleanupFns.push(() => backdrop.removeEventListener("click", onBackdropClick));
+  
+      // 2) Close button
       if (closeButton) closeButton.onclick = closeOverlay;
   
-      // ESC to close
+      // 3) ESC
       const onKeyDown = (e) => {
         if (e.key === "Escape") closeOverlay();
       };
       document.addEventListener("keydown", onKeyDown);
       cleanupFns.push(() => document.removeEventListener("keydown", onKeyDown));
   
-      // Click outside image to close (but not when clicking the image or zoom arrows)
-      const onOverlayClick = (e) => {
-        if (!overlay) return;
-        const clickedInside =
-          e.target === overlayImg || e.target.closest(".zoomed-carousel-controls");
-        if (!clickedInside) closeOverlay();
-      };
-      if (overlay) {
-        overlay.addEventListener("click", onOverlayClick);
-        cleanupFns.push(() => overlay.removeEventListener("click", onOverlayClick));
-      }
+      // OPEN: use CAPTURE so Bootstrap / other handlers don’t swallow it
+      const onRootPointerUp = (e) => {
+        // If overlay already open, ignore clicks behind
+        if (overlay.style.display === "block") return;
   
-      // ONE delegated handler that works even if nodes get replaced
-      // Use CAPTURE so Bootstrap carousel doesn't swallow the event first
-      const onRootClick = (e) => {
-        const img = e.target.closest(".carousel-inner img, .images img");
-        if (!img) return;
-  
-        // If overlay is open, ignore clicks behind it
-        if (overlay && overlay.style.display === "block") return;
-  
-        e.preventDefault();
-        e.stopPropagation();
-  
-        // ensure src before we copy it into overlay
-        ensureSrc(img);
-  
-        const index = clickableImgs.indexOf(img);
-        openOverlay(index === -1 ? 0 : index);
-      };
-  
-      activeRoot.addEventListener("click", onRootClick, { capture: true });
-      cleanupFns.push(() =>
-        activeRoot.removeEventListener("click", onRootClick, { capture: true })
-      );
-  
-      // (Optional) Also open on keyboard "Enter" when image focused
-      const onRootKey = (e) => {
-        if (e.key !== "Enter") return;
         const img = e.target.closest(".carousel-inner img, .images img");
         if (!img) return;
   
         e.preventDefault();
         e.stopPropagation();
   
-        ensureSrc(img);
         const index = clickableImgs.indexOf(img);
         openOverlay(index === -1 ? 0 : index);
       };
   
-      activeRoot.addEventListener("keydown", onRootKey, { capture: true });
+      activeRoot.addEventListener("pointerup", onRootPointerUp, { capture: true });
       cleanupFns.push(() =>
-        activeRoot.removeEventListener("keydown", onRootKey, { capture: true })
+        activeRoot.removeEventListener("pointerup", onRootPointerUp, { capture: true })
       );
     };
   
-    // initial mount
     mount(mq.matches);
-  
-    // remount on breakpoint change
     mq.addEventListener("change", (e) => mount(e.matches));
   });
-
