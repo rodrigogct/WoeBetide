@@ -12,7 +12,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const track = root.querySelector("[data-wb-track]");
     if (!host || !track) return;
   
-    // ---- Lazy-load helper
+    // ---------------------------------------------------------
+    // Helpers
+    // ---------------------------------------------------------
     const ensureSrc = (img) => {
       if (!img) return;
       if (img.getAttribute("src")) return;
@@ -20,18 +22,18 @@ document.addEventListener("DOMContentLoaded", () => {
       if (ds) img.setAttribute("src", ds);
     };
   
-    // Initial image load
+    const originalSlides = Array.from(track.querySelectorAll("[data-wb-slide]"));
+    if (!originalSlides.length) return;
+  
     ensureSrc(track.querySelector("img[data-src]"));
   
-    const originalSlides = Array.from(track.querySelectorAll("[data-wb-slide]"));
-    if (originalSlides.length === 0) return;
-  
-    // ---- Dots
+    // ---------------------------------------------------------
+    // Dots
+    // ---------------------------------------------------------
     const dotsWrap = root.querySelector("[data-wb-dots]");
     const dots = [];
   
     const setActiveDot = (idx) => {
-      if (!dots.length) return;
       dots.forEach((d, i) => d.classList.toggle("is-active", i === idx));
     };
   
@@ -43,14 +45,16 @@ document.addEventListener("DOMContentLoaded", () => {
         b.className = "wb-dot" + (i === 0 ? " is-active" : "");
         b.addEventListener("click", (e) => {
           e.preventDefault();
-          goToIndex(i, { smooth: true });
+          moveToRealIndex(i, true);
         });
         dotsWrap.appendChild(b);
         dots.push(b);
       }
     }
   
-    // ---- Infinite loop via clones
+    // ---------------------------------------------------------
+    // Clone first + last for real infinite effect
+    // ---------------------------------------------------------
     const cloneFirst = originalSlides[0].cloneNode(true);
     const cloneLast = originalSlides[originalSlides.length - 1].cloneNode(true);
   
@@ -64,144 +68,149 @@ document.addEventListener("DOMContentLoaded", () => {
     const realCount = originalSlides.length;
   
     const slideW = () => track.clientWidth;
-  
-    let currentRealIndex = 0;
-    let scrollTimer = null;
-    let isInstantJumping = false;
-  
+    const realToDom = (realIdx) => realIdx + 1; // because dom 0 = cloneLast
     const normalizeIndex = (idx) => ((idx % realCount) + realCount) % realCount;
   
-    const getRealDomIndex = (realIdx) => realIdx + 1; // +1 because cloneLast is first
-  
-    const computeIndexFromScroll = () => {
-      const w = slideW();
-      if (!w) return { raw: 1, real: currentRealIndex, isClone: false };
-  
-      const x = track.scrollLeft;
-      const raw = Math.round(x / w);
-  
-      if (raw <= 0) {
-        return { raw: 0, real: realCount - 1, isClone: true };
-      }
-  
-      if (raw >= realCount + 1) {
-        return { raw: realCount + 1, real: 0, isClone: true };
-      }
-  
-      return {
-        raw,
-        real: raw - 1,
-        isClone: false,
-      };
-    };
+    let currentRealIndex = 0;
+    let scrollEndTimer = null;
+    let isAutoJumping = false;
+    let isAnimatingByButton = false;
   
     const loadNeighbors = (realIdx) => {
-      const domIdx = getRealDomIndex(realIdx);
+      const domIdx = realToDom(realIdx);
   
-      const cur = allSlides[domIdx]?.querySelector("img[data-src]");
-      const prev = allSlides[domIdx - 1]?.querySelector("img[data-src]");
-      const next = allSlides[domIdx + 1]?.querySelector("img[data-src]");
-  
-      ensureSrc(cur);
-      ensureSrc(prev);
-      ensureSrc(next);
+      ensureSrc(allSlides[domIdx]?.querySelector("img[data-src]"));
+      ensureSrc(allSlides[domIdx - 1]?.querySelector("img[data-src]"));
+      ensureSrc(allSlides[domIdx + 1]?.querySelector("img[data-src]"));
     };
   
-    const syncToRealIndex = (realIdx, { smooth = false } = {}) => {
-      const normalizedIndex = normalizeIndex(realIdx);
-      const x = (normalizedIndex + 1) * slideW();
+    const setScrollSnap = (enabled) => {
+      track.style.scrollSnapType = enabled ? "" : "none";
+    };
   
-      currentRealIndex = normalizedIndex;
+    const instantScrollTo = (left) => {
+      isAutoJumping = true;
+      setScrollSnap(false);
+      track.scrollTo({ left, behavior: "auto" });
+  
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          setScrollSnap(true);
+          isAutoJumping = false;
+        });
+      });
+    };
+  
+    const syncUI = (realIdx) => {
+      currentRealIndex = normalizeIndex(realIdx);
       setActiveDot(currentRealIndex);
       loadNeighbors(currentRealIndex);
+    };
   
+    const moveToDomIndex = (domIdx, smooth = true) => {
+      const left = domIdx * slideW();
       track.scrollTo({
-        left: x,
+        left,
         behavior: smooth ? "smooth" : "auto",
       });
     };
   
-    const goToIndex = (realIndex, { smooth = true } = {}) => {
-      const normalizedIndex = normalizeIndex(realIndex);
-      currentRealIndex = normalizedIndex;
-      setActiveDot(currentRealIndex);
-      loadNeighbors(currentRealIndex);
-  
-      const x = (normalizedIndex + 1) * slideW();
-      track.scrollTo({
-        left: x,
-        behavior: smooth ? "smooth" : "auto",
-      });
+    const moveToRealIndex = (realIdx, smooth = true) => {
+      const normalized = normalizeIndex(realIdx);
+      syncUI(normalized);
+      moveToDomIndex(realToDom(normalized), smooth);
     };
   
-    // Initial alignment to first REAL slide
-    syncToRealIndex(0, { smooth: false });
+    const getNearestDomIndex = () => {
+      const w = slideW();
+      if (!w) return 1;
+      return Math.round(track.scrollLeft / w);
+    };
   
-    // ---- Scroll handling
+    const handleLoopRepositionIfNeeded = () => {
+      const domIdx = getNearestDomIndex();
+  
+      // 0 = cloneLast
+      if (domIdx === 0) {
+        instantScrollTo(realCount * slideW());
+        syncUI(realCount - 1);
+        return;
+      }
+  
+      // realCount + 1 = cloneFirst
+      if (domIdx === realCount + 1) {
+        instantScrollTo(1 * slideW());
+        syncUI(0);
+        return;
+      }
+  
+      // Normal real slides
+      syncUI(domIdx - 1);
+    };
+  
+    // ---------------------------------------------------------
+    // Initial position: first real slide
+    // ---------------------------------------------------------
+    instantScrollTo(slideW());
+    syncUI(0);
+  
+    // ---------------------------------------------------------
+    // Scroll observer
+    // ---------------------------------------------------------
     track.addEventListener("scroll", () => {
-      if (isInstantJumping) return;
+      if (isAutoJumping) return;
   
-      if (scrollTimer) window.clearTimeout(scrollTimer);
+      if (scrollEndTimer) clearTimeout(scrollEndTimer);
   
-      scrollTimer = window.setTimeout(() => {
-        const info = computeIndexFromScroll();
-  
-        currentRealIndex = info.real;
-        setActiveDot(currentRealIndex);
-        loadNeighbors(currentRealIndex);
-  
-        // If landed on clone, jump instantly to matching real slide
-        if (info.raw === 0) {
-          isInstantJumping = true;
-          track.scrollTo({
-            left: realCount * slideW(),
-            behavior: "auto",
-          });
-          currentRealIndex = realCount - 1;
-          setActiveDot(currentRealIndex);
-          loadNeighbors(currentRealIndex);
-  
-          requestAnimationFrame(() => {
-            isInstantJumping = false;
-          });
-        } else if (info.raw === realCount + 1) {
-          isInstantJumping = true;
-          track.scrollTo({
-            left: slideW(),
-            behavior: "auto",
-          });
-          currentRealIndex = 0;
-          setActiveDot(currentRealIndex);
-          loadNeighbors(currentRealIndex);
-  
-          requestAnimationFrame(() => {
-            isInstantJumping = false;
-          });
-        }
-      }, 80);
+      scrollEndTimer = setTimeout(() => {
+        handleLoopRepositionIfNeeded();
+        isAnimatingByButton = false;
+      }, 90);
     });
   
-    // ---- Arrow buttons
+    // ---------------------------------------------------------
+    // Prev / Next buttons with REAL loop effect
+    // ---------------------------------------------------------
     const prevBtn = root.querySelector("[data-wb-prev]");
     const nextBtn = root.querySelector("[data-wb-next]");
-  
-    if (prevBtn) {
-      prevBtn.addEventListener("click", (e) => {
-        e.preventDefault();
-        goToIndex(currentRealIndex - 1, { smooth: true });
-      });
-    }
   
     if (nextBtn) {
       nextBtn.addEventListener("click", (e) => {
         e.preventDefault();
-        goToIndex(currentRealIndex + 1, { smooth: true });
+        if (isAnimatingByButton) return;
+        isAnimatingByButton = true;
+  
+        // If on last real, animate to cloneFirst
+        if (currentRealIndex === realCount - 1) {
+          setActiveDot(0);
+          loadNeighbors(0);
+          moveToDomIndex(realCount + 1, true);
+        } else {
+          moveToRealIndex(currentRealIndex + 1, true);
+        }
       });
     }
   
-    // =========================================================
+    if (prevBtn) {
+      prevBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        if (isAnimatingByButton) return;
+        isAnimatingByButton = true;
+  
+        // If on first real, animate to cloneLast
+        if (currentRealIndex === 0) {
+          setActiveDot(realCount - 1);
+          loadNeighbors(realCount - 1);
+          moveToDomIndex(0, true);
+        } else {
+          moveToRealIndex(currentRealIndex - 1, true);
+        }
+      });
+    }
+  
+    // ---------------------------------------------------------
     // ZOOM OVERLAY V2
-    // =========================================================
+    // ---------------------------------------------------------
     const overlay = document.querySelector(".image-selector.image-selector-v2");
     if (!overlay) return;
   
@@ -213,7 +222,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   
     const overlayImg = overlay.querySelector(".photo-v2");
-    const closeBtn = overlay.querySelector(".close-v2") || overlay.querySelector(".close");
+    const closeBtn =
+      overlay.querySelector(".close-v2") || overlay.querySelector(".close");
   
     const setOverlayClosed = () => {
       overlay.style.display = "none";
@@ -234,19 +244,20 @@ document.addEventListener("DOMContentLoaded", () => {
     setOverlayClosed();
   
     const getRealImgAt = (realIdx) => {
-      const domIdx = getRealDomIndex(normalizeIndex(realIdx));
+      const domIdx = realToDom(normalizeIndex(realIdx));
       return allSlides[domIdx]?.querySelector("img");
     };
   
     const showZoom = (realIdx) => {
-      currentRealIndex = normalizeIndex(realIdx);
+      const normalized = normalizeIndex(realIdx);
+      const img = getRealImgAt(normalized);
   
-      const img = getRealImgAt(currentRealIndex);
       ensureSrc(img);
   
       const src = img?.getAttribute("src") || img?.getAttribute("data-src") || "";
       if (overlayImg) overlayImg.src = src;
   
+      currentRealIndex = normalized;
       setActiveDot(currentRealIndex);
     };
   
@@ -262,16 +273,16 @@ document.addEventListener("DOMContentLoaded", () => {
     window.prevImageV2 = () => {
       const nextIdx = normalizeIndex(currentRealIndex - 1);
       showZoom(nextIdx);
-      syncToRealIndex(nextIdx, { smooth: false });
+      moveToRealIndex(nextIdx, false);
     };
   
     window.nextImageV2 = () => {
       const nextIdx = normalizeIndex(currentRealIndex + 1);
       showZoom(nextIdx);
-      syncToRealIndex(nextIdx, { smooth: false });
+      moveToRealIndex(nextIdx, false);
     };
   
-    // Open zoom when clicking image
+    // Open zoom on image tap/click
     track.addEventListener(
       "pointerup",
       (e) => {
@@ -319,8 +330,9 @@ document.addEventListener("DOMContentLoaded", () => {
       if (e.key === "Escape") closeZoom();
     });
   
-    // Keep alignment on resize
+    // Resize
     window.addEventListener("resize", () => {
-      syncToRealIndex(currentRealIndex, { smooth: false });
+      instantScrollTo(realToDom(currentRealIndex) * slideW());
+      syncUI(currentRealIndex);
     });
   });
