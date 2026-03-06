@@ -1,10 +1,10 @@
-// item-carousel-v2.js
+// carousel.js
 document.addEventListener("DOMContentLoaded", () => {
     const root = document.getElementById("item-layout-root-v2");
     const tpl = document.getElementById("tpl-unified-v2");
     if (!root || !tpl) return;
   
-    // Mount ONCE (no desktop/mobile swap, no duplicate DOM)
+    // Mount ONCE
     root.innerHTML = "";
     root.appendChild(tpl.content.cloneNode(true));
   
@@ -12,7 +12,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const track = root.querySelector("[data-wb-track]");
     if (!host || !track) return;
   
-    // ---- Lazy-load helper (uses your existing data-src approach)
+    // ---- Lazy-load helper
     const ensureSrc = (img) => {
       if (!img) return;
       if (img.getAttribute("src")) return;
@@ -20,18 +20,24 @@ document.addEventListener("DOMContentLoaded", () => {
       if (ds) img.setAttribute("src", ds);
     };
   
-    // Initial load first image (fastest)
+    // Initial image load
     ensureSrc(track.querySelector("img[data-src]"));
   
-    const slides = Array.from(track.querySelectorAll("[data-wb-slide]"));
-    if (slides.length === 0) return;
+    const originalSlides = Array.from(track.querySelectorAll("[data-wb-slide]"));
+    if (originalSlides.length === 0) return;
   
     // ---- Dots
     const dotsWrap = root.querySelector("[data-wb-dots]");
     const dots = [];
+  
+    const setActiveDot = (idx) => {
+      if (!dots.length) return;
+      dots.forEach((d, i) => d.classList.toggle("is-active", i === idx));
+    };
+  
     if (dotsWrap) {
       dotsWrap.innerHTML = "";
-      for (let i = 0; i < slides.length; i++) {
+      for (let i = 0; i < originalSlides.length; i++) {
         const b = document.createElement("button");
         b.type = "button";
         b.className = "wb-dot" + (i === 0 ? " is-active" : "");
@@ -44,71 +50,99 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
   
-    // ---- Infinite loop via clones (first and last)
-    // We clone nodes so we can scroll "past ends" then jump seamlessly.
-    const cloneFirst = slides[0].cloneNode(true);
-    const cloneLast = slides[slides.length - 1].cloneNode(true);
+    // ---- Infinite loop via clones
+    const cloneFirst = originalSlides[0].cloneNode(true);
+    const cloneLast = originalSlides[originalSlides.length - 1].cloneNode(true);
+  
     cloneFirst.setAttribute("data-wb-clone", "first");
     cloneLast.setAttribute("data-wb-clone", "last");
   
-    track.insertBefore(cloneLast, slides[0]);
+    track.insertBefore(cloneLast, originalSlides[0]);
     track.appendChild(cloneFirst);
   
-    // Recompute after clones
     const allSlides = Array.from(track.querySelectorAll("[data-wb-slide]"));
-    const realCount = slides.length;
+    const realCount = originalSlides.length;
   
-    // Each slide is 100% width; we can scroll by clientWidth.
     const slideW = () => track.clientWidth;
   
-    // Start at first REAL slide (index 1 because 0 is cloneLast)
     let currentRealIndex = 0;
-    let isJumping = false;
+    let scrollTimer = null;
+    let isInstantJumping = false;
   
-    const setActiveDot = (idx) => {
-      if (!dots.length) return;
-      dots.forEach((d, i) => d.classList.toggle("is-active", i === idx));
-    };
+    const normalizeIndex = (idx) => ((idx % realCount) + realCount) % realCount;
   
-    const goToIndex = (realIndex, { smooth } = { smooth: true }) => {
-      const x = (realIndex + 1) * slideW(); // +1 offset because of cloneLast at start
-      isJumping = true;
-      track.scrollTo({ left: x, behavior: smooth ? "smooth" : "auto" });
-      // allow scroll event to settle
-      window.setTimeout(() => (isJumping = false), smooth ? 250 : 0);
-    };
+    const getRealDomIndex = (realIdx) => realIdx + 1; // +1 because cloneLast is first
   
-    // Jump to first real on load (no animation)
-    track.scrollTo({ left: slideW(), behavior: "auto" });
-  
-    // ---- Determine active index from scroll position
     const computeIndexFromScroll = () => {
-      const x = track.scrollLeft;
       const w = slideW();
-      const raw = Math.round(x / w); // 0..realCount+1 including clones
-      // raw=0 -> cloneLast, raw=realCount+1 -> cloneFirst
-      if (raw <= 0) return { raw, real: realCount - 1, isClone: true };
-      if (raw >= realCount + 1) return { raw, real: 0, isClone: true };
-      return { raw, real: raw - 1, isClone: false };
+      if (!w) return { raw: 1, real: currentRealIndex, isClone: false };
+  
+      const x = track.scrollLeft;
+      const raw = Math.round(x / w);
+  
+      if (raw <= 0) {
+        return { raw: 0, real: realCount - 1, isClone: true };
+      }
+  
+      if (raw >= realCount + 1) {
+        return { raw: realCount + 1, real: 0, isClone: true };
+      }
+  
+      return {
+        raw,
+        real: raw - 1,
+        isClone: false,
+      };
     };
   
-    // Lazy-load current + neighbors
     const loadNeighbors = (realIdx) => {
-      // real slide in DOM is at position realIdx+1
-      const domIdx = realIdx + 1;
+      const domIdx = getRealDomIndex(realIdx);
+  
       const cur = allSlides[domIdx]?.querySelector("img[data-src]");
       const prev = allSlides[domIdx - 1]?.querySelector("img[data-src]");
       const next = allSlides[domIdx + 1]?.querySelector("img[data-src]");
+  
       ensureSrc(cur);
       ensureSrc(prev);
       ensureSrc(next);
     };
   
-    // On scroll end-ish: update dots, lazy load, loop jump if on clone
-    let scrollTimer = null;
+    const syncToRealIndex = (realIdx, { smooth = false } = {}) => {
+      const normalizedIndex = normalizeIndex(realIdx);
+      const x = (normalizedIndex + 1) * slideW();
+  
+      currentRealIndex = normalizedIndex;
+      setActiveDot(currentRealIndex);
+      loadNeighbors(currentRealIndex);
+  
+      track.scrollTo({
+        left: x,
+        behavior: smooth ? "smooth" : "auto",
+      });
+    };
+  
+    const goToIndex = (realIndex, { smooth = true } = {}) => {
+      const normalizedIndex = normalizeIndex(realIndex);
+      currentRealIndex = normalizedIndex;
+      setActiveDot(currentRealIndex);
+      loadNeighbors(currentRealIndex);
+  
+      const x = (normalizedIndex + 1) * slideW();
+      track.scrollTo({
+        left: x,
+        behavior: smooth ? "smooth" : "auto",
+      });
+    };
+  
+    // Initial alignment to first REAL slide
+    syncToRealIndex(0, { smooth: false });
+  
+    // ---- Scroll handling
     track.addEventListener("scroll", () => {
-      if (isJumping) return;
+      if (isInstantJumping) return;
+  
       if (scrollTimer) window.clearTimeout(scrollTimer);
+  
       scrollTimer = window.setTimeout(() => {
         const info = computeIndexFromScroll();
   
@@ -116,29 +150,61 @@ document.addEventListener("DOMContentLoaded", () => {
         setActiveDot(currentRealIndex);
         loadNeighbors(currentRealIndex);
   
-        // If user landed on a clone, jump instantly to corresponding real slide
+        // If landed on clone, jump instantly to matching real slide
         if (info.raw === 0) {
-          // cloneLast -> jump to last real
-          track.scrollTo({ left: realCount * slideW(), behavior: "auto" });
+          isInstantJumping = true;
+          track.scrollTo({
+            left: realCount * slideW(),
+            behavior: "auto",
+          });
+          currentRealIndex = realCount - 1;
+          setActiveDot(currentRealIndex);
+          loadNeighbors(currentRealIndex);
+  
+          requestAnimationFrame(() => {
+            isInstantJumping = false;
+          });
         } else if (info.raw === realCount + 1) {
-          // cloneFirst -> jump to first real
-          track.scrollTo({ left: slideW(), behavior: "auto" });
+          isInstantJumping = true;
+          track.scrollTo({
+            left: slideW(),
+            behavior: "auto",
+          });
+          currentRealIndex = 0;
+          setActiveDot(currentRealIndex);
+          loadNeighbors(currentRealIndex);
+  
+          requestAnimationFrame(() => {
+            isInstantJumping = false;
+          });
         }
       }, 80);
     });
   
-    // ---- Arrow buttons (optional)
+    // ---- Arrow buttons
     const prevBtn = root.querySelector("[data-wb-prev]");
     const nextBtn = root.querySelector("[data-wb-next]");
-    if (prevBtn) prevBtn.addEventListener("click", () => goToIndex(currentRealIndex - 1));
-    if (nextBtn) nextBtn.addEventListener("click", () => goToIndex(currentRealIndex + 1));
   
-
-    // V2 ZOOM OVERLAY (separate)
+    if (prevBtn) {
+      prevBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        goToIndex(currentRealIndex - 1, { smooth: true });
+      });
+    }
+  
+    if (nextBtn) {
+      nextBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        goToIndex(currentRealIndex + 1, { smooth: true });
+      });
+    }
+  
+    // =========================================================
+    // ZOOM OVERLAY V2
+    // =========================================================
     const overlay = document.querySelector(".image-selector.image-selector-v2");
     if (!overlay) return;
   
-    // Backdrop that always catches clicks
     let backdrop = overlay.querySelector(".zoom-backdrop-v2");
     if (!backdrop) {
       backdrop = document.createElement("div");
@@ -168,16 +234,19 @@ document.addEventListener("DOMContentLoaded", () => {
     setOverlayClosed();
   
     const getRealImgAt = (realIdx) => {
-      // real slide DOM index is realIdx+1
-      return allSlides[realIdx + 1]?.querySelector("img");
+      const domIdx = getRealDomIndex(normalizeIndex(realIdx));
+      return allSlides[domIdx]?.querySelector("img");
     };
   
     const showZoom = (realIdx) => {
-      currentRealIndex = (realIdx + realCount) % realCount;
+      currentRealIndex = normalizeIndex(realIdx);
+  
       const img = getRealImgAt(currentRealIndex);
       ensureSrc(img);
+  
       const src = img?.getAttribute("src") || img?.getAttribute("data-src") || "";
       if (overlayImg) overlayImg.src = src;
+  
       setActiveDot(currentRealIndex);
     };
   
@@ -186,65 +255,72 @@ document.addEventListener("DOMContentLoaded", () => {
       showZoom(realIdx);
     };
   
-    const closeZoom = () => setOverlayClosed();
+    const closeZoom = () => {
+      setOverlayClosed();
+    };
   
     window.prevImageV2 = () => {
-      const nextIdx = (currentRealIndex - 1 + realCount) % realCount;
+      const nextIdx = normalizeIndex(currentRealIndex - 1);
       showZoom(nextIdx);
-      goToIndex(nextIdx, { smooth: false });
+      syncToRealIndex(nextIdx, { smooth: false });
     };
   
     window.nextImageV2 = () => {
-      const nextIdx = (currentRealIndex + 1) % realCount;
+      const nextIdx = normalizeIndex(currentRealIndex + 1);
       showZoom(nextIdx);
-      goToIndex(nextIdx, { smooth: false });
+      syncToRealIndex(nextIdx, { smooth: false });
     };
   
-    // Open zoom when tapping image
+    // Open zoom when clicking image
     track.addEventListener(
       "pointerup",
       (e) => {
         if (overlay.style.display === "block") return;
+  
         const img = e.target.closest(".wb-snap__slide img");
         if (!img) return;
   
         e.preventDefault();
         e.stopPropagation();
   
-        // Figure which REAL slide was clicked
         const slideEl = img.closest("[data-wb-slide]");
-        const idxInAll = allSlides.indexOf(slideEl); // includes clones
-        // Convert DOM index -> real index:
-        // idxInAll 0 = cloneLast => last real
-        // idxInAll realCount+1 = cloneFirst => first real
+        const idxInAll = allSlides.indexOf(slideEl);
+  
         let realIdx;
-        if (idxInAll === 0) realIdx = realCount - 1;
-        else if (idxInAll === realCount + 1) realIdx = 0;
-        else realIdx = idxInAll - 1;
+        if (idxInAll === 0) {
+          realIdx = realCount - 1;
+        } else if (idxInAll === realCount + 1) {
+          realIdx = 0;
+        } else {
+          realIdx = idxInAll - 1;
+        }
   
         openZoom(realIdx);
       },
       { capture: true }
     );
   
-    // Close mechanisms
+    // Close overlay
     backdrop.addEventListener("click", (e) => {
       e.preventDefault();
       e.stopPropagation();
       closeZoom();
     });
   
-    if (closeBtn) closeBtn.addEventListener("click", (e) => {
-      e.preventDefault();
-      closeZoom();
-    });
+    if (closeBtn) {
+      closeBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        closeZoom();
+      });
+    }
   
     document.addEventListener("keydown", (e) => {
       if (e.key === "Escape") closeZoom();
     });
   
-    // Re-align on resize (important because width = 100% snap)
+    // Keep alignment on resize
     window.addEventListener("resize", () => {
-      track.scrollTo({ left: (currentRealIndex + 1) * slideW(), behavior: "auto" });
+      syncToRealIndex(currentRealIndex, { smooth: false });
     });
   });
