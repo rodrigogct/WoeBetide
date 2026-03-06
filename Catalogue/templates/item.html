@@ -8,232 +8,42 @@
   <link rel="stylesheet" href="{% static 'css/catalogue.css' %}">
   <link rel="stylesheet" href="{% static 'css/carousel.css' %}">
 
-  <div id="item-layout-root"></div>
+  <!-- NEW: V2 root (unified, single DOM) -->
+  <div id="item-layout-root-v2"></div>
 
-  <template id="tpl-desktop">  
-    <div class="item">
-      <!-- images -->
-      <div class="images">
-          {% if item %}
-            <div class="main-images">
-              {% for img in images %}
-                <picture class="img-{{ forloop.counter }}">
-                  <img
-                    data-src="{{ img.url|cld_item }}"
-                    alt="Image {{ forloop.counter }}"
-                    decoding="async"
-                    {% if forloop.first %}
-                      fetchpriority="high"
-                    {% else %}
-                      fetchpriority="low"
-                    {% endif %}
-                  >
-                </picture>
-              {% endfor %}            
-            </div>
-          {% endif %}
-      </div> 
-      <!-- product information -->
-      <div class="information">
-          <div class="text container">
-              <div style="display: flex; flex-direction: column; border-bottom: 1px solid; justify-content: center;">
-                  <!-- title and subtitle of the text. -->
-                  <div class="section row">
-                      <div class="item_name">
-                          {% if item.name %}
-                          <h6 style="font-size: 1.5rem; text-transform: uppercase">{{item.name}}</h6>
-                          {% endif %}
-                      </div>
-                      <div class="item_size">
-                        {% if not item.is_sold %}
-                          {% if item.size %}
-                            <p>Size: <strong>{{ item.size }}</strong></p>
-                          {% endif %}
-                        {% endif %}
-                      </div>
-                      <div class="item_price">
-                        {% if not item.is_sold%}
-                          {% if item.price %}
-                            <p>Price: <strong>${{ item.price }}</strong> MXN</p>
-                          {% endif %}
-                        {% endif %}
-                      </div>
-                      <div class="item_description">
-                          <!-- catalogue description -->
-                          {% if item.description %}
-                          <p>{{item.description}}</p>
-                          {% endif %}                          
-                      </div>
-                  </div>
-                  <!-- measurements information -->
-                  <div class="measurements_information">
-                    {% if not item.is_sold %}
-                      {% if item.size %}
-                        <div class="measurements row">
-                          <div class="width" style="border-bottom: none; border-right: none;">
-                            <p>Width</p>
-                            <img class="measure-info" data-target="width" src="{% static 'images/misc/information-logotype-in-a-circle.png' %}" loading="lazy" alt="">
-                            <div class="measurements-img" data-img="width">
-                              <img src="{% static 'images/misc/width.png' %}" loading="eager" alt="">
-                            </div>
-                          </div>
-                          <!-- catalogue items width -->
-                          {% if item.width_in_cm %}
-                            <p class="info" style="border-bottom: none;">{{ item.width_in_cm }} cm / {{ item.width }} in</p>
-                          {% endif %}
-                          <div class="length" style="border-bottom: none; border-right: none;">
-                            <p style="border-right: none; border-bottom: none;">Length</p>
-                            <img class="measure-info" data-target="length" src="{% static 'images/misc/information-logotype-in-a-circle.png' %}" loading="lazy" alt="">
-                            <div class="measurements-img" data-img="length">
-                              <img src="{% static 'images/misc/length.png' %}" loading="eager" alt="">
-                            </div>
-                          </div>
-                          <!-- catalogue items lenght -->
-                          {% if item.length_in_cm %}
-                            <p class="info" style="border-bottom: none;">{{ item.length_in_cm }} cm / {{ item.length }} in</p>
-                          {% endif %}
-                          <div class="sleeve" style="border-right: none;">
-                            <p style="border-right: none;">Sleeve</p>
-                            <img class="measure-info" data-target="sleeve" src="{% static 'images/misc/information-logotype-in-a-circle.png' %}" loading="lazy" alt="">
-                            <div class="measurements-img" data-img="sleeve">
-                              <img src="{% static 'images/misc/sleeve.png' %}" loading="eager" alt="">
-                            </div>
-                          </div>
-                          <!-- catalogue items sleeve lenght -->
-                          {% if item.sleeve_in_cm %}
-                            <p class="info">{{ item.sleeve_in_cm }} cm / {{ item.sleeve }} in</p>
-                          {% endif %}
-                        </div>
-                      {% endif %}
-                    {% endif %}
-                  </div>
-              </div>
-              <div style="display: flex; flex-direction: column; justify-content: center;">
-                  <!-- disclaimer -->
-                  <div class="disclaimer row">
-                  <p style="margin-top: 20px;">1. Vintage garments will include unique wear characteristics and sometimes subtle distressing. These are considered a feature, not a defect.</p>
-                  <p>2. Each gament is chosen by our team in Mexico City.</p>
-                  <p>3. All items have been laundered.</p>
-                  <p>4. All sales are final. Due to the nature of vintage clothing, the tagged size might not display the correct size. We recommend checking the measurements shown above.</p>
-                  <p>5. Images may not display the exact color of the garment in its entirety.</p>
-                  </div>
-                  <!-- add to cart -->
-                  <div class="add-cart row">
-                  <p><strong>Contact us via Instagram at @woe.betide for more information.</strong></p>
-                  </div>
-              </div>
-
-              <div class="buy-buttons">
-                {% if item.is_archive or item.is_sold %}
-                <p class="mt-2" style="text-align: center;">SOLD OUT</p>
-              
-                {% elif item.shopify_variant_id %}
-                  <button>
-                    <a href="https://tyu50q-za.myshopify.com/cart/{{ item.shopify_variant_id }}:1" class="btn btn-buy">Buy Now</a>
-                  </button>
-                  <form method="post" action="{% url 'CartAdd' item.id %}">
-                    {% csrf_token %}
-                    <button class="btn btn-dark mt-2" data-item-id="{{ item.id }}" data-quantity="1" data-max-qty="1">
-                      Add to Cart
-                    </button>
-
-                    <a href="{% url 'Cart' %}" class="view-cart-link" style="display:none; text-align:center; margin-top:8px;">
-                      View cart
-                    </a>
-                  </form>
-
-                {% else %}
-                  <p class="coming-soon-text" style="text-align: center;">Coming Soon</p>
-                {% endif %}  
-              </div>
-          </div>
-      </div>
-    </div>  
-  </template>
-  
-  <template id="tpl-mobile">
-    <!-- CAROUSEL -->
-    <div class="item-carousel">
-      <!-- images -->
+  <template id="tpl-unified-v2">
+    <!-- This wrapper will be styled to look identical to your mobile layout -->
+    <div class="item-carousel item-carousel-v2">
       <div class="images">
         {% if item %}
           <div class="main-images">
-            <!-- first carousel -->
-            <div id="carouselExampleAutoplaying" class="carousel slide" data-bs-touch="true" data-bs-interval="false" data-bs-wrap="true">
-                <div class="carousel-inner">
-                    {% for img in images %}
-                      <!-- <div class="carousel-item {% if forloop.first %}active{% endif %}">
-                        <img
-                          {% if forloop.first %}
-                            src="{{ img.url|cld_item }}"
-                            loading="eager" fetchpriority="high"
-                          {% else %}
-                            data-src="{{ img.url|cld_item }}"
-                            loading="lazy" fetchpriority="low"
-                          {% endif %}
-                          alt="Image {{ forloop.counter }}"
-                          decoding="async"
-                        >
-                      </div>                   -->
-                      <div class="carousel-item {% if forloop.first %}active{% endif %}">
-                        <img
-                          {% if forloop.first %}
-                            data-src="{{ img.url|cld_item }}"
-                            fetchpriority="high"
-                            loading="eager"
-                          {% else %}
-                            data-src="{{ img.url|cld_item }}"
-                            fetchpriority="low"
-                            loading="lazy"
-                          {% endif %}
-                          class="d-block w-100"
-                          alt="Image {{ forloop.counter }}"
-                          decoding="async"
-                        >
-                      </div>
-                    {% endfor %}
-                </div>
-                <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleAutoplaying" data-bs-slide="prev">
-                          <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-                          <span class="visually-hidden">Previous</span>
-                </button>
-                <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleAutoplaying" data-bs-slide="next">
-                          <span class="carousel-control-next-icon" aria-hidden="true"></span>
-                          <span class="visually-hidden">Next</span>
-                </button>
+            <div class="wb-snap" data-wb-snap>
+              <div class="wb-snap__track" data-wb-track>
+                {% for img in images %}
+                  <div class="wb-snap__slide" data-wb-slide>
+                    <img
+                      data-src="{{ img.url|cld_item }}"
+                      alt="Image {{ forloop.counter }}"
+                      decoding="async"
+                      {% if forloop.first %}
+                        fetchpriority="high" loading="eager"
+                      {% else %}
+                        fetchpriority="low" loading="lazy"
+                      {% endif %}
+                    >
+                  </div>
+                {% endfor %}
+              </div>
+
+              <!-- dots -->
+              <div class="wb-dots" data-wb-dots aria-hidden="true"></div>
+
+              <!-- OPTIONAL: keep arrows (desktop/trackpad), hidden on touch if you want -->
+              <button class="wb-arrow wb-arrow--prev" type="button" data-wb-prev aria-label="Previous"></button>
+              <button class="wb-arrow wb-arrow--next" type="button" data-wb-next aria-label="Next"></button>
             </div>
           </div>
         {% endif %}
-        <!-- <div class="secondary-images">
-                <div id="carouselExampleSlidesOnly" class="carousel slide" data-bs-ride="carousel">
-                      <div class="carousel-inner">
-                      {% if item.img3 %}
-                        <div class="carousel-item active">
-                          <img src="{{item.img3.url}}" class="d-block w-100" alt="..." style="border-bottom: none;">
-                        </div>
-                      {% endif %}
-                      {% if item.img4 %}
-                        <div class="carousel-item">
-                          <img src="{{item.img4.url}}" class="d-block w-100" alt="..." style="border-bottom: none;">
-                        </div>
-                      {% endif %}
-                      </div>
-                </div>
-                <div id="carouselExampleSlidesOnly" class="carousel slide" data-bs-ride="carousel">
-                      <div class="carousel-inner">
-                      {% if item.img5 %}
-                        <div class="carousel-item active">
-                          <img src="{{item.img5.url}}" class="d-block w-100" alt="...">
-                        </div>
-                      {% endif %}
-                      {% if item.img6 %}
-                        <div class="carousel-item">
-                          <img src="{{item.img6.url}}" class="d-block w-100" alt="...">
-                        </div>
-                      {% endif %}
-                      </div>
-                </div>
-        </div> -->
       </div>
       <!-- product information -->
       <div class="information">
@@ -384,53 +194,6 @@
               {% endif %}  
             </div>
         </div>
-      </div>
-    </div>
-  </template>
-
-  <!-- NEW: V2 root (unified, single DOM) -->
-  <div id="item-layout-root-v2"></div>
-
-  <template id="tpl-unified-v2">
-    <!-- This wrapper will be styled to look identical to your mobile layout -->
-    <div class="item-carousel item-carousel-v2">
-      <div class="images">
-        {% if item %}
-          <div class="main-images">
-            <div class="wb-snap" data-wb-snap>
-              <div class="wb-snap__track" data-wb-track>
-                {% for img in images %}
-                  <div class="wb-snap__slide" data-wb-slide>
-                    <img
-                      data-src="{{ img.url|cld_item }}"
-                      alt="Image {{ forloop.counter }}"
-                      decoding="async"
-                      {% if forloop.first %}
-                        fetchpriority="high" loading="eager"
-                      {% else %}
-                        fetchpriority="low" loading="lazy"
-                      {% endif %}
-                    >
-                  </div>
-                {% endfor %}
-              </div>
-
-              <!-- dots -->
-              <div class="wb-dots" data-wb-dots aria-hidden="true"></div>
-
-              <!-- OPTIONAL: keep arrows (desktop/trackpad), hidden on touch if you want -->
-              <button class="wb-arrow wb-arrow--prev" type="button" data-wb-prev aria-label="Previous"></button>
-              <button class="wb-arrow wb-arrow--next" type="button" data-wb-next aria-label="Next"></button>
-            </div>
-          </div>
-        {% endif %}
-      </div>
-
-      <!-- IMPORTANT: keep your existing info markup exactly -->
-      <!-- Easiest: reuse your existing mobile .information block by copy/paste -->
-      <!-- (Paste your current tpl-mobile “information” section here unchanged) -->
-      <div class="information">
-        <!-- paste your existing tpl-mobile information HTML here, unchanged -->
       </div>
     </div>
   </template>
