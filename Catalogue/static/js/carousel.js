@@ -3,6 +3,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const tpl = document.getElementById("tpl-unified-v2");
     if (!root || !tpl) return;
   
+    // Mount ONCE
     root.innerHTML = "";
     root.appendChild(tpl.content.cloneNode(true));
   
@@ -10,6 +11,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const track = root.querySelector("[data-wb-track]");
     if (!host || !track) return;
   
+    // ---------------------------------------------------------
+    // Helpers
+    // ---------------------------------------------------------
     const ensureSrc = (img) => {
       if (!img) return;
       if (img.getAttribute("src")) return;
@@ -22,6 +26,9 @@ document.addEventListener("DOMContentLoaded", () => {
   
     ensureSrc(track.querySelector("img[data-src]"));
   
+    // ---------------------------------------------------------
+    // Dots
+    // ---------------------------------------------------------
     const dotsWrap = root.querySelector("[data-wb-dots]");
     const dots = [];
   
@@ -29,6 +36,7 @@ document.addEventListener("DOMContentLoaded", () => {
       dots.forEach((d, i) => d.classList.toggle("is-active", i === idx));
     };
   
+    // moveToRealIndex is defined later, but click handlers run after that
     if (dotsWrap) {
       dotsWrap.innerHTML = "";
       for (let i = 0; i < originalSlides.length; i++) {
@@ -44,6 +52,9 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
   
+    // ---------------------------------------------------------
+    // Clone first + last for real infinite effect
+    // ---------------------------------------------------------
     const cloneFirst = originalSlides[0].cloneNode(true);
     const cloneLast = originalSlides[originalSlides.length - 1].cloneNode(true);
   
@@ -57,7 +68,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const realCount = originalSlides.length;
   
     const slideW = () => track.clientWidth;
-    const realToDom = (realIdx) => realIdx + 1;
+    const realToDom = (realIdx) => realIdx + 1; // dom 0 = cloneLast
     const normalizeIndex = (idx) => ((idx % realCount) + realCount) % realCount;
   
     let currentRealIndex = 0;
@@ -66,6 +77,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let settleRaf = null;
     let lastScrollLeft = track.scrollLeft;
     let stableFrames = 0;
+    let activeScrollAnimation = null;
   
     const loadNeighbors = (realIdx) => {
       const domIdx = realToDom(realIdx);
@@ -79,6 +91,11 @@ document.addEventListener("DOMContentLoaded", () => {
     };
   
     const instantScrollTo = (left) => {
+      if (activeScrollAnimation) {
+        cancelAnimationFrame(activeScrollAnimation);
+        activeScrollAnimation = null;
+      }
+  
       isAutoJumping = true;
       setScrollSnap(false);
       track.scrollLeft = left;
@@ -97,12 +114,56 @@ document.addEventListener("DOMContentLoaded", () => {
       loadNeighbors(currentRealIndex);
     };
   
+    const animateScrollTo = (targetLeft, duration = 160) => {
+      if (activeScrollAnimation) {
+        cancelAnimationFrame(activeScrollAnimation);
+        activeScrollAnimation = null;
+      }
+  
+      const startLeft = track.scrollLeft;
+      const distance = targetLeft - startLeft;
+  
+      if (!duration || duration <= 0 || Math.abs(distance) < 1) {
+        track.scrollLeft = targetLeft;
+        return;
+      }
+  
+      let startTime = null;
+  
+      const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
+  
+      const step = (timestamp) => {
+        if (startTime === null) startTime = timestamp;
+  
+        const elapsed = timestamp - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const eased = easeOutCubic(progress);
+  
+        track.scrollLeft = startLeft + distance * eased;
+  
+        if (progress < 1) {
+          activeScrollAnimation = requestAnimationFrame(step);
+        } else {
+          activeScrollAnimation = null;
+        }
+      };
+  
+      activeScrollAnimation = requestAnimationFrame(step);
+    };
+  
     const moveToDomIndex = (domIdx, smooth = true) => {
       const left = domIdx * slideW();
-      track.scrollTo({
-        left,
-        behavior: smooth ? "smooth" : "auto",
-      });
+  
+      if (!smooth) {
+        if (activeScrollAnimation) {
+          cancelAnimationFrame(activeScrollAnimation);
+          activeScrollAnimation = null;
+        }
+        track.scrollLeft = left;
+        return;
+      }
+  
+      animateScrollTo(left, 160);
     };
   
     const moveToRealIndex = (realIdx, smooth = true) => {
@@ -120,18 +181,21 @@ document.addEventListener("DOMContentLoaded", () => {
     const handleLoopRepositionIfNeeded = () => {
       const domIdx = getNearestDomIndex();
   
+      // 0 = cloneLast
       if (domIdx === 0) {
         instantScrollTo(realCount * slideW());
         syncUI(realCount - 1);
         return;
       }
   
+      // realCount + 1 = cloneFirst
       if (domIdx === realCount + 1) {
         instantScrollTo(slideW());
         syncUI(0);
         return;
       }
   
+      // normal real slides
       syncUI(domIdx - 1);
     };
   
@@ -167,9 +231,15 @@ document.addEventListener("DOMContentLoaded", () => {
       settleRaf = requestAnimationFrame(check);
     };
   
+    // ---------------------------------------------------------
+    // Initial position: first real slide
+    // ---------------------------------------------------------
     instantScrollTo(slideW());
     syncUI(0);
   
+    // ---------------------------------------------------------
+    // Scroll observer
+    // ---------------------------------------------------------
     if ("onscrollend" in track) {
       track.addEventListener("scrollend", () => {
         if (isAutoJumping) return;
@@ -182,6 +252,9 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     }
   
+    // ---------------------------------------------------------
+    // Prev / Next buttons with REAL loop effect
+    // ---------------------------------------------------------
     const prevBtn = root.querySelector("[data-wb-prev]");
     const nextBtn = root.querySelector("[data-wb-next]");
   
@@ -191,6 +264,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (isAnimatingByButton) return;
         isAnimatingByButton = true;
   
+        // If on last real, animate to cloneFirst
         if (currentRealIndex === realCount - 1) {
           setActiveDot(0);
           loadNeighbors(0);
@@ -207,6 +281,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (isAnimatingByButton) return;
         isAnimatingByButton = true;
   
+        // If on first real, animate to cloneLast
         if (currentRealIndex === 0) {
           setActiveDot(realCount - 1);
           loadNeighbors(realCount - 1);
@@ -217,6 +292,129 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     }
   
+    // ---------------------------------------------------------
+    // ZOOM OVERLAY V2
+    // ---------------------------------------------------------
+    const overlay = document.querySelector(".image-selector.image-selector-v2");
+    if (!overlay) return;
+  
+    let backdrop = overlay.querySelector(".zoom-backdrop-v2");
+    if (!backdrop) {
+      backdrop = document.createElement("div");
+      backdrop.className = "zoom-backdrop-v2";
+      overlay.prepend(backdrop);
+    }
+  
+    const overlayImg = overlay.querySelector(".photo-v2");
+    const closeBtn =
+      overlay.querySelector(".close-v2") || overlay.querySelector(".close");
+  
+    const setOverlayClosed = () => {
+      overlay.style.display = "none";
+      overlay.style.opacity = "0";
+      overlay.style.pointerEvents = "none";
+      overlay.classList.remove("active");
+      document.body.classList.remove("lock-scroll");
+    };
+  
+    const setOverlayOpen = () => {
+      overlay.style.display = "block";
+      overlay.style.opacity = "1";
+      overlay.style.pointerEvents = "auto";
+      overlay.classList.add("active");
+      document.body.classList.add("lock-scroll");
+    };
+  
+    setOverlayClosed();
+  
+    const getRealImgAt = (realIdx) => {
+      const domIdx = realToDom(normalizeIndex(realIdx));
+      return allSlides[domIdx]?.querySelector("img");
+    };
+  
+    const showZoom = (realIdx) => {
+      const normalized = normalizeIndex(realIdx);
+      const img = getRealImgAt(normalized);
+  
+      ensureSrc(img);
+  
+      const src = img?.getAttribute("src") || img?.getAttribute("data-src") || "";
+      if (overlayImg) overlayImg.src = src;
+  
+      currentRealIndex = normalized;
+      setActiveDot(currentRealIndex);
+    };
+  
+    const openZoom = (realIdx) => {
+      setOverlayOpen();
+      showZoom(realIdx);
+    };
+  
+    const closeZoom = () => {
+      setOverlayClosed();
+    };
+  
+    window.prevImageV2 = () => {
+      const nextIdx = normalizeIndex(currentRealIndex - 1);
+      showZoom(nextIdx);
+      moveToRealIndex(nextIdx, false);
+    };
+  
+    window.nextImageV2 = () => {
+      const nextIdx = normalizeIndex(currentRealIndex + 1);
+      showZoom(nextIdx);
+      moveToRealIndex(nextIdx, false);
+    };
+  
+    // Open zoom on image tap/click
+    track.addEventListener(
+      "pointerup",
+      (e) => {
+        if (overlay.style.display === "block") return;
+  
+        const img = e.target.closest(".wb-snap__slide img");
+        if (!img) return;
+  
+        e.preventDefault();
+        e.stopPropagation();
+  
+        const slideEl = img.closest("[data-wb-slide]");
+        const idxInAll = allSlides.indexOf(slideEl);
+  
+        let realIdx;
+        if (idxInAll === 0) {
+          realIdx = realCount - 1;
+        } else if (idxInAll === realCount + 1) {
+          realIdx = 0;
+        } else {
+          realIdx = idxInAll - 1;
+        }
+  
+        openZoom(realIdx);
+      },
+      { capture: true }
+    );
+  
+    // Close overlay
+    backdrop.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      closeZoom();
+    });
+  
+    if (closeBtn) {
+      closeBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        closeZoom();
+      });
+    }
+  
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") closeZoom();
+    });
+  
+    // Resize
     window.addEventListener("resize", () => {
       instantScrollTo(realToDom(currentRealIndex) * slideW());
       syncUI(currentRealIndex);
