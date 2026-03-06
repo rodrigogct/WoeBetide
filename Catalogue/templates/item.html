@@ -151,6 +151,243 @@
     </div>  
   </template>
   
+  <template id="tpl-mobile">
+    <!-- CAROUSEL -->
+    <div class="item-carousel">
+      <!-- images -->
+      <div class="images">
+        {% if item %}
+          <div class="main-images">
+            <!-- first carousel -->
+            <div id="carouselExampleAutoplaying" class="carousel slide" data-bs-touch="true" data-bs-interval="false" data-bs-wrap="true">
+                <div class="carousel-inner">
+                    {% for img in images %}
+                      <!-- <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                        <img
+                          {% if forloop.first %}
+                            src="{{ img.url|cld_item }}"
+                            loading="eager" fetchpriority="high"
+                          {% else %}
+                            data-src="{{ img.url|cld_item }}"
+                            loading="lazy" fetchpriority="low"
+                          {% endif %}
+                          alt="Image {{ forloop.counter }}"
+                          decoding="async"
+                        >
+                      </div>                   -->
+                      <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                        <img
+                          {% if forloop.first %}
+                            data-src="{{ img.url|cld_item }}"
+                            fetchpriority="high"
+                            loading="eager"
+                          {% else %}
+                            data-src="{{ img.url|cld_item }}"
+                            fetchpriority="low"
+                            loading="lazy"
+                          {% endif %}
+                          class="d-block w-100"
+                          alt="Image {{ forloop.counter }}"
+                          decoding="async"
+                        >
+                      </div>
+                    {% endfor %}
+                </div>
+                <button class="carousel-control-prev" type="button" data-bs-target="#carouselExampleAutoplaying" data-bs-slide="prev">
+                          <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                          <span class="visually-hidden">Previous</span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#carouselExampleAutoplaying" data-bs-slide="next">
+                          <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                          <span class="visually-hidden">Next</span>
+                </button>
+            </div>
+          </div>
+        {% endif %}
+        <!-- <div class="secondary-images">
+                <div id="carouselExampleSlidesOnly" class="carousel slide" data-bs-ride="carousel">
+                      <div class="carousel-inner">
+                      {% if item.img3 %}
+                        <div class="carousel-item active">
+                          <img src="{{item.img3.url}}" class="d-block w-100" alt="..." style="border-bottom: none;">
+                        </div>
+                      {% endif %}
+                      {% if item.img4 %}
+                        <div class="carousel-item">
+                          <img src="{{item.img4.url}}" class="d-block w-100" alt="..." style="border-bottom: none;">
+                        </div>
+                      {% endif %}
+                      </div>
+                </div>
+                <div id="carouselExampleSlidesOnly" class="carousel slide" data-bs-ride="carousel">
+                      <div class="carousel-inner">
+                      {% if item.img5 %}
+                        <div class="carousel-item active">
+                          <img src="{{item.img5.url}}" class="d-block w-100" alt="...">
+                        </div>
+                      {% endif %}
+                      {% if item.img6 %}
+                        <div class="carousel-item">
+                          <img src="{{item.img6.url}}" class="d-block w-100" alt="...">
+                        </div>
+                      {% endif %}
+                      </div>
+                </div>
+        </div> -->
+      </div>
+      <!-- product information -->
+      <div class="information">
+        <div class="text container">
+            <div style="display: flex; flex-direction: column; border-bottom: 1px solid; justify-content: center;">
+                <!-- title and subtitle of the text. -->
+                <div class="section row">
+                    <div class="item_name">
+                      {% if item.name %}
+                      <h6 style="text-transform: uppercase; font-size: 1.5 rem;">{{item.name}}</h6>
+                      {% endif %}
+                    </div>
+                    <div class="item_size">
+                      {% if item.size %} 
+                      <p>Size: <strong>{{item.size}}</strong></p>
+                      {% endif %}
+                    </div>
+                    <div class="item_price">
+                      {% if item.price %}
+                      <p style="margin-bottom: 0;">Price: <strong>${{item.price}}</strong> MXN</p>
+                      {% endif %}
+                    </div>
+                    <div class="item_description">
+                        <!-- catalogue description -->
+                        {% if item.description %}
+                        <p>{{item.description}}</p>
+                        {% endif %}
+                        <!-- staff-pickups description -->
+                        {% if staff_item.description %}
+                        <p>{{staff_item.description}}</p>
+                        {% endif %}
+                        <!-- new item description -->
+                        {% if new_item.description %}
+                        <p>{{new_item.description}}</p>
+                        {% endif %}                          
+                    </div>
+                </div>
+                <!-- measurements information -->
+                <div class="measurements_information">
+                  <div class="measurements row">
+
+                    <div class="width" style="border-bottom: none; border-right: none;">
+                      <p>Width</p>
+                      <img
+                        class="measure-info"
+                        data-target="width"
+                        src="{% static 'images/misc/information-logotype-in-a-circle.png' %}"
+                        loading="lazy"
+                        alt=""
+                      >
+                      <div class="measurements-img" data-img="width">
+                        <img src="{% static 'images/misc/width.png' %}" loading="lazy" alt="">
+                      </div>
+                    </div>
+                    <!-- catalogue items width -->
+                    {% if item.width_in_cm %}
+                      <p class="info" style="border-bottom: none;">{{ item.width_in_cm }} cm / {{ item.width }} in</p>
+                    {% endif %}
+                    <!-- staff-pickups items width -->
+                    {% if staff_item.width_in_cm %}
+                      <p class="info" style="border-bottom: none;">{{ staff_item.width_in_cm }} cm / {{ staff_item.width }} in</p>
+                    {% endif %}
+
+                    <div class="length" style="border-bottom: none; border-right: none;">
+                      <p style="border-right: none; border-bottom: none;">Length</p>
+                      <img
+                        class="measure-info"
+                        data-target="length"
+                        src="{% static 'images/misc/information-logotype-in-a-circle.png' %}"
+                        loading="lazy"
+                        alt=""
+                      >
+                      <div class="measurements-img" data-img="length">
+                        <img src="{% static 'images/misc/length.png' %}" loading="lazy" alt="">
+                      </div>
+                    </div>
+                    <!-- catalogue items lenght -->
+                    {% if item.length_in_cm %}
+                      <p class="info" style="border-bottom: none;">{{ item.length_in_cm }} cm / {{ item.length }} in</p>
+                    {% endif %}
+                    <!-- staff-pickups items length -->
+                    {% if staff_item.length_in_cm %}
+                      <p class="info" style="border-bottom: none;">{{ staff_item.length_in_cm }} cm / {{ staff_item.length }} in</p>
+                    {% endif %}
+
+                    <div class="sleeve" style="border-right: none;">
+                      <p style="border-right: none;">Sleeve</p>
+                      <img
+                        class="measure-info"
+                        data-target="sleeve"
+                        src="{% static 'images/misc/information-logotype-in-a-circle.png' %}"
+                        loading="lazy"
+                        alt=""
+                      >
+                      <div class="measurements-img" data-img="sleeve">
+                        <img src="{% static 'images/misc/sleeve.png' %}" loading="lazy" alt="">
+                      </div>
+                    </div>
+                    <!-- catalogue items sleeve lenght -->
+                    {% if item.sleeve_in_cm %}
+                      <p class="info">{{ item.sleeve_in_cm }} cm / {{ item.sleeve }} in</p>
+                    {% endif %}
+                    <!-- staff-pickups items sleeve lenght -->
+                    {% if staff_item.sleeve_in_cm %}
+                      <p class="info">{{ staff_item.sleeve_in_cm }} cm / {{ staff_item.sleeve }} in</p>
+                    {% endif %}
+
+                  </div>
+                </div>
+            </div>
+            <div style="display: flex; flex-direction: column; justify-content: center;">
+                <!-- disclaimer -->
+                <div class="disclaimer row">
+                <p style="margin-top: 20px;">1. Vintage garments will include unique wear characteristics and sometimes subtle distressing. These are considered a feature, not a defect.</p>
+                <p>2. Each gament is chosen by our team in Mexico City.</p>
+                <p>3. All items have been laundered.</p>
+                <p>4. All sales are final. Due to the nature of vintage clothing, the tagged size might not display the correct size. We recommend checking the measurements shown above.</p>
+                <p>5. Images may not display the exact color of the garment in its entirety.</p>
+                </div>
+                <!-- add to cart -->
+                <div class="add-cart row">
+                <p><strong>Contact us via Instagram at @woe.betide for more information.</strong></p>
+                </div>
+            </div>
+            <div class="buy-buttons">
+              {% if item.is_archive or item.is_sold %}
+              <p class="mt-2" style="text-align: center;">SOLD OUT</p>
+            
+              {% elif item.shopify_variant_id %}
+                <button>
+                  <a href="https://tyu50q-za.myshopify.com/cart/{{ item.shopify_variant_id }}:1" class="btn btn-buy">Buy Now</a>
+                </button>
+                <form method="post" action="{% url 'CartAdd' item.id %}">
+                  {% csrf_token %}
+                  <!-- <button class="btn btn-dark mt-2">
+                    Add to Cart
+                  </button> -->
+                  <button class="btn btn-dark mt-2"
+                    data-item-id="{{ item.id }}"
+                    data-quantity="1"
+                    data-max-qty="1">
+                    Add to Cart
+                  </button>
+                </form>
+              
+              {% else %}
+                <p class="coming-soon-text" style="text-align: center;">Coming Soon</p>
+              {% endif %}  
+            </div>
+        </div>
+      </div>
+    </div>
+  </template>
+
   <!-- NEW: V2 root (unified, single DOM) -->
   <div id="item-layout-root-v2"></div>
 
@@ -341,7 +578,7 @@
     </div>
   </template>
 
-<!-- NEW: V2 zoom overlay (separate from existing .image-selector) -->
+  <!-- NEW: V2 zoom overlay (separate from existing .image-selector) -->
   <main class="image-selector image-selector-v2" data-closable>
     <div class="zoomed-carousel-controls zoomed-carousel-controls-v2">
       <button class="zoomed-carousel-prev" type="button" onclick="prevImageV2()" style="background-color:black;border:none;">
