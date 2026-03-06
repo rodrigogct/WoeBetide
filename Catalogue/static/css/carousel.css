@@ -12,7 +12,7 @@
     overflow-x: auto;
     overflow-y: hidden;
     scroll-snap-type: x mandatory;
-    scroll-behavior: smooth;
+    /* scroll-behavior: smooth; */
   
     /* makes it feel like iOS/modern swipe */
     -webkit-overflow-scrolling: touch;
