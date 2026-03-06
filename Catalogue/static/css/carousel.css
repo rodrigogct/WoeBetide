@@ -1,0 +1,126 @@
+/* Keep using your existing .images / .main-images sizing rules.
+   We only style inside wb-snap. */
+
+   .item-carousel-v2 .wb-snap {
+    position: relative;
+    width: 100%;
+  }
+  
+  /* Track = horizontal scroll + snap */
+  .item-carousel-v2 .wb-snap__track {
+    display: flex;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+  
+    /* makes it feel like iOS/modern swipe */
+    -webkit-overflow-scrolling: touch;
+  
+    /* hide scrollbar without affecting scroll */
+    scrollbar-width: none;
+  }
+  .item-carousel-v2 .wb-snap__track::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .item-carousel-v2 .wb-snap__slide {
+    flex: 0 0 100%;
+    scroll-snap-align: center;
+    scroll-snap-stop: always;
+    position: relative;
+  }
+  
+  /* Images should look identical to your current carousel images */
+  .item-carousel-v2 .wb-snap__slide img {
+    width: 100%;
+    height: 750px;            /* match your mobile height */
+    object-fit: cover;
+    border-top: none;
+    user-select: none;
+    -webkit-user-drag: none;
+    cursor: zoom-in;
+  }
+  
+  /* Match your existing responsive heights */
+  @media (max-width: 500px) {
+    .item-carousel-v2 .wb-snap__slide img {
+      min-height: 300px;
+      height: 450px;
+    }
+  }
+  
+  /* Dots (like inspo). Position similar to screenshot: bottom left area */
+  .item-carousel-v2 .wb-dots {
+    position: absolute;
+    left: 14px;
+    bottom: 14px;
+    display: flex;
+    gap: 10px;
+    z-index: 3;
+    pointer-events: auto;
+  }
+  
+  .item-carousel-v2 .wb-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 999px;
+    border: 1px solid black;
+    background: transparent;
+    opacity: 0.9;
+  }
+  
+  .item-carousel-v2 .wb-dot.is-active {
+    background: black;
+  }
+  
+  /* Optional arrows for desktop, visually subtle */
+  .item-carousel-v2 .wb-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 42px;
+    height: 42px;
+    border: none;
+    background: transparent;
+    z-index: 3;
+    cursor: pointer;
+  }
+  
+  /* Use simple chevrons without changing your design system */
+  .item-carousel-v2 .wb-arrow::before {
+    content: "";
+    display: block;
+    width: 14px;
+    height: 14px;
+    border-top: 2px solid rgba(0,0,0,0.45);
+    border-right: 2px solid rgba(0,0,0,0.45);
+    margin: 0 auto;
+  }
+  
+  .item-carousel-v2 .wb-arrow--prev { left: 10px; }
+  .item-carousel-v2 .wb-arrow--prev::before { transform: rotate(-135deg); }
+  
+  .item-carousel-v2 .wb-arrow--next { right: 10px; }
+  .item-carousel-v2 .wb-arrow--next::before { transform: rotate(45deg); }
+  
+  /* Hide arrows on touch devices (keeps it clean like your screenshot) */
+  @media (hover: none) and (pointer: coarse) {
+    .item-carousel-v2 .wb-arrow { display: none; }
+  }
+  
+  /* V2 overlay backdrop layer (click-to-close reliability) */
+  .image-selector.image-selector-v2 .zoom-backdrop-v2 {
+    position: absolute;
+    inset: 0;
+    background: black;
+    z-index: 0;
+  }
+  
+  /* Ensure V2 overlay content sits above backdrop */
+  .image-selector.image-selector-v2 .zoomed-carousel-controls-v2,
+  .image-selector.image-selector-v2 .image-container-v2,
+  .image-selector.image-selector-v2 .close-v2 {
+    position: relative;
+    z-index: 2;
+  }

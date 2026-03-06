@@ -6,6 +6,7 @@
 {% block content %}
   <link rel="stylesheet" href="{% static 'css/item.css' %}">
   <link rel="stylesheet" href="{% static 'css/catalogue.css' %}">
+  <link rel="stylesheet" href="{% static 'css/carousel.css' %}">
 
   <div id="item-layout-root"></div>
 
@@ -386,6 +387,75 @@
       </div>
     </div>
   </template>
+
+  <!-- NEW: V2 root (unified, single DOM) -->
+  <div id="item-layout-root-v2"></div>
+
+  <template id="tpl-unified-v2">
+    <!-- This wrapper will be styled to look identical to your mobile layout -->
+    <div class="item-carousel item-carousel-v2">
+      <div class="images">
+        {% if item %}
+          <div class="main-images">
+            <div class="wb-snap" data-wb-snap>
+              <div class="wb-snap__track" data-wb-track>
+                {% for img in images %}
+                  <div class="wb-snap__slide" data-wb-slide>
+                    <img
+                      data-src="{{ img.url|cld_item }}"
+                      alt="Image {{ forloop.counter }}"
+                      decoding="async"
+                      {% if forloop.first %}
+                        fetchpriority="high" loading="eager"
+                      {% else %}
+                        fetchpriority="low" loading="lazy"
+                      {% endif %}
+                    >
+                  </div>
+                {% endfor %}
+              </div>
+
+              <!-- dots -->
+              <div class="wb-dots" data-wb-dots aria-hidden="true"></div>
+
+              <!-- OPTIONAL: keep arrows (desktop/trackpad), hidden on touch if you want -->
+              <button class="wb-arrow wb-arrow--prev" type="button" data-wb-prev aria-label="Previous"></button>
+              <button class="wb-arrow wb-arrow--next" type="button" data-wb-next aria-label="Next"></button>
+            </div>
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- IMPORTANT: keep your existing info markup exactly -->
+      <!-- Easiest: reuse your existing mobile .information block by copy/paste -->
+      <!-- (Paste your current tpl-mobile “information” section here unchanged) -->
+      <div class="information">
+        <!-- paste your existing tpl-mobile information HTML here, unchanged -->
+      </div>
+    </div>
+  </template>
+
+<!-- NEW: V2 zoom overlay (separate from existing .image-selector) -->
+<main class="image-selector image-selector-v2" data-closable>
+  <div class="zoomed-carousel-controls zoomed-carousel-controls-v2">
+    <button class="zoomed-carousel-prev" type="button" onclick="prevImageV2()" style="background-color:black;border:none;">
+      <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+      <span class="visually-hidden">Previous</span>
+    </button>
+    <button class="zoomed-carousel-next" type="button" onclick="nextImageV2()" style="background-color:black;border:none;">
+      <span class="carousel-control-next-icon" aria-hidden="true"></span>
+      <span class="visually-hidden">Next</span>
+    </button>
+  </div>
+
+  <div class="image-container image-container-v2">
+    <img class="photo photo-v2" src="" alt="">
+  </div>
+
+  <button type="button" class="close close-v2" aria-label="Close">
+    <span aria-hidden="true">&times;</span>
+  </button>
+</main>
 
   <!-- Zoomed-in image view -->
   <main class="image-selector" data-closable>
