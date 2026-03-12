@@ -1,32 +1,61 @@
-// item-zoom.js (drop-in, backdrop-based, works on desktop + mobile)
+// item-zoom.js (V2 only: works with #item-layout-root-v2 + #tpl-unified-v2)
 
 document.addEventListener("DOMContentLoaded", () => {
-    const root = document.getElementById("item-layout-root");
-    const tplDesktop = document.getElementById("tpl-desktop");
-    const tplMobile = document.getElementById("tpl-mobile");
-    if (!root || !tplDesktop || !tplMobile) {
-      console.warn("[zoom] missing root/template nodes");
+    const root = document.getElementById("item-layout-root-v2");
+    const tpl = document.getElementById("tpl-unified-v2");
+  
+    if (!root || !tpl) {
+      console.warn("[zoom v2] missing root/template nodes");
       return;
     }
   
-    const overlay = document.querySelector(".image-selector");
+    // Mount unified template once
+    root.innerHTML = "";
+    root.appendChild(tpl.content.cloneNode(true));
+  
+    const activeRoot = root.querySelector(".item-carousel-v2") || root.firstElementChild;
+    if (!activeRoot) {
+      console.warn("[zoom v2] mounted layout not found");
+      return;
+    }
+  
+    // Zoom overlay
+    const overlay =
+      document.querySelector(".image-selector-v2") ||
+      document.querySelector(".image-selector");
+  
     if (!overlay) {
-      console.warn("[zoom] missing .image-selector overlay");
+      console.warn("[zoom v2] missing zoom overlay");
       return;
     }
   
-    const overlayImg = overlay.querySelector("img.photo") || overlay.querySelector("img");
-    const closeButton = overlay.querySelector("button.close");
+    const overlayImg =
+      overlay.querySelector(".photo-v2") ||
+      overlay.querySelector(".photo") ||
+      overlay.querySelector("img");
   
-    // --- HARD GUARANTEE: add a backdrop div that always receives clicks ---
+    const closeButton =
+      overlay.querySelector(".close-v2") ||
+      overlay.querySelector(".close");
+  
+    const catalogue = Array.from(document.querySelectorAll(".catalogue"));
+    const navbar = Array.from(document.querySelectorAll(".navbar"));
+  
+    // Backdrop for reliable close behavior
     let backdrop = overlay.querySelector(".zoom-backdrop");
     if (!backdrop) {
       backdrop = document.createElement("div");
       backdrop.className = "zoom-backdrop";
-      overlay.prepend(backdrop); // behind everything else (CSS will handle z-index)
+      overlay.prepend(backdrop);
     }
   
-    // Ensure overlay starts fully inactive and never blocks page
+    const ensureSrc = (img) => {
+      if (!img) return;
+      if (img.getAttribute("src")) return;
+      const ds = img.getAttribute("data-src");
+      if (ds) img.setAttribute("src", ds);
+    };
+  
     const setOverlayClosed = () => {
       overlay.style.display = "none";
       overlay.style.opacity = "0";
@@ -45,132 +74,211 @@ document.addEventListener("DOMContentLoaded", () => {
   
     setOverlayClosed();
   
-    const ensureSrc = (img) => {
-      if (!img) return;
-      if (img.getAttribute("src")) return;
-      const ds = img.getAttribute("data-src");
-      if (ds) img.setAttribute("src", ds);
+    // --- V2 carousel / snap elements
+    const host = activeRoot.querySelector("[data-wb-snap]");
+    const track = activeRoot.querySelector("[data-wb-track]");
+    const slides = Array.from(activeRoot.querySelectorAll("[data-wb-slide]"));
+    const dotsWrap = activeRoot.querySelector("[data-wb-dots]");
+    const prevBtn = activeRoot.querySelector("[data-wb-prev]");
+    const nextBtn = activeRoot.querySelector("[data-wb-next]");
+  
+    if (!host || !track || !slides.length) {
+      console.warn("[zoom v2] snap carousel elements not found");
+      return;
+    }
+  
+    // Load first image immediately
+    ensureSrc(slides[0].querySelector("img"));
+  
+    // Load nearby images
+    const preloadAround = (index) => {
+      const current = slides[index]?.querySelector("img");
+      const next = slides[index + 1]?.querySelector("img");
+      const prev = slides[index - 1]?.querySelector("img");
+  
+      ensureSrc(current);
+      ensureSrc(next);
+      ensureSrc(prev);
     };
   
-    const catalogue = Array.from(document.querySelectorAll(".catalogue .elements"));
-    const navbar = Array.from(document.querySelectorAll(".navbar"));
+    let currentIndex = 0;
+    let isProgrammaticScroll = false;
   
-    const mq = window.matchMedia("(max-width: 700px)");
-    let cleanupFns = [];
+    // Dots
+    const dots = slides.map((_, index) => {
+      const dot = document.createElement("button");
+      dot.type = "button";
+      dot.className = "wb-dot";
+      dot.setAttribute("aria-label", `Go to image ${index + 1}`);
+      dot.addEventListener("click", () => goTo(index));
+      dotsWrap?.appendChild(dot);
+      return dot;
+    });
   
-    const mount = (isMobile) => {
-      cleanupFns.forEach((fn) => fn());
-      cleanupFns = [];
+    const updateDots = () => {
+      dots.forEach((dot, index) => {
+        dot.classList.toggle("is-active", index === currentIndex);
+      });
+    };
   
-      // Swap layout
-      root.innerHTML = "";
-      root.appendChild((isMobile ? tplMobile : tplDesktop).content.cloneNode(true));
+    const getSlideWidth = () => host.clientWidth;
   
-      const activeRoot = root.querySelector(".item") || root.querySelector(".item-carousel");
-      if (!activeRoot) return;
+    const goTo = (index, behavior = "smooth") => {
+      const clamped = ((index % slides.length) + slides.length) % slides.length;
+      currentIndex = clamped;
+      preloadAround(currentIndex);
   
-      // Find carousel controls in the mounted template (to hide them during zoom)
-      const carouselControls = Array.from(
-        activeRoot.querySelectorAll(".carousel-control-prev, .carousel-control-next")
-      );
+      isProgrammaticScroll = true;
+      host.scrollTo({
+        left: getSlideWidth() * currentIndex,
+        behavior,
+      });
   
-      // Load initial images
-      const imgsWithDataSrc = Array.from(activeRoot.querySelectorAll("img[data-src]"));
-      if (isMobile) imgsWithDataSrc.slice(0, 1).forEach(ensureSrc);
-      else imgsWithDataSrc.forEach(ensureSrc);
+      updateDots();
   
-      // Bootstrap carousel lazy-load
-      const carousel = activeRoot.querySelector("#carouselExampleAutoplaying");
-      if (carousel) {
-        const onSlide = (e) => {
-          ensureSrc(e.relatedTarget?.querySelector("img"));
-          ensureSrc(e.relatedTarget?.nextElementSibling?.querySelector("img"));
-        };
-        carousel.addEventListener("slide.bs.carousel", onSlide);
-        cleanupFns.push(() => carousel.removeEventListener("slide.bs.carousel", onSlide));
+      window.setTimeout(() => {
+        isProgrammaticScroll = false;
+      }, behavior === "smooth" ? 350 : 50);
+    };
+  
+    const syncIndexFromScroll = () => {
+      const width = getSlideWidth();
+      if (!width) return;
+  
+      const newIndex = Math.round(host.scrollLeft / width);
+      const clamped = Math.max(0, Math.min(slides.length - 1, newIndex));
+  
+      if (clamped !== currentIndex) {
+        currentIndex = clamped;
+        preloadAround(currentIndex);
+        updateDots();
       }
+    };
   
-      const clickableImgs = Array.from(
-        activeRoot.querySelectorAll(".carousel-inner img, .images img")
-      );
+    const onScroll = () => {
+      if (isProgrammaticScroll) return;
+      syncIndexFromScroll();
+    };
   
-      let currentIndex = 0;
+    let scrollTimer = null;
+    const onScrollEndish = () => {
+      window.clearTimeout(scrollTimer);
+      scrollTimer = window.setTimeout(() => {
+        goTo(currentIndex);
+      }, 80);
+    };
   
-      const showImage = (index) => {
-        if (!clickableImgs.length || !overlayImg) return;
-        currentIndex = (index + clickableImgs.length) % clickableImgs.length;
+    host.addEventListener("scroll", onScroll, { passive: true });
+    host.addEventListener("scroll", onScrollEndish, { passive: true });
   
-        const img = clickableImgs[currentIndex];
-        ensureSrc(img);
+    if (prevBtn) {
+      prevBtn.addEventListener("click", () => {
+        goTo(currentIndex - 1);
+      });
+    }
   
-        const src = img.getAttribute("src") || img.getAttribute("data-src") || "";
-        overlayImg.src = src;
-      };
+    if (nextBtn) {
+      nextBtn.addEventListener("click", () => {
+        goTo(currentIndex + 1);
+      });
+    }
   
-      const openOverlay = (index) => {
-        setOverlayOpen();
-        showImage(index);
+    // Keep correct position on resize
+    const onResize = () => goTo(currentIndex, "auto");
+    window.addEventListener("resize", onResize);
   
-        // Hide UI behind
-        carouselControls.forEach((c) => (c.style.display = "none"));
-        catalogue.forEach((c) => (c.style.display = "none"));
-        navbar.forEach((n) => (n.style.display = "none"));
-      };
+    // --- Zoom logic
+    const clickableImgs = slides
+      .map((slide) => slide.querySelector("img"))
+      .filter(Boolean);
   
-      const closeOverlay = () => {
-        setOverlayClosed();
+    let zoomIndex = 0;
   
-        // Restore UI behind
-        carouselControls.forEach((c) => (c.style.display = ""));
-        catalogue.forEach((c) => (c.style.display = ""));
-        navbar.forEach((n) => (n.style.display = ""));
-      };
+    const showZoomImage = (index) => {
+      if (!clickableImgs.length || !overlayImg) return;
   
-      // Expose your inline controls
-      window.prevImage = () => showImage(currentIndex - 1);
-      window.nextImage = () => showImage(currentIndex + 1);
+      zoomIndex = ((index % clickableImgs.length) + clickableImgs.length) % clickableImgs.length;
   
-      // Close mechanisms that cannot fail:
-      // 1) Backdrop click
-      const onBackdropClick = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        closeOverlay();
-      };
-      backdrop.addEventListener("click", onBackdropClick);
-      cleanupFns.push(() => backdrop.removeEventListener("click", onBackdropClick));
+      const img = clickableImgs[zoomIndex];
+      ensureSrc(img);
   
-      // 2) Close button
-      if (closeButton) closeButton.onclick = closeOverlay;
+      const src = img.getAttribute("src") || img.getAttribute("data-src") || "";
+      const alt = img.getAttribute("alt") || "";
   
-      // 3) ESC
-      const onKeyDown = (e) => {
-        if (e.key === "Escape") closeOverlay();
-      };
-      document.addEventListener("keydown", onKeyDown);
-      cleanupFns.push(() => document.removeEventListener("keydown", onKeyDown));
+      overlayImg.src = src;
+      overlayImg.alt = alt;
+    };
   
-      // OPEN: use CAPTURE so Bootstrap / other handlers don’t swallow it
-      const onRootPointerUp = (e) => {
-        // If overlay already open, ignore clicks behind
-        if (overlay.style.display === "block") return;
+    const openOverlay = (index) => {
+      showZoomImage(index);
+      setOverlayOpen();
   
-        const img = e.target.closest(".carousel-inner img, .images img");
+      catalogue.forEach((el) => {
+        el.dataset.prevDisplay = el.style.display;
+        el.style.display = "none";
+      });
+  
+      navbar.forEach((el) => {
+        el.dataset.prevDisplay = el.style.display;
+        el.style.display = "none";
+      });
+    };
+  
+    const closeOverlay = () => {
+      setOverlayClosed();
+  
+      catalogue.forEach((el) => {
+        el.style.display = el.dataset.prevDisplay || "";
+      });
+  
+      navbar.forEach((el) => {
+        el.style.display = el.dataset.prevDisplay || "";
+      });
+    };
+  
+    window.prevImageV2 = () => showZoomImage(zoomIndex - 1);
+    window.nextImageV2 = () => showZoomImage(zoomIndex + 1);
+  
+    const onBackdropClick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      closeOverlay();
+    };
+  
+    backdrop.addEventListener("click", onBackdropClick);
+  
+    if (closeButton) {
+      closeButton.addEventListener("click", closeOverlay);
+    }
+  
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") closeOverlay();
+      if (!overlay.classList.contains("active")) return;
+  
+      if (e.key === "ArrowLeft") showZoomImage(zoomIndex - 1);
+      if (e.key === "ArrowRight") showZoomImage(zoomIndex + 1);
+    });
+  
+    activeRoot.addEventListener(
+      "pointerup",
+      (e) => {
+        if (overlay.classList.contains("active")) return;
+  
+        const img = e.target.closest("[data-wb-slide] img, .images img");
         if (!img) return;
   
+        const index = clickableImgs.indexOf(img);
+        if (index === -1) return;
+  
         e.preventDefault();
         e.stopPropagation();
   
-        const index = clickableImgs.indexOf(img);
-        openOverlay(index === -1 ? 0 : index);
-      };
+        openOverlay(index);
+      },
+      { capture: true }
+    );
   
-      activeRoot.addEventListener("pointerup", onRootPointerUp, { capture: true });
-      cleanupFns.push(() =>
-        activeRoot.removeEventListener("pointerup", onRootPointerUp, { capture: true })
-      );
-    };
-  
-    mount(mq.matches);
-    mq.addEventListener("change", (e) => mount(e.matches));
+    // Initial state
+    updateDots();
+    goTo(0, "auto");
   });
