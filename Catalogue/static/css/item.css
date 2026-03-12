@@ -149,157 +149,80 @@ body.lock-scroll {
 
 .image-selector {
     position: fixed;
-    inset: 0;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
     background-color: black;
     pointer-events: none;
     opacity: 0;
+    transition: 1s;
     transition: opacity 0.3s ease;
+    touch-action: pan-x pan-y;
     z-index: 9999;
-    overflow: hidden;
+    overflow-y: hidden;
     overscroll-behavior: contain;
 }
 
 .image-selector.active {
+    visibility: visible;
     opacity: 1;
-    pointer-events: auto;
 }
 
-.zoom-backdrop {
+.image-selector img {
+    max-width: 90%;
+    max-height: 90%;
+    background-attachment: fixed;
+    object-fit: cover;
     position: absolute;
-    inset: 0;
-    z-index: 0;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    cursor: zoom-in;
 }
 
-.image-container,
-.image-container-v2 {
+.close {
     position: absolute;
-    inset: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    overflow: hidden;
-    z-index: 1;
+    left: 92%;
+    bottom: 95%;
+    border: none;
+    background:none;
+    padding: none;
+    color: white;
 }
 
-.photo,
-.photo-v2 {
-    display: block;
-    max-width: 90vw;
-    max-height: 90vh;
-    width: auto;
-    height: auto;
-    object-fit: contain;
-    position: static;
-    transform: none;
-    z-index: 1;
-}
-
-/* arrows wrapper */
-.image-selector .zoomed-carousel-controls,
-.zoomed-carousel-controls-v2 {
-    position: absolute;
-    inset: 0;
-    z-index: 3;
-    pointer-events: none;
-}
-
-/* actual arrow buttons */
-.zoomed-carousel-prev,
-.zoomed-carousel-next {
+.image-selector .zoomed-carousel-controls {
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
-    width: 56px;
-    height: 56px;
+    width: 100%;
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    justify-content: center;
-    pointer-events: auto;
-    border: none !important;
-    background: transparent !important;
-    color: white;
-    z-index: 4;
-    padding: 0;
 }
 
-.zoomed-carousel-prev {
-    left: 12px;
-}
-
-.zoomed-carousel-next {
-    right: 12px;
-}
-
-/* make bootstrap-style arrow icons visible */
-.zoomed-carousel-prev .carousel-control-prev-icon,
-.zoomed-carousel-next .carousel-control-next-icon {
-    display: block;
-    width: 2rem;
-    height: 2rem;
-    filter: invert(1);
-    background-size: 100% 100%;
-}
-
-/* close button */
-.close,
-.close-v2 {
-    position: absolute;
-    top: 16px;
-    right: 16px;
-    left: auto;
-    bottom: auto;
-    width: 44px;
-    height: 44px;
+.image-container {
+    max-height: 90vh;
+    max-width: 90vw;
+    overflow: auto;
     display: flex;
-    align-items: center;
     justify-content: center;
-    border: none;
-    background: transparent;
-    color: white;
-    font-size: 2.2rem;
-    line-height: 1;
-    z-index: 5;
-    cursor: pointer;
-    padding: 0;
+    align-items: center;
+  }
+
+.photo {
+    display: grid;
+    grid-column: auto;
+    height: 900px;
+    transition: transform 0.3s ease;
+    max-width: none; /* Important */
+    max-height: none; /* Important */
+    position: absolute; /* Important for transform to create overflow */
+    top: 0;
+    left: 0;
+    z-index: 9999;
 }
-
-.close span,
-.close-v2 span {
-    display: block;
-    line-height: 1;
-}
-
-@media (max-width: 700px) {
-    .photo,
-    .photo-v2 {
-        max-width: 92vw;
-        max-height: 84vh;
-    }
-
-    .zoomed-carousel-prev,
-    .zoomed-carousel-next {
-        width: 48px;
-        height: 48px;
-    }
-
-    .zoomed-carousel-prev {
-        left: 8px;
-    }
-
-    .zoomed-carousel-next {
-        right: 8px;
-    }
-
-    .close,
-    .close-v2 {
-        top: 10px;
-        right: 10px;
-        width: 40px;
-        height: 40px;
-        font-size: 2rem;
-    }
-}
-
+  
 /* Garment information */
 
 .information { 
