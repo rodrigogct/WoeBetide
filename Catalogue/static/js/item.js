@@ -1,11 +1,14 @@
-// item-zoom.js (V2 only)
+// item-zoom.js
+// desktop = tpl-desktop
+// mobile  = tpl-unified-v2
 
 document.addEventListener("DOMContentLoaded", () => {
     const root = document.getElementById("item-layout-root-v2");
-    const tpl = document.getElementById("tpl-unified-v2");
+    const tplDesktop = document.getElementById("tpl-desktop");
+    const tplMobile = document.getElementById("tpl-unified-v2");
   
-    if (!root || !tpl) {
-      console.warn("[zoom] missing V2 root/template nodes");
+    if (!root || !tplDesktop || !tplMobile) {
+      console.warn("[zoom] missing root/template nodes");
       return;
     }
   
@@ -59,36 +62,57 @@ document.addEventListener("DOMContentLoaded", () => {
     const catalogue = Array.from(document.querySelectorAll(".catalogue .elements"));
     const navbar = Array.from(document.querySelectorAll(".navbar"));
   
+    const mq = window.matchMedia("(max-width: 700px)");
     let cleanupFns = [];
-    let currentIndex = 0;
-    let clickableImgs = [];
   
-    const mount = () => {
+    const mount = (isMobile) => {
       cleanupFns.forEach((fn) => fn());
       cleanupFns = [];
   
       root.innerHTML = "";
-      root.appendChild(tpl.content.cloneNode(true));
+      root.appendChild((isMobile ? tplMobile : tplDesktop).content.cloneNode(true));
   
-      const activeRoot = root.querySelector(".item-carousel-v2");
-      if (!activeRoot) {
-        console.warn("[zoom] missing mounted .item-carousel-v2");
-        return;
+      const activeRoot =
+        root.querySelector(".item-carousel-v2") ||
+        root.querySelector(".item-carousel") ||
+        root.querySelector(".item");
+  
+      if (!activeRoot) return;
+  
+      const carouselControls = Array.from(
+        activeRoot.querySelectorAll(
+          ".carousel-control-prev, .carousel-control-next, [data-wb-prev], [data-wb-next]"
+        )
+      );
+  
+      const imgsWithDataSrc = Array.from(activeRoot.querySelectorAll("img[data-src]"));
+  
+      if (isMobile) {
+        imgsWithDataSrc.slice(0, 1).forEach(ensureSrc);
+      } else {
+        imgsWithDataSrc.forEach(ensureSrc);
       }
   
-      const track = activeRoot.querySelector("[data-wb-track]");
-      if (!track) {
-        console.warn("[zoom] missing [data-wb-track]");
-        return;
+      const carousel = activeRoot.querySelector("#carouselExampleAutoplaying");
+      if (carousel) {
+        const onSlide = (e) => {
+          ensureSrc(e.relatedTarget?.querySelector("img"));
+          ensureSrc(e.relatedTarget?.nextElementSibling?.querySelector("img"));
+        };
+  
+        carousel.addEventListener("slide.bs.carousel", onSlide);
+        cleanupFns.push(() => carousel.removeEventListener("slide.bs.carousel", onSlide));
       }
   
-      const prevBtn = activeRoot.querySelector("[data-wb-prev]");
-      const nextBtn = activeRoot.querySelector("[data-wb-next]");
+      let clickableImgs = [];
   
-      clickableImgs = Array.from(track.querySelectorAll("[data-wb-slide] img"));
+      if (isMobile) {
+        clickableImgs = Array.from(activeRoot.querySelectorAll("[data-wb-slide] img"));
+      } else {
+        clickableImgs = Array.from(activeRoot.querySelectorAll(".images img"));
+      }
   
-      // initial load: first image only
-      ensureSrc(clickableImgs[0]);
+      let currentIndex = 0;
   
       const showImage = (index) => {
         if (!clickableImgs.length || !overlayImg) return;
@@ -106,8 +130,7 @@ document.addEventListener("DOMContentLoaded", () => {
         setOverlayOpen();
         showImage(index);
   
-        if (prevBtn) prevBtn.style.display = "none";
-        if (nextBtn) nextBtn.style.display = "none";
+        carouselControls.forEach((c) => (c.style.display = "none"));
         catalogue.forEach((c) => (c.style.display = "none"));
         navbar.forEach((n) => (n.style.display = "none"));
       };
@@ -115,8 +138,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const closeOverlay = () => {
         setOverlayClosed();
   
-        if (prevBtn) prevBtn.style.display = "";
-        if (nextBtn) nextBtn.style.display = "";
+        carouselControls.forEach((c) => (c.style.display = ""));
         catalogue.forEach((c) => (c.style.display = ""));
         navbar.forEach((n) => (n.style.display = ""));
       };
@@ -141,8 +163,8 @@ document.addEventListener("DOMContentLoaded", () => {
   
       const onKeyDown = (e) => {
         if (e.key === "Escape") closeOverlay();
-        if (e.key === "ArrowLeft" && overlay.style.display === "block") showImage(currentIndex - 1);
-        if (e.key === "ArrowRight" && overlay.style.display === "block") showImage(currentIndex + 1);
+        if (overlay.style.display === "block" && e.key === "ArrowLeft") showImage(currentIndex - 1);
+        if (overlay.style.display === "block" && e.key === "ArrowRight") showImage(currentIndex + 1);
       };
       document.addEventListener("keydown", onKeyDown);
       cleanupFns.push(() => document.removeEventListener("keydown", onKeyDown));
@@ -150,7 +172,10 @@ document.addEventListener("DOMContentLoaded", () => {
       const onRootPointerUp = (e) => {
         if (overlay.style.display === "block") return;
   
-        const img = e.target.closest("[data-wb-slide] img, .images img");
+        const img = isMobile
+          ? e.target.closest("[data-wb-slide] img, .images img")
+          : e.target.closest(".images img");
+  
         if (!img) return;
   
         e.preventDefault();
@@ -164,39 +189,9 @@ document.addEventListener("DOMContentLoaded", () => {
       cleanupFns.push(() =>
         activeRoot.removeEventListener("pointerup", onRootPointerUp, { capture: true })
       );
-  
-      // Optional arrow behavior for non-touch / desktop
-      const goToIndex = (index) => {
-        if (!track || !clickableImgs.length) return;
-  
-        currentIndex = (index + clickableImgs.length) % clickableImgs.length;
-  
-        ensureSrc(clickableImgs[currentIndex]);
-        ensureSrc(clickableImgs[currentIndex + 1]);
-  
-        const slide = clickableImgs[currentIndex].closest("[data-wb-slide]");
-        if (slide) {
-          slide.scrollIntoView({
-            behavior: "smooth",
-            inline: "start",
-            block: "nearest",
-          });
-        }
-      };
-  
-      if (prevBtn) {
-        const onPrev = () => goToIndex(currentIndex - 1);
-        prevBtn.addEventListener("click", onPrev);
-        cleanupFns.push(() => prevBtn.removeEventListener("click", onPrev));
-      }
-  
-      if (nextBtn) {
-        const onNext = () => goToIndex(currentIndex + 1);
-        nextBtn.addEventListener("click", onNext);
-        cleanupFns.push(() => nextBtn.removeEventListener("click", onNext));
-      }
     };
   
-    mount();
+    mount(mq.matches);
+    mq.addEventListener("change", (e) => mount(e.matches));
   });
   
