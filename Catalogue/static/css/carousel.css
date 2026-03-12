@@ -121,6 +121,5 @@
   .image-selector.image-selector-v2 .zoomed-carousel-controls-v2,
   .image-selector.image-selector-v2 .image-container-v2,
   .image-selector.image-selector-v2 .close-v2 {
-    position: relative;
     z-index: 2;
   }
