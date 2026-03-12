@@ -117,9 +117,3 @@
     z-index: 0;
   }
   
-  /* Ensure V2 overlay content sits above backdrop */
-  .image-selector.image-selector-v2 .zoomed-carousel-controls-v2,
-  .image-selector.image-selector-v2 .image-container-v2,
-  .image-selector.image-selector-v2 .close-v2 {
-    z-index: 2;
-  }
