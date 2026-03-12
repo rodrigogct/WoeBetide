@@ -1,6 +1,7 @@
 // item-zoom.js
 // desktop: tpl-desktop
 // mobile: tpl-unified-v2
+// zoom overlay: swipeable carousel with arrow wrap-around
 
 document.addEventListener("DOMContentLoaded", () => {
   const root = document.getElementById("item-layout-root-v2");
@@ -21,10 +22,12 @@ document.addEventListener("DOMContentLoaded", () => {
     return;
   }
 
-  const overlayImg =
-    overlay.querySelector(".photo-v2") ||
-    overlay.querySelector(".photo") ||
-    overlay.querySelector("img");
+  const zoomTrack = overlay.querySelector("[data-zoom-track]");
+
+  if (!zoomTrack) {
+    console.warn("[item-zoom] missing zoom track. Add: <div class='zoom-track' data-zoom-track></div>");
+    return;
+  }
 
   const closeButton =
     overlay.querySelector(".close-v2") ||
@@ -53,6 +56,7 @@ document.addEventListener("DOMContentLoaded", () => {
     overlay.style.pointerEvents = "none";
     overlay.classList.remove("active");
     document.body.classList.remove("lock-scroll");
+    zoomTrack.innerHTML = "";
   };
 
   const setOverlayOpen = () => {
@@ -90,9 +94,130 @@ document.addEventListener("DOMContentLoaded", () => {
   const mq = window.matchMedia("(max-width: 700px)");
   let cleanupFns = [];
 
+  // ----------------------------------------
+  // Zoom overlay carousel state
+  // ----------------------------------------
+  let zoomIndex = 0;
+  let zoomSourceImgs = [];
+  let zoomScrollRaf = null;
+  let zoomLastScrollLeft = 0;
+  let zoomStableFrames = 0;
+
+  const normalizeZoomIndex = (idx) => {
+    const total = zoomSourceImgs.length || 1;
+    return ((idx % total) + total) % total;
+  };
+
+  const buildZoomCarousel = (sourceImgs) => {
+    zoomTrack.innerHTML = "";
+    zoomSourceImgs = sourceImgs.slice();
+
+    zoomSourceImgs.forEach((img, index) => {
+      ensureSrc(img);
+
+      const slide = document.createElement("div");
+      slide.className = "zoom-slide";
+      slide.setAttribute("data-zoom-slide", "");
+
+      const zoomImg = document.createElement("img");
+      zoomImg.src = img.getAttribute("src") || img.getAttribute("data-src") || "";
+      zoomImg.alt = img.getAttribute("alt") || `Image ${index + 1}`;
+      zoomImg.draggable = false;
+
+      slide.appendChild(zoomImg);
+      zoomTrack.appendChild(slide);
+    });
+  };
+
+  const scrollZoomTo = (index, smooth = true) => {
+    const slides = zoomTrack.querySelectorAll("[data-zoom-slide]");
+    if (!slides.length) return;
+
+    zoomIndex = normalizeZoomIndex(index);
+
+    zoomTrack.scrollTo({
+      left: zoomIndex * zoomTrack.clientWidth,
+      behavior: smooth ? "smooth" : "auto",
+    });
+  };
+
+  const syncZoomIndexFromScroll = () => {
+    const width = zoomTrack.clientWidth || 1;
+    zoomIndex = Math.round(zoomTrack.scrollLeft / width);
+    zoomIndex = Math.max(0, Math.min(zoomIndex, zoomSourceImgs.length - 1));
+  };
+
+  const watchZoomScrollSettled = () => {
+    cancelAnimationFrame(zoomScrollRaf);
+
+    const check = () => {
+      const now = zoomTrack.scrollLeft;
+
+      if (Math.abs(now - zoomLastScrollLeft) < 0.5) {
+        zoomStableFrames += 1;
+      } else {
+        zoomStableFrames = 0;
+        zoomLastScrollLeft = now;
+      }
+
+      if (zoomStableFrames >= 3) {
+        syncZoomIndexFromScroll();
+        zoomStableFrames = 0;
+        return;
+      }
+
+      zoomScrollRaf = requestAnimationFrame(check);
+    };
+
+    zoomLastScrollLeft = zoomTrack.scrollLeft;
+    zoomStableFrames = 0;
+    zoomScrollRaf = requestAnimationFrame(check);
+  };
+
+  const attachZoomCarouselListeners = () => {
+    const onZoomScroll = () => {
+      if (!overlay.classList.contains("active")) return;
+      watchZoomScrollSettled();
+    };
+
+    zoomTrack.addEventListener("scroll", onZoomScroll);
+    cleanupFns.push(() => zoomTrack.removeEventListener("scroll", onZoomScroll));
+  };
+
+  const openZoomCarousel = (sourceImgs, index) => {
+    buildZoomCarousel(sourceImgs);
+    setOverlayOpen();
+    hideChrome();
+    attachZoomCarouselListeners();
+    scrollZoomTo(index, false);
+  };
+
+  const closeZoomCarousel = () => {
+    cancelAnimationFrame(zoomScrollRaf);
+    zoomScrollRaf = null;
+    zoomStableFrames = 0;
+    setOverlayClosed();
+    showChrome();
+  };
+
+  window.prevImageV2 = () => {
+    if (!overlay.classList.contains("active")) return;
+    scrollZoomTo(zoomIndex - 1, true);
+  };
+
+  window.nextImageV2 = () => {
+    if (!overlay.classList.contains("active")) return;
+    scrollZoomTo(zoomIndex + 1, true);
+  };
+
+  // ----------------------------------------
+  // Main mount switcher
+  // ----------------------------------------
   const mount = (isMobile) => {
     cleanupFns.forEach((fn) => fn());
     cleanupFns = [];
+
+    closeZoomCarousel();
 
     root.innerHTML = "";
     root.appendChild((isMobile ? tplMobile : tplDesktop).content.cloneNode(true));
@@ -111,8 +236,47 @@ document.addEventListener("DOMContentLoaded", () => {
     } else {
       mountDesktop(activeRoot);
     }
+
+    // shared overlay listeners
+    const onBackdropClick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      closeZoomCarousel();
+    };
+    backdrop.addEventListener("click", onBackdropClick);
+    cleanupFns.push(() => backdrop.removeEventListener("click", onBackdropClick));
+
+    if (closeButton) {
+      const onClose = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        closeZoomCarousel();
+      };
+      closeButton.addEventListener("click", onClose);
+      cleanupFns.push(() => closeButton.removeEventListener("click", onClose));
+    }
+
+    const onKeyDown = (e) => {
+      if (!overlay.classList.contains("active")) return;
+
+      if (e.key === "Escape") closeZoomCarousel();
+      if (e.key === "ArrowLeft") window.prevImageV2();
+      if (e.key === "ArrowRight") window.nextImageV2();
+    };
+    document.addEventListener("keydown", onKeyDown);
+    cleanupFns.push(() => document.removeEventListener("keydown", onKeyDown));
+
+    const onResize = () => {
+      if (!overlay.classList.contains("active")) return;
+      scrollZoomTo(zoomIndex, false);
+    };
+    window.addEventListener("resize", onResize);
+    cleanupFns.push(() => window.removeEventListener("resize", onResize));
   };
 
+  // ----------------------------------------
+  // Desktop
+  // ----------------------------------------
   const mountDesktop = (activeRoot) => {
     const imgsWithDataSrc = Array.from(
       activeRoot.querySelectorAll(".main-images img[data-src]")
@@ -120,57 +284,6 @@ document.addEventListener("DOMContentLoaded", () => {
     imgsWithDataSrc.forEach(ensureSrc);
 
     const clickableImgs = Array.from(activeRoot.querySelectorAll(".main-images img"));
-    let currentIndex = 0;
-
-    const showZoomImage = (index) => {
-      if (!clickableImgs.length || !overlayImg) return;
-
-      currentIndex =
-        ((index % clickableImgs.length) + clickableImgs.length) % clickableImgs.length;
-
-      const img = clickableImgs[currentIndex];
-      ensureSrc(img);
-
-      overlayImg.src = img.getAttribute("src") || img.getAttribute("data-src") || "";
-      overlayImg.alt = img.getAttribute("alt") || "";
-    };
-
-    const openOverlay = (index) => {
-      showZoomImage(index);
-      setOverlayOpen();
-      hideChrome();
-    };
-
-    const closeOverlay = () => {
-      setOverlayClosed();
-      showChrome();
-    };
-
-    window.prevImageV2 = () => showZoomImage(currentIndex - 1);
-    window.nextImageV2 = () => showZoomImage(currentIndex + 1);
-
-    const onBackdropClick = (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      closeOverlay();
-    };
-    backdrop.addEventListener("click", onBackdropClick);
-    cleanupFns.push(() => backdrop.removeEventListener("click", onBackdropClick));
-
-    if (closeButton) {
-      const onClose = () => closeOverlay();
-      closeButton.addEventListener("click", onClose);
-      cleanupFns.push(() => closeButton.removeEventListener("click", onClose));
-    }
-
-    const onKeyDown = (e) => {
-      if (e.key === "Escape") closeOverlay();
-      if (!overlay.classList.contains("active")) return;
-      if (e.key === "ArrowLeft") showZoomImage(currentIndex - 1);
-      if (e.key === "ArrowRight") showZoomImage(currentIndex + 1);
-    };
-    document.addEventListener("keydown", onKeyDown);
-    cleanupFns.push(() => document.removeEventListener("keydown", onKeyDown));
 
     const onPointerUp = (e) => {
       if (overlay.classList.contains("active")) return;
@@ -183,7 +296,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
       e.preventDefault();
       e.stopPropagation();
-      openOverlay(index);
+
+      openZoomCarousel(clickableImgs, index);
     };
 
     activeRoot.addEventListener("pointerup", onPointerUp, { capture: true });
@@ -192,6 +306,9 @@ document.addEventListener("DOMContentLoaded", () => {
     );
   };
 
+  // ----------------------------------------
+  // Mobile
+  // ----------------------------------------
   const mountMobile = (activeRoot) => {
     const host = activeRoot.querySelector("[data-wb-snap]");
     const track = activeRoot.querySelector("[data-wb-track]");
@@ -209,18 +326,13 @@ document.addEventListener("DOMContentLoaded", () => {
     const prevBtn = activeRoot.querySelector("[data-wb-prev]");
     const nextBtn = activeRoot.querySelector("[data-wb-next]");
 
-    // ---------------------------------------------------------
-    // Dots
-    // ---------------------------------------------------------
     const dots = [];
 
     const setActiveDot = (idx) => {
       dots.forEach((d, i) => d.classList.toggle("is-active", i === idx));
     };
 
-    // ---------------------------------------------------------
-    // Clone first + last for real infinite effect
-    // ---------------------------------------------------------
+    // real infinite loop with clones
     const cloneFirst = originalSlides[0].cloneNode(true);
     const cloneLast = originalSlides[originalSlides.length - 1].cloneNode(true);
 
@@ -232,6 +344,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const allSlides = Array.from(track.querySelectorAll("[data-wb-slide]"));
     const realCount = originalSlides.length;
+    const realImgs = originalSlides.map((slide) => slide.querySelector("img"));
 
     if (dotsWrap) {
       dotsWrap.innerHTML = "";
@@ -249,13 +362,11 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
 
-    // IMPORTANT: preserve your old working carousel behavior
     const slideW = () => track.clientWidth;
-    const realToDom = (realIdx) => realIdx + 1; // dom 0 = cloneLast
+    const realToDom = (realIdx) => realIdx + 1;
     const normalizeIndex = (idx) => ((idx % realCount) + realCount) % realCount;
 
     let currentRealIndex = 0;
-    let zoomIndex = 0;
     let isAutoJumping = false;
     let isAnimatingByButton = false;
     let settleRaf = null;
@@ -364,21 +475,18 @@ document.addEventListener("DOMContentLoaded", () => {
     const handleLoopRepositionIfNeeded = () => {
       const domIdx = getNearestDomIndex();
 
-      // 0 = cloneLast
       if (domIdx === 0) {
         instantScrollTo(realCount * slideW());
         syncUI(realCount - 1);
         return;
       }
 
-      // realCount + 1 = cloneFirst
       if (domIdx === realCount + 1) {
         instantScrollTo(slideW());
         syncUI(0);
         return;
       }
 
-      // normal real slides
       syncUI(domIdx - 1);
     };
 
@@ -414,15 +522,10 @@ document.addEventListener("DOMContentLoaded", () => {
       settleRaf = requestAnimationFrame(check);
     };
 
-    // ---------------------------------------------------------
-    // Initial position: first real slide
-    // ---------------------------------------------------------
+    // initial position
     instantScrollTo(slideW());
     syncUI(0);
 
-    // ---------------------------------------------------------
-    // Scroll observer
-    // ---------------------------------------------------------
     if ("onscrollend" in track) {
       const onScrollEnd = () => {
         if (isAutoJumping) return;
@@ -439,9 +542,6 @@ document.addEventListener("DOMContentLoaded", () => {
       cleanupFns.push(() => track.removeEventListener("scroll", onScroll));
     }
 
-    // ---------------------------------------------------------
-    // Prev / Next buttons with REAL loop effect
-    // ---------------------------------------------------------
     if (nextBtn) {
       const onNext = (e) => {
         e.preventDefault();
@@ -480,54 +580,9 @@ document.addEventListener("DOMContentLoaded", () => {
       cleanupFns.push(() => prevBtn.removeEventListener("click", onPrev));
     }
 
-    // ---------------------------------------------------------
-    // ZOOM OVERLAY V2
-    // ---------------------------------------------------------
-    const getRealImgAt = (realIdx) => {
-      const domIdx = realToDom(normalizeIndex(realIdx));
-      return allSlides[domIdx]?.querySelector("img");
-    };
-
-    const showZoom = (realIdx) => {
-      const normalized = normalizeIndex(realIdx);
-      const img = getRealImgAt(normalized);
-
-      ensureSrc(img);
-
-      const src = img?.getAttribute("src") || img?.getAttribute("data-src") || "";
-      if (overlayImg) overlayImg.src = src;
-      if (overlayImg) overlayImg.alt = img?.getAttribute("alt") || "";
-
-      zoomIndex = normalized;
-      currentRealIndex = normalized;
-      setActiveDot(currentRealIndex);
-    };
-
-    const openZoom = (realIdx) => {
-      setOverlayOpen();
-      hideChrome();
-      showZoom(realIdx);
-    };
-
-    const closeZoom = () => {
-      setOverlayClosed();
-      showChrome();
-    };
-
-    window.prevImageV2 = () => {
-      const nextIdx = normalizeIndex(zoomIndex - 1);
-      showZoom(nextIdx);
-      moveToRealIndex(nextIdx, false);
-    };
-
-    window.nextImageV2 = () => {
-      const nextIdx = normalizeIndex(zoomIndex + 1);
-      showZoom(nextIdx);
-      moveToRealIndex(nextIdx, false);
-    };
-
+    // open zoom overlay from real image only
     const onPointerUp = (e) => {
-      if (overlay.style.display === "block") return;
+      if (overlay.classList.contains("active")) return;
 
       const img = e.target.closest(".wb-snap__slide img");
       if (!img) return;
@@ -547,42 +602,13 @@ document.addEventListener("DOMContentLoaded", () => {
         realIdx = idxInAll - 1;
       }
 
-      openZoom(realIdx);
+      openZoomCarousel(realImgs, realIdx);
     };
 
     track.addEventListener("pointerup", onPointerUp, { capture: true });
     cleanupFns.push(() =>
       track.removeEventListener("pointerup", onPointerUp, { capture: true })
     );
-
-    const onBackdropClick = (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      closeZoom();
-    };
-    backdrop.addEventListener("click", onBackdropClick);
-    cleanupFns.push(() => backdrop.removeEventListener("click", onBackdropClick));
-
-    if (closeButton) {
-      const onClose = (e) => {
-        if (e) {
-          e.preventDefault();
-          e.stopPropagation();
-        }
-        closeZoom();
-      };
-      closeButton.addEventListener("click", onClose);
-      cleanupFns.push(() => closeButton.removeEventListener("click", onClose));
-    }
-
-    const onKeyDown = (e) => {
-      if (e.key === "Escape") closeZoom();
-      if (!overlay.classList.contains("active")) return;
-      if (e.key === "ArrowLeft") window.prevImageV2();
-      if (e.key === "ArrowRight") window.nextImageV2();
-    };
-    document.addEventListener("keydown", onKeyDown);
-    cleanupFns.push(() => document.removeEventListener("keydown", onKeyDown));
 
     const onResize = () => {
       instantScrollTo(realToDom(currentRealIndex) * slideW());
