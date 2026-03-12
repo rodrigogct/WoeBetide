@@ -1,39 +1,32 @@
-// item-zoom.js
-// desktop = tpl-desktop
-// mobile  = tpl-unified-v2
+// item-zoom.js (drop-in, backdrop-based, works on desktop + mobile)
 
 document.addEventListener("DOMContentLoaded", () => {
-    const root = document.getElementById("item-layout-root-v2");
+    const root = document.getElementById("item-layout-root");
     const tplDesktop = document.getElementById("tpl-desktop");
-    const tplMobile = document.getElementById("tpl-unified-v2");
-  
+    const tplMobile = document.getElementById("tpl-mobile");
     if (!root || !tplDesktop || !tplMobile) {
       console.warn("[zoom] missing root/template nodes");
       return;
     }
   
-    const overlay = document.querySelector(".image-selector-v2");
+    const overlay = document.querySelector(".image-selector");
     if (!overlay) {
-      console.warn("[zoom] missing .image-selector-v2 overlay");
+      console.warn("[zoom] missing .image-selector overlay");
       return;
     }
   
-    const overlayImg =
-      overlay.querySelector("img.photo-v2") ||
-      overlay.querySelector("img.photo") ||
-      overlay.querySelector("img");
+    const overlayImg = overlay.querySelector("img.photo") || overlay.querySelector("img");
+    const closeButton = overlay.querySelector("button.close");
   
-    const closeButton =
-      overlay.querySelector("button.close-v2") ||
-      overlay.querySelector("button.close");
-  
+    // --- HARD GUARANTEE: add a backdrop div that always receives clicks ---
     let backdrop = overlay.querySelector(".zoom-backdrop");
     if (!backdrop) {
       backdrop = document.createElement("div");
       backdrop.className = "zoom-backdrop";
-      overlay.prepend(backdrop);
+      overlay.prepend(backdrop); // behind everything else (CSS will handle z-index)
     }
   
+    // Ensure overlay starts fully inactive and never blocks page
     const setOverlayClosed = () => {
       overlay.style.display = "none";
       overlay.style.opacity = "0";
@@ -69,54 +62,42 @@ document.addEventListener("DOMContentLoaded", () => {
       cleanupFns.forEach((fn) => fn());
       cleanupFns = [];
   
+      // Swap layout
       root.innerHTML = "";
       root.appendChild((isMobile ? tplMobile : tplDesktop).content.cloneNode(true));
   
-      const activeRoot =
-        root.querySelector(".item-carousel-v2") ||
-        root.querySelector(".item-carousel") ||
-        root.querySelector(".item");
-  
+      const activeRoot = root.querySelector(".item") || root.querySelector(".item-carousel");
       if (!activeRoot) return;
   
+      // Find carousel controls in the mounted template (to hide them during zoom)
       const carouselControls = Array.from(
-        activeRoot.querySelectorAll(
-          ".carousel-control-prev, .carousel-control-next, [data-wb-prev], [data-wb-next]"
-        )
+        activeRoot.querySelectorAll(".carousel-control-prev, .carousel-control-next")
       );
   
+      // Load initial images
       const imgsWithDataSrc = Array.from(activeRoot.querySelectorAll("img[data-src]"));
+      if (isMobile) imgsWithDataSrc.slice(0, 1).forEach(ensureSrc);
+      else imgsWithDataSrc.forEach(ensureSrc);
   
-      if (isMobile) {
-        imgsWithDataSrc.slice(0, 1).forEach(ensureSrc);
-      } else {
-        imgsWithDataSrc.forEach(ensureSrc);
-      }
-  
+      // Bootstrap carousel lazy-load
       const carousel = activeRoot.querySelector("#carouselExampleAutoplaying");
       if (carousel) {
         const onSlide = (e) => {
           ensureSrc(e.relatedTarget?.querySelector("img"));
           ensureSrc(e.relatedTarget?.nextElementSibling?.querySelector("img"));
         };
-  
         carousel.addEventListener("slide.bs.carousel", onSlide);
         cleanupFns.push(() => carousel.removeEventListener("slide.bs.carousel", onSlide));
       }
   
-      let clickableImgs = [];
-  
-      if (isMobile) {
-        clickableImgs = Array.from(activeRoot.querySelectorAll("[data-wb-slide] img"));
-      } else {
-        clickableImgs = Array.from(activeRoot.querySelectorAll(".images img"));
-      }
+      const clickableImgs = Array.from(
+        activeRoot.querySelectorAll(".carousel-inner img, .images img")
+      );
   
       let currentIndex = 0;
   
       const showImage = (index) => {
         if (!clickableImgs.length || !overlayImg) return;
-  
         currentIndex = (index + clickableImgs.length) % clickableImgs.length;
   
         const img = clickableImgs[currentIndex];
@@ -130,6 +111,7 @@ document.addEventListener("DOMContentLoaded", () => {
         setOverlayOpen();
         showImage(index);
   
+        // Hide UI behind
         carouselControls.forEach((c) => (c.style.display = "none"));
         catalogue.forEach((c) => (c.style.display = "none"));
         navbar.forEach((n) => (n.style.display = "none"));
@@ -138,14 +120,18 @@ document.addEventListener("DOMContentLoaded", () => {
       const closeOverlay = () => {
         setOverlayClosed();
   
+        // Restore UI behind
         carouselControls.forEach((c) => (c.style.display = ""));
         catalogue.forEach((c) => (c.style.display = ""));
         navbar.forEach((n) => (n.style.display = ""));
       };
   
-      window.prevImageV2 = () => showImage(currentIndex - 1);
-      window.nextImageV2 = () => showImage(currentIndex + 1);
+      // Expose your inline controls
+      window.prevImage = () => showImage(currentIndex - 1);
+      window.nextImage = () => showImage(currentIndex + 1);
   
+      // Close mechanisms that cannot fail:
+      // 1) Backdrop click
       const onBackdropClick = (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -154,28 +140,22 @@ document.addEventListener("DOMContentLoaded", () => {
       backdrop.addEventListener("click", onBackdropClick);
       cleanupFns.push(() => backdrop.removeEventListener("click", onBackdropClick));
   
-      if (closeButton) {
-        closeButton.onclick = closeOverlay;
-        cleanupFns.push(() => {
-          closeButton.onclick = null;
-        });
-      }
+      // 2) Close button
+      if (closeButton) closeButton.onclick = closeOverlay;
   
+      // 3) ESC
       const onKeyDown = (e) => {
         if (e.key === "Escape") closeOverlay();
-        if (overlay.style.display === "block" && e.key === "ArrowLeft") showImage(currentIndex - 1);
-        if (overlay.style.display === "block" && e.key === "ArrowRight") showImage(currentIndex + 1);
       };
       document.addEventListener("keydown", onKeyDown);
       cleanupFns.push(() => document.removeEventListener("keydown", onKeyDown));
   
+      // OPEN: use CAPTURE so Bootstrap / other handlers don’t swallow it
       const onRootPointerUp = (e) => {
+        // If overlay already open, ignore clicks behind
         if (overlay.style.display === "block") return;
   
-        const img = isMobile
-          ? e.target.closest("[data-wb-slide] img, .images img")
-          : e.target.closest(".images img");
-  
+        const img = e.target.closest(".carousel-inner img, .images img");
         if (!img) return;
   
         e.preventDefault();
@@ -194,4 +174,3 @@ document.addEventListener("DOMContentLoaded", () => {
     mount(mq.matches);
     mq.addEventListener("change", (e) => mount(e.matches));
   });
-  
