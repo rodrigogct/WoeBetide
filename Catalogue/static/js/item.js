@@ -63,7 +63,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.body.classList.add("lock-scroll");
   };
 
-  const hidePageChrome = () => {
+  const hideChrome = () => {
     catalogue.forEach((el) => {
       el.dataset.prevDisplay = el.style.display;
       el.style.display = "none";
@@ -75,7 +75,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   };
 
-  const showPageChrome = () => {
+  const showChrome = () => {
     catalogue.forEach((el) => {
       el.style.display = el.dataset.prevDisplay || "";
     });
@@ -138,12 +138,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const openOverlay = (index) => {
       showZoomImage(index);
       setOverlayOpen();
-      hidePageChrome();
+      hideChrome();
     };
 
     const closeOverlay = () => {
       setOverlayClosed();
-      showPageChrome();
+      showChrome();
     };
 
     window.prevImageV2 = () => showZoomImage(currentIndex - 1);
@@ -195,28 +195,32 @@ document.addEventListener("DOMContentLoaded", () => {
   const mountMobile = (activeRoot) => {
     const host = activeRoot.querySelector("[data-wb-snap]");
     const track = activeRoot.querySelector("[data-wb-track]");
-    const dotsWrap = activeRoot.querySelector("[data-wb-dots]");
-    const prevBtn = activeRoot.querySelector("[data-wb-prev]");
-    const nextBtn = activeRoot.querySelector("[data-wb-next]");
-
     if (!host || !track) {
       console.warn("[item-zoom] mobile snap carousel elements not found");
       return;
     }
 
     const originalSlides = Array.from(track.querySelectorAll("[data-wb-slide]"));
-    if (!originalSlides.length) {
-      console.warn("[item-zoom] no mobile slides found");
-      return;
-    }
+    if (!originalSlides.length) return;
 
-    const originalImgs = originalSlides
-      .map((slide) => slide.querySelector("img"))
-      .filter(Boolean);
+    ensureSrc(track.querySelector("img[data-src]"));
 
-    ensureSrc(originalImgs[0]);
+    const dotsWrap = activeRoot.querySelector("[data-wb-dots]");
+    const prevBtn = activeRoot.querySelector("[data-wb-prev]");
+    const nextBtn = activeRoot.querySelector("[data-wb-next]");
 
-    // Clone first and last for real infinite loop
+    // ---------------------------------------------------------
+    // Dots
+    // ---------------------------------------------------------
+    const dots = [];
+
+    const setActiveDot = (idx) => {
+      dots.forEach((d, i) => d.classList.toggle("is-active", i === idx));
+    };
+
+    // ---------------------------------------------------------
+    // Clone first + last for real infinite effect
+    // ---------------------------------------------------------
     const cloneFirst = originalSlides[0].cloneNode(true);
     const cloneLast = originalSlides[originalSlides.length - 1].cloneNode(true);
 
@@ -229,7 +233,24 @@ document.addEventListener("DOMContentLoaded", () => {
     const allSlides = Array.from(track.querySelectorAll("[data-wb-slide]"));
     const realCount = originalSlides.length;
 
-    const slideW = () => host.clientWidth;
+    if (dotsWrap) {
+      dotsWrap.innerHTML = "";
+      for (let i = 0; i < realCount; i++) {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "wb-dot" + (i === 0 ? " is-active" : "");
+        b.setAttribute("aria-label", `Go to image ${i + 1}`);
+        b.addEventListener("click", (e) => {
+          e.preventDefault();
+          moveToRealIndex(i, true);
+        });
+        dotsWrap.appendChild(b);
+        dots.push(b);
+      }
+    }
+
+    // IMPORTANT: preserve your old working carousel behavior
+    const slideW = () => track.clientWidth;
     const realToDom = (realIdx) => realIdx + 1; // dom 0 = cloneLast
     const normalizeIndex = (idx) => ((idx % realCount) + realCount) % realCount;
 
@@ -238,41 +259,19 @@ document.addEventListener("DOMContentLoaded", () => {
     let isAutoJumping = false;
     let isAnimatingByButton = false;
     let settleRaf = null;
-    let lastScrollLeft = host.scrollLeft;
+    let lastScrollLeft = track.scrollLeft;
     let stableFrames = 0;
     let activeScrollAnimation = null;
 
-    // Dots
-    if (dotsWrap) dotsWrap.innerHTML = "";
-
-    const dots = Array.from({ length: realCount }, (_, i) => {
-      const dot = document.createElement("button");
-      dot.type = "button";
-      dot.className = "wb-dot" + (i === 0 ? " is-active" : "");
-      dot.setAttribute("aria-label", `Go to image ${i + 1}`);
-      dot.addEventListener("click", (e) => {
-        e.preventDefault();
-        moveToRealIndex(i, true);
-      });
-      dotsWrap?.appendChild(dot);
-      return dot;
-    });
-
-    const setActiveDot = (idx) => {
-      dots.forEach((dot, i) => {
-        dot.classList.toggle("is-active", i === idx);
-      });
-    };
-
     const loadNeighbors = (realIdx) => {
       const domIdx = realToDom(realIdx);
-      ensureSrc(allSlides[domIdx]?.querySelector("img"));
-      ensureSrc(allSlides[domIdx - 1]?.querySelector("img"));
-      ensureSrc(allSlides[domIdx + 1]?.querySelector("img"));
+      ensureSrc(allSlides[domIdx]?.querySelector("img[data-src]"));
+      ensureSrc(allSlides[domIdx - 1]?.querySelector("img[data-src]"));
+      ensureSrc(allSlides[domIdx + 1]?.querySelector("img[data-src]"));
     };
 
     const setScrollSnap = (enabled) => {
-      host.style.scrollSnapType = enabled ? "" : "none";
+      track.style.scrollSnapType = enabled ? "" : "none";
     };
 
     const instantScrollTo = (left) => {
@@ -283,7 +282,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       isAutoJumping = true;
       setScrollSnap(false);
-      host.scrollLeft = left;
+      track.scrollLeft = left;
 
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
@@ -293,17 +292,23 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     };
 
+    const syncUI = (realIdx) => {
+      currentRealIndex = normalizeIndex(realIdx);
+      setActiveDot(currentRealIndex);
+      loadNeighbors(currentRealIndex);
+    };
+
     const animateScrollTo = (targetLeft, duration = 160) => {
       if (activeScrollAnimation) {
         cancelAnimationFrame(activeScrollAnimation);
         activeScrollAnimation = null;
       }
 
-      const startLeft = host.scrollLeft;
+      const startLeft = track.scrollLeft;
       const distance = targetLeft - startLeft;
 
       if (!duration || duration <= 0 || Math.abs(distance) < 1) {
-        host.scrollLeft = targetLeft;
+        track.scrollLeft = targetLeft;
         return;
       }
 
@@ -317,7 +322,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const progress = Math.min(elapsed / duration, 1);
         const eased = easeOutCubic(progress);
 
-        host.scrollLeft = startLeft + distance * eased;
+        track.scrollLeft = startLeft + distance * eased;
 
         if (progress < 1) {
           activeScrollAnimation = requestAnimationFrame(step);
@@ -329,12 +334,6 @@ document.addEventListener("DOMContentLoaded", () => {
       activeScrollAnimation = requestAnimationFrame(step);
     };
 
-    const syncUI = (realIdx) => {
-      currentRealIndex = normalizeIndex(realIdx);
-      setActiveDot(currentRealIndex);
-      loadNeighbors(currentRealIndex);
-    };
-
     const moveToDomIndex = (domIdx, smooth = true) => {
       const left = domIdx * slideW();
 
@@ -343,7 +342,7 @@ document.addEventListener("DOMContentLoaded", () => {
           cancelAnimationFrame(activeScrollAnimation);
           activeScrollAnimation = null;
         }
-        host.scrollLeft = left;
+        track.scrollLeft = left;
         return;
       }
 
@@ -359,7 +358,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const getNearestDomIndex = () => {
       const w = slideW();
       if (!w) return 1;
-      return Math.round(host.scrollLeft / w);
+      return Math.round(track.scrollLeft / w);
     };
 
     const handleLoopRepositionIfNeeded = () => {
@@ -379,7 +378,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      // Normal real slides
+      // normal real slides
       syncUI(domIdx - 1);
     };
 
@@ -392,7 +391,7 @@ document.addEventListener("DOMContentLoaded", () => {
       cancelAnimationFrame(settleRaf);
 
       const check = () => {
-        const now = host.scrollLeft;
+        const now = track.scrollLeft;
 
         if (Math.abs(now - lastScrollLeft) < 0.5) {
           stableFrames += 1;
@@ -410,73 +409,39 @@ document.addEventListener("DOMContentLoaded", () => {
         settleRaf = requestAnimationFrame(check);
       };
 
-      lastScrollLeft = host.scrollLeft;
+      lastScrollLeft = track.scrollLeft;
       stableFrames = 0;
       settleRaf = requestAnimationFrame(check);
     };
 
-    // Zoom
-    const getRealImgAt = (realIdx) => {
-      const domIdx = realToDom(normalizeIndex(realIdx));
-      return allSlides[domIdx]?.querySelector("img");
-    };
-
-    const showZoomImage = (realIdx) => {
-      if (!overlayImg) return;
-
-      zoomIndex = normalizeIndex(realIdx);
-      const img = getRealImgAt(zoomIndex);
-      ensureSrc(img);
-
-      overlayImg.src = img?.getAttribute("src") || img?.getAttribute("data-src") || "";
-      overlayImg.alt = img?.getAttribute("alt") || "";
-    };
-
-    const openOverlay = (realIdx) => {
-      showZoomImage(realIdx);
-      setOverlayOpen();
-      hidePageChrome();
-    };
-
-    const closeOverlay = () => {
-      setOverlayClosed();
-      showPageChrome();
-    };
-
-    window.prevImageV2 = () => {
-      const nextIdx = normalizeIndex(zoomIndex - 1);
-      showZoomImage(nextIdx);
-      moveToRealIndex(nextIdx, false);
-    };
-
-    window.nextImageV2 = () => {
-      const nextIdx = normalizeIndex(zoomIndex + 1);
-      showZoomImage(nextIdx);
-      moveToRealIndex(nextIdx, false);
-    };
-
-    // Initial position
+    // ---------------------------------------------------------
+    // Initial position: first real slide
+    // ---------------------------------------------------------
     instantScrollTo(slideW());
     syncUI(0);
 
+    // ---------------------------------------------------------
     // Scroll observer
-    if ("onscrollend" in host) {
+    // ---------------------------------------------------------
+    if ("onscrollend" in track) {
       const onScrollEnd = () => {
         if (isAutoJumping) return;
         onScrollSettled();
       };
-      host.addEventListener("scrollend", onScrollEnd);
-      cleanupFns.push(() => host.removeEventListener("scrollend", onScrollEnd));
+      track.addEventListener("scrollend", onScrollEnd);
+      cleanupFns.push(() => track.removeEventListener("scrollend", onScrollEnd));
     } else {
       const onScroll = () => {
         if (isAutoJumping) return;
         watchScrollSettled();
       };
-      host.addEventListener("scroll", onScroll, { passive: true });
-      cleanupFns.push(() => host.removeEventListener("scroll", onScroll));
+      track.addEventListener("scroll", onScroll);
+      cleanupFns.push(() => track.removeEventListener("scroll", onScroll));
     }
 
-    // Buttons
+    // ---------------------------------------------------------
+    // Prev / Next buttons with REAL loop effect
+    // ---------------------------------------------------------
     if (nextBtn) {
       const onNext = (e) => {
         e.preventDefault();
@@ -515,11 +480,56 @@ document.addEventListener("DOMContentLoaded", () => {
       cleanupFns.push(() => prevBtn.removeEventListener("click", onPrev));
     }
 
-    // Open zoom on image tap/click
-    const onPointerUp = (e) => {
-      if (overlay.classList.contains("active")) return;
+    // ---------------------------------------------------------
+    // ZOOM OVERLAY V2
+    // ---------------------------------------------------------
+    const getRealImgAt = (realIdx) => {
+      const domIdx = realToDom(normalizeIndex(realIdx));
+      return allSlides[domIdx]?.querySelector("img");
+    };
 
-      const img = e.target.closest("[data-wb-slide] img");
+    const showZoom = (realIdx) => {
+      const normalized = normalizeIndex(realIdx);
+      const img = getRealImgAt(normalized);
+
+      ensureSrc(img);
+
+      const src = img?.getAttribute("src") || img?.getAttribute("data-src") || "";
+      if (overlayImg) overlayImg.src = src;
+      if (overlayImg) overlayImg.alt = img?.getAttribute("alt") || "";
+
+      zoomIndex = normalized;
+      currentRealIndex = normalized;
+      setActiveDot(currentRealIndex);
+    };
+
+    const openZoom = (realIdx) => {
+      setOverlayOpen();
+      hideChrome();
+      showZoom(realIdx);
+    };
+
+    const closeZoom = () => {
+      setOverlayClosed();
+      showChrome();
+    };
+
+    window.prevImageV2 = () => {
+      const nextIdx = normalizeIndex(zoomIndex - 1);
+      showZoom(nextIdx);
+      moveToRealIndex(nextIdx, false);
+    };
+
+    window.nextImageV2 = () => {
+      const nextIdx = normalizeIndex(zoomIndex + 1);
+      showZoom(nextIdx);
+      moveToRealIndex(nextIdx, false);
+    };
+
+    const onPointerUp = (e) => {
+      if (overlay.style.display === "block") return;
+
+      const img = e.target.closest(".wb-snap__slide img");
       if (!img) return;
 
       e.preventDefault();
@@ -537,31 +547,36 @@ document.addEventListener("DOMContentLoaded", () => {
         realIdx = idxInAll - 1;
       }
 
-      openOverlay(realIdx);
+      openZoom(realIdx);
     };
 
-    activeRoot.addEventListener("pointerup", onPointerUp, { capture: true });
+    track.addEventListener("pointerup", onPointerUp, { capture: true });
     cleanupFns.push(() =>
-      activeRoot.removeEventListener("pointerup", onPointerUp, { capture: true })
+      track.removeEventListener("pointerup", onPointerUp, { capture: true })
     );
 
-    // Overlay close
     const onBackdropClick = (e) => {
       e.preventDefault();
       e.stopPropagation();
-      closeOverlay();
+      closeZoom();
     };
     backdrop.addEventListener("click", onBackdropClick);
     cleanupFns.push(() => backdrop.removeEventListener("click", onBackdropClick));
 
     if (closeButton) {
-      const onClose = () => closeOverlay();
+      const onClose = (e) => {
+        if (e) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+        closeZoom();
+      };
       closeButton.addEventListener("click", onClose);
       cleanupFns.push(() => closeButton.removeEventListener("click", onClose));
     }
 
     const onKeyDown = (e) => {
-      if (e.key === "Escape") closeOverlay();
+      if (e.key === "Escape") closeZoom();
       if (!overlay.classList.contains("active")) return;
       if (e.key === "ArrowLeft") window.prevImageV2();
       if (e.key === "ArrowRight") window.nextImageV2();
@@ -569,7 +584,6 @@ document.addEventListener("DOMContentLoaded", () => {
     document.addEventListener("keydown", onKeyDown);
     cleanupFns.push(() => document.removeEventListener("keydown", onKeyDown));
 
-    // Resize
     const onResize = () => {
       instantScrollTo(realToDom(currentRealIndex) * slideW());
       syncUI(currentRealIndex);
@@ -580,12 +594,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   mount(mq.matches);
 
-  const onMediaChange = (e) => mount(e.matches);
+  const onMqChange = (e) => mount(e.matches);
   if (mq.addEventListener) {
-    mq.addEventListener("change", onMediaChange);
-    cleanupFns.push(() => mq.removeEventListener("change", onMediaChange));
-  } else if (mq.addListener) {
-    mq.addListener(onMediaChange);
-    cleanupFns.push(() => mq.removeListener(onMediaChange));
+    mq.addEventListener("change", onMqChange);
+  } else {
+    mq.addListener(onMqChange);
   }
 });
