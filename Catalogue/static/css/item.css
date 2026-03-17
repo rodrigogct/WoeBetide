@@ -175,7 +175,7 @@ body.lock-scroll {
     background-attachment: fixed;
     object-fit: cover;
     position: absolute;
-    top: 50%;
+    top: 48%;
     left: 50%;
     transform: translate(-50%, -50%);
     cursor: zoom-in;
