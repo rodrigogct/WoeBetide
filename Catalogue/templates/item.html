@@ -342,7 +342,7 @@
 
   <!-- Zoom overlay -->
   <main class="image-selector image-selector-v2" data-closable>
-    <div class="zoomed-carousel-controls zoomed-carousel-controls-v2">
+    <div class="zoomed-carousel-controls zoomed-carousel-controls-v2" style="z-index: 999;">
       <button class="zoomed-carousel-prev" type="button" onclick="prevImageV2()" style="background-color:black;border:none;">
         <span class="carousel-control-prev-icon" aria-hidden="true"></span>
         <span class="visually-hidden">Previous</span>
@@ -357,7 +357,7 @@
       <div class="zoom-track" data-zoom-track></div>
     </div>
 
-    <button type="button" class="close close-v2" aria-label="Close">
+    <button type="button" class="close close-v2" aria-label="Close" style="z-index: 999;">
       <span aria-hidden="true">&times;</span>
     </button>
   </main>
