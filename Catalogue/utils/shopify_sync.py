@@ -1,4 +1,5 @@
 import requests
+from urllib.parse import urlparse, parse_qs
 from django.utils.text import slugify
 from Catalogue.models import Item
 
@@ -20,57 +21,60 @@ def sync_shopify_variants(STORE, API_VERSION, ACCESS_TOKEN):
 
     params = {"limit": 250}
 
-    while True:
-        r = requests.get(base_url, headers=headers, params=params, timeout=30)
-        if r.status_code != 200:
-            return {
-                "success": False,
-                "status_code": r.status_code,
-                "updated": 0,
-                "not_found": [],
-            }
+    try:
+        while True:
+            r = requests.get(base_url, headers=headers, params=params, timeout=30)
+            r.raise_for_status()
 
-        data = r.json().get("products", [])
-        products.extend(data)
+            data = r.json().get("products", [])
+            products.extend(data)
 
-        link = r.headers.get("Link", "")
-        if 'rel="next"' not in link:
-            break
-
-        from urllib.parse import urlparse, parse_qs
-
-        next_params = None
-        for part in link.split(","):
-            if 'rel="next"' in part:
-                url_part = part.split(";")[0].strip().strip("<>")
-                qs = parse_qs(urlparse(url_part).query)
-                next_params = {
-                    "limit": 250,
-                    "page_info": qs.get("page_info", [""])[0],
-                }
+            link = r.headers.get("Link", "")
+            if 'rel="next"' not in link:
                 break
 
-        if not next_params:
-            break
+            next_params = None
+            for part in link.split(","):
+                if 'rel="next"' in part:
+                    url_part = part.split(";")[0].strip().strip("<>")
+                    qs = parse_qs(urlparse(url_part).query)
+                    next_params = {
+                        "limit": 250,
+                        "page_info": qs.get("page_info", [""])[0],
+                    }
+                    break
 
-        params = next_params
+            if not next_params:
+                break
 
-    # Shopify: handle -> first variant ID
+            params = next_params
+
+    except requests.RequestException as e:
+        return {
+            "success": False,
+            "status_code": getattr(getattr(e, "response", None), "status_code", None),
+            "updated": 0,
+            "not_found": [],
+            "error": str(e),
+        }
+
+    # Build Shopify handle -> first variant ID map
     handle_to_variant = {}
-    for p in products:
-        handle = normalize_handle(p.get("handle"))
-        variants = p.get("variants", [])
+    for product in products:
+        handle = normalize_handle(product.get("handle"))
+        variants = product.get("variants", [])
         if handle and variants and variants[0].get("id"):
             handle_to_variant[handle] = str(variants[0]["id"])
 
-    items = list(Item.objects.all())
+    # Only sync active catalogue items
+    items = list(Item.objects.filter(is_sold=False, is_archive=False))
     to_update = []
 
     for item in items:
         preferred_handle = normalize_handle(item.shopify_handle) if item.shopify_handle else ""
         fallback_handle = normalize_handle(item.name)
-
         handle = preferred_handle or fallback_handle
+
         variant_id = handle_to_variant.get(handle)
 
         if variant_id:
@@ -94,7 +98,7 @@ def sync_shopify_variants(STORE, API_VERSION, ACCESS_TOKEN):
         Item.objects.bulk_update(
             to_update,
             ["shopify_variant_id", "shopify_handle"],
-            batch_size=500,
+            batch_size=200,
         )
 
     return {
@@ -102,4 +106,5 @@ def sync_shopify_variants(STORE, API_VERSION, ACCESS_TOKEN):
         "status_code": 200,
         "updated": updated,
         "not_found": not_found,
+        "error": None,
     }
