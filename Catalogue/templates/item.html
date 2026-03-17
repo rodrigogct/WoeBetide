@@ -151,7 +151,6 @@
     </div>  
   </template>
   
-  <!-- NEW: V2 root (unified, single DOM) -->
   <div id="item-layout-root-v2"></div>
 
   <template id="tpl-unified-v2">
@@ -341,7 +340,7 @@
     </div>
   </template>
 
-  <!-- NEW: V2 zoom overlay (separate from existing .image-selector) -->
+  <!-- Zoom overlay -->
   <main class="image-selector image-selector-v2" data-closable>
     <div class="zoomed-carousel-controls zoomed-carousel-controls-v2">
       <button class="zoomed-carousel-prev" type="button" onclick="prevImageV2()" style="background-color:black;border:none;">
@@ -355,7 +354,7 @@
     </div>
 
     <div class="image-container image-container-v2">
-      <img class="photo photo-v2" src="" alt="">
+      <div class="zoom-track" data-zoom-track></div>
     </div>
 
     <button type="button" class="close close-v2" aria-label="Close">
