@@ -186,31 +186,6 @@ def add_to_cart(request, item_id):
         return JsonResponse({"ok": True, "variant_id": vid, "qty": new_qty, "count": cart_utils.get_cart_count(request.session)})
     return redirect("Cart")
 
-# @require_POST
-# def update_cart(request):
-#     cart, _ = cart_utils.sanitize_cart_session(request)
-
-#     for key, value in request.POST.items():
-#         if key.startswith("qty[") and key.endswith("]"):
-#             vid = key[4:-1]
-
-#             # If item is sold, force remove
-#             if Item.objects.filter(shopify_variant_id=vid, is_sold=True).exists():
-#                 cart_utils.remove_item(request.session, vid)
-#                 continue
-
-#             try:
-#                 qty = int(value or 0)
-#             except ValueError:
-#                 qty = 0
-
-#             qty = max(0, min(qty, MAX_QTY_PER_ITEM))
-#             cart_utils.set_qty(request.session, vid, qty)
-
-#     if _wants_json(request):
-#         return JsonResponse({"ok": True, "count": cart_utils.get_cart_count(request.session)})
-#     return redirect("Cart")
-
 def _cart_summary(request):
     cart, _ = cart_utils.sanitize_cart_session(request)
     items = Item.objects.filter(shopify_variant_id__in=cart.keys())
@@ -273,7 +248,9 @@ def update_cart(request):
 
     if _wants_json(request):
         summary = _cart_summary(request)
-    return JsonResponse({"ok": True, **summary})
+        return JsonResponse({"ok": True, **summary})
+
+    return redirect("Cart")
 
 @require_POST
 def remove_from_cart(request, variant_id):

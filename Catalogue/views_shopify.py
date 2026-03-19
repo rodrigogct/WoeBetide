@@ -90,4 +90,10 @@ def orders_paid_webhook(request):
                 item.id, item.name
             )
 
+    logger.warning("WEBHOOK HIT")
+    logger.warning("RAW BODY: %s", request.body.decode("utf-8"))
+    logger.warning("Processing Shopify variant_id=%s", variant_id)
+    logger.warning("Matched Django item=%s", item.name)
+    logger.warning("No Django Item matched Shopify variant_id=%s", variant_id)
+
     return HttpResponse(status=200)
