@@ -30,20 +30,26 @@ def _verify_shopify_hmac(request) -> bool:
 
 @csrf_exempt
 def orders_paid_webhook(request):
+    logger.warning("🚨 WEBHOOK HIT: method=%s path=%s", request.method, request.path)
+
     if request.method != "POST":
+        logger.warning("Webhook rejected: non-POST request")
         return HttpResponse(status=405)
 
     if not _verify_shopify_hmac(request):
-        logger.warning("Invalid Shopify webhook HMAC.")
+        logger.warning("❌ Invalid Shopify webhook HMAC.")
         return HttpResponseForbidden("Invalid HMAC")
+
+    logger.warning("✅ Shopify HMAC passed")
+    logger.warning("RAW BODY: %s", request.body.decode("utf-8"))
 
     try:
         payload = json.loads(request.body.decode("utf-8"))
     except Exception as e:
-        logger.exception("Could not decode Shopify webhook payload: %s", e)
+        logger.exception("❌ Could not decode Shopify webhook payload: %s", e)
         return HttpResponse(status=400)
 
-    logger.info("Received Shopify paid webhook: order_id=%s", payload.get("id"))
+    logger.warning("📦 Received Shopify paid webhook: order_id=%s", payload.get("id"))
 
     sold_time = timezone.now()
 
@@ -52,20 +58,21 @@ def orders_paid_webhook(request):
         price = li.get("price")
         title = li.get("title")
 
-        logger.info(
-            "Processing line item: title=%s variant_id=%s price=%s",
+        logger.warning(
+            "🧾 Processing line item: title=%s variant_id=%s price=%s",
             title, variant_id, price
         )
 
         if not variant_id:
-            logger.warning("Line item missing variant_id: %s", li)
+            logger.warning("⚠️ Line item missing variant_id: %s", li)
             continue
 
         try:
             item = Item.objects.get(shopify_variant_id=str(variant_id))
+            logger.warning("✅ Matched Django item: id=%s name=%s", item.id, item.name)
         except Item.DoesNotExist:
             logger.warning(
-                "No Django Item matched Shopify variant_id=%s title=%s",
+                "❌ No Django Item matched Shopify variant_id=%s title=%s",
                 variant_id, title
             )
             continue
@@ -80,20 +87,14 @@ def orders_paid_webhook(request):
 
             item.save(update_fields=["is_sold", "sold_at", "sold_price", "is_archive", "updated"])
 
-            logger.info(
-                "Marked item as sold: item_id=%s name=%s variant_id=%s",
+            logger.warning(
+                "✅ Marked item as sold: item_id=%s name=%s variant_id=%s",
                 item.id, item.name, variant_id
             )
         else:
-            logger.info(
-                "Item already marked sold: item_id=%s name=%s",
+            logger.warning(
+                "ℹ️ Item already marked sold: item_id=%s name=%s",
                 item.id, item.name
             )
-
-    logger.warning("WEBHOOK HIT")
-    logger.warning("RAW BODY: %s", request.body.decode("utf-8"))
-    logger.warning("Processing Shopify variant_id=%s", variant_id)
-    logger.warning("Matched Django item=%s", item.name)
-    logger.warning("No Django Item matched Shopify variant_id=%s", variant_id)
 
     return HttpResponse(status=200)
