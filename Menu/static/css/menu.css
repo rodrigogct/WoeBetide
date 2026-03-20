@@ -278,10 +278,8 @@ body {
     display: inline-flex;
     align-items: center;
     border-radius: 50%;
-    background: var(--wbBtnBg);
     color: #fff;
-    box-shadow: var(--wbBtnShadow);
-    opacity: 0.4;
+    /* opacity: 0.4; */
   }
   
   /* bigger, crisp arrow */
