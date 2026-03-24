@@ -396,16 +396,18 @@ body {
         /* text-align: center; */
     }
 
-/* keep wrapper/button visible */
+ /* ===== mobile catalogue carousel only ===== */
+
+/* keep wrapper visible so hanging arrow is not clipped */
 .catalogue,
 .catalogue .elements,
 .catalogue .wb-scroller-wrap {
     width: 100%;
-    overflow: visible !important;
+    overflow: visible;
     position: relative;
 }
 
-/* the actual mobile scroller */
+/* actual horizontal scroller */
 .catalogue .wb-scroller-wrap > .block.container-xxxl {
     display: flex !important;
     flex-wrap: nowrap !important;
@@ -423,7 +425,7 @@ body {
     display: none;
 }
 
-/* VERY IMPORTANT: override bootstrap/global .col */
+/* IMPORTANT: target only direct children so bootstrap .col does not win */
 .catalogue .wb-scroller-wrap > .block.container-xxxl > .col {
     flex: 0 0 50% !important;
     width: 50% !important;
@@ -439,10 +441,11 @@ body {
     border-top: none;
 }
 
-/* image wrappers */
+/* wrappers inside each card */
 .catalogue .wb-scroller-wrap > .block.container-xxxl > .col .element,
 .catalogue .wb-scroller-wrap > .block.container-xxxl > .col .element-text,
-.catalogue .wb-scroller-wrap > .block.container-xxxl > .col .element-text a {
+.catalogue .wb-scroller-wrap > .block.container-xxxl > .col .element-text a,
+.catalogue .wb-scroller-wrap > .block.container-xxxl > .col .element-text picture {
     display: block;
     width: 100%;
 }
@@ -466,42 +469,6 @@ body {
     align-items: center;
     justify-content: space-between;
 }
-
-/* mobile next button */
-.wb-mobile-only {
-    display: block !important;
-}
-
-.wb-next-btn {
-    position: absolute;
-    right: -18px;
-    top: 50%;
-    transform: translateY(-50%);
-    background: transparent;
-    border: 0;
-    padding: 0;
-    z-index: 30;
-    line-height: 0;
-    cursor: pointer;
-}
-
-.wb-round-icon {
-    width: 56px;
-    height: 56px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    color: white;
-    opacity: 1;
-    pointer-events: none;
-}
-
-.wb-round-icon svg {
-    width: 34px;
-    height: 34px;
-    display: block;
-}
-
 }
 
 @media (max-width: 599px) {
