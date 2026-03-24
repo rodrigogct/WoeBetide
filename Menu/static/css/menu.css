@@ -375,7 +375,89 @@ body {
 }
 
 @media (max-width: 600px) {
-    .catalogue .block.container-xxxl {
+
+    .menu img {
+        height: 450px !important;
+    }
+
+    :root{
+        --navH: 55px; 
+        --heroH: 60px;  
+        --Gap: 12px;
+        --heroRows: 3; 
+    }
+
+    .menu .hero {
+        position: sticky;
+        height: var(--heroH);   /* ensure each row has the same fixed height */
+        line-height: 1;         /* no extra font spacing */
+        margin: 0;              /* remove default h1 margins */
+        font-size: 50px;
+        /* text-align: center; */
+    }
+
+    .block.container-xxxl .col{
+        border-left: none;
+    }
+    
+    /* Add top border to all .col elements */
+    .block.container-xxxl .col {
+        border-top: 1px solid black;
+    }
+    
+    /* Remove top border if there's another .col element directly below */
+    .block.container-xxxl .col {
+        border-top: none;
+    }
+    
+    .vintage {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .vintage .img1 img,
+    .extra-info .img1 img {
+        height: 450px;
+    }
+
+    .catalogue a.recents {
+        margin-left: 25px;
+        font-size: 18px;
+    }
+
+    .vintage .shop-all a, 
+    .staff-picks a, .tees a, 
+    .sweatshirts a, 
+    .outerwear a, 
+    .archive a {
+        z-index: 1000;
+        font-size: 25px;
+        /* margin-left: 50px;
+        margin-top: 60px; */
+    }
+
+        /* 1) Make sure no wrapper is semi-transparent */
+    .vintage .image-container,
+    .vintage .image-container .img1,
+    .vintage .image-container .img2,
+    .vintage .image-container .img3,
+    .vintage picture {
+    opacity: 1 !important;
+    }
+
+    /* 2) Dim ONLY the images (not text) */
+   .vintage .image-container img {
+    /* choose ONE of these: */
+    opacity: 1;           /* simple */
+    /* filter: brightness(0.9);      often nicer than opacity */
+    transition: filter .25s ease, opacity .25s ease;
+    }
+
+    .extra-info {
+    grid-template-columns: 1fr;
+    }
+
+    /* Infinite mobile scroller */
+    .catalogue .block.container-xxxl{
         display: flex;
         flex-wrap: nowrap;
         overflow-x: auto;
@@ -387,11 +469,12 @@ body {
         gap: 0;
     }
 
-    .catalogue .block.container-xxxl::-webkit-scrollbar {
+    .catalogue .block.container-xxxl::-webkit-scrollbar{
         display: none;
     }
 
-    .catalogue .block.container-xxxl .col {
+    /* each card must stay at 50% so 2 are visible */
+    .catalogue .block.container-xxxl .col{
         flex: 0 0 50%;
         width: 50%;
         min-width: 50%;
@@ -404,15 +487,16 @@ body {
         border-top: none;
     }
 
+    /* image wrappers */
     .catalogue .block.container-xxxl .element,
     .catalogue .block.container-xxxl .element picture,
-    .catalogue .block.container-xxxl .element-text picture {
+    .catalogue .block.container-xxxl .element-text picture{
         display: block;
         width: 100%;
     }
 
     .catalogue .block.container-xxxl .element img,
-    .catalogue .block.container-xxxl .element-text picture img {
+    .catalogue .block.container-xxxl .element-text picture img{
         display: block;
         width: 100% !important;
         height: auto !important;
@@ -420,11 +504,13 @@ body {
         object-fit: cover;
     }
 
-    .catalogue .block.container-xxxl .element-info .column {
+    /* info rows */
+    .catalogue .block.container-xxxl .element-info .column{
         display: flex;
         align-items: center;
         justify-content: space-between;
     }
+
 }
 
 @media (max-width: 599px) {
