@@ -456,63 +456,61 @@ body {
     grid-template-columns: 1fr;
     }
 
-    /* Horizontal scroller container (unchanged behavior) */
+    /* Infinite mobile scroller */
     .catalogue .block.container-xxxl{
-        display:flex;
-        overflow-x:auto;
-        scroll-snap-type:x mandatory;
-        -webkit-overflow-scrolling:touch;
-    }
-  
-    /* Ensure the media itself controls height proportionally */
-    .catalogue .block.container-xxxl .element,
-    .catalogue .block.container-xxxl .element picture{
-        display:block;
-    }
-    
-    .catalogue .block.container-xxxl .element img{
-        display:block;
-        width:100%;
-        height:auto !important;     
-        /* aspect-ratio: 3 / 4; */
-        object-fit: cover;                
-        max-height:none;  
-    }
-  
-    /* Keep your existing two-line row layout */
-    .catalogue .block.container-xxxl .element-info .column{
-        display:flex;
-        align-items:center;
-        justify-content:space-between;
-    }
-    
-    /* Keep your existing border behavior; just avoid legacy mobile overrides */
-    .block.container-xxxl .col{
-        border-left:none;
-        border-top:none;
+        display: flex;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        overflow-y: hidden;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        scroll-behavior: smooth;
+        gap: 0;
     }
 
-    /* 👇 Force each card to 50% of the viewport/container width */
+    .catalogue .block.container-xxxl::-webkit-scrollbar{
+        display: none;
+    }
+
+    /* each card must stay at 50% so 2 are visible */
     .catalogue .block.container-xxxl .col{
-        /* Pretend it's a 2-col grid */
-        --cols: 2;
-        --gap: 0px;
-        flex: 0 0 calc( (100% - (var(--cols) - 1) * var(--gap)) / var(--cols) );
-        scroll-snap-align:start;
-        min-width: 0;
-        display:flex; flex-direction:column;
+        flex: 0 0 50%;
+        width: 50%;
+        min-width: 50%;
+        max-width: 50%;
+        scroll-snap-align: start;
+        display: flex;
+        flex-direction: column;
+        box-sizing: border-box;
+        border-left: none;
+        border-top: none;
     }
 
-    /* Let images size intrinsically like your catalogue */
-    .catalogue .block.container-xxxl .element-text picture,
-    .catalogue .block.container-xxxl .element-text picture img{
-        display:block;
-        width:100% !important;
-        height:auto !important;      /* natural proportions */
-        max-height:none !important;
-        object-fit:cover;          /* or 'cover' if you like the crop look */
+    /* image wrappers */
+    .catalogue .block.container-xxxl .element,
+    .catalogue .block.container-xxxl .element picture,
+    .catalogue .block.container-xxxl .element-text picture{
+        display: block;
+        width: 100%;
     }
-  
+
+    .catalogue .block.container-xxxl .element img,
+    .catalogue .block.container-xxxl .element-text picture img{
+        display: block;
+        width: 100% !important;
+        height: auto !important;
+        max-height: none !important;
+        object-fit: cover;
+    }
+
+    /* info rows */
+    .catalogue .block.container-xxxl .element-info .column{
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
 }
 
 @media (max-width: 599px) {
