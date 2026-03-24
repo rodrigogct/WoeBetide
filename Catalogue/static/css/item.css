@@ -323,9 +323,9 @@ h6 {
     background-color: white;
 }
 
-/* .information .buy-buttons button:hover .btn-buy {
+.information .buy-buttons button:hover .btn-buy {
     color: black;
-} */
+}
 
 .disclaimer {
     display: flex;
