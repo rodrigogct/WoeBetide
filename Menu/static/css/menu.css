@@ -396,120 +396,111 @@ body {
         /* text-align: center; */
     }
 
-    .block.container-xxxl .col{
-        border-left: none;
-    }
-    
-    /* Add top border to all .col elements */
-    .block.container-xxxl .col {
-        border-top: 1px solid black;
-    }
-    
-    /* Remove top border if there's another .col element directly below */
-    .block.container-xxxl .col {
-        border-top: none;
-    }
-    
-    .vintage {
-        grid-template-columns: 1fr 1fr;
-    }
+/* keep wrapper/button visible */
+.catalogue,
+.catalogue .elements,
+.catalogue .wb-scroller-wrap {
+    width: 100%;
+    overflow: visible !important;
+    position: relative;
+}
 
-    .vintage .img1 img,
-    .extra-info .img1 img {
-        height: 450px;
-    }
+/* the actual mobile scroller */
+.catalogue .wb-scroller-wrap > .block.container-xxxl {
+    display: flex !important;
+    flex-wrap: nowrap !important;
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    width: 100%;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    scroll-behavior: smooth;
+    gap: 0;
+}
 
-    .catalogue a.recents {
-        margin-left: 25px;
-        font-size: 18px;
-    }
+.catalogue .wb-scroller-wrap > .block.container-xxxl::-webkit-scrollbar {
+    display: none;
+}
 
-    .vintage .shop-all a, 
-    .staff-picks a, .tees a, 
-    .sweatshirts a, 
-    .outerwear a, 
-    .archive a {
-        z-index: 1000;
-        font-size: 25px;
-        /* margin-left: 50px;
-        margin-top: 60px; */
-    }
+/* VERY IMPORTANT: override bootstrap/global .col */
+.catalogue .wb-scroller-wrap > .block.container-xxxl > .col {
+    flex: 0 0 50% !important;
+    width: 50% !important;
+    min-width: 50% !important;
+    max-width: 50% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    box-sizing: border-box;
+    scroll-snap-align: start;
+    padding: 0;
+    margin: 0;
+    border-left: none;
+    border-top: none;
+}
 
-        /* 1) Make sure no wrapper is semi-transparent */
-    .vintage .image-container,
-    .vintage .image-container .img1,
-    .vintage .image-container .img2,
-    .vintage .image-container .img3,
-    .vintage picture {
-    opacity: 1 !important;
-    }
+/* image wrappers */
+.catalogue .wb-scroller-wrap > .block.container-xxxl > .col .element,
+.catalogue .wb-scroller-wrap > .block.container-xxxl > .col .element-text,
+.catalogue .wb-scroller-wrap > .block.container-xxxl > .col .element-text a {
+    display: block;
+    width: 100%;
+}
 
-    /* 2) Dim ONLY the images (not text) */
-   .vintage .image-container img {
-    /* choose ONE of these: */
-    opacity: 1;           /* simple */
-    /* filter: brightness(0.9);      often nicer than opacity */
-    transition: filter .25s ease, opacity .25s ease;
-    }
+/* image sizing */
+.catalogue .wb-scroller-wrap > .block.container-xxxl > .col img {
+    display: block;
+    width: 100% !important;
+    height: auto !important;
+    max-height: none !important;
+    object-fit: cover;
+}
 
-    .extra-info {
-    grid-template-columns: 1fr;
-    }
+/* info rows */
+.catalogue .wb-scroller-wrap > .block.container-xxxl > .col .element-info {
+    width: 100%;
+}
 
-    /* Infinite mobile scroller */
-    .catalogue .block.container-xxxl{
-        display: flex;
-        flex-wrap: nowrap;
-        overflow-x: auto;
-        overflow-y: hidden;
-        scroll-snap-type: x mandatory;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: none;
-        scroll-behavior: smooth;
-        gap: 0;
-    }
+.catalogue .wb-scroller-wrap > .block.container-xxxl > .col .element-info .column {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
 
-    .catalogue .block.container-xxxl::-webkit-scrollbar{
-        display: none;
-    }
+/* mobile next button */
+.wb-mobile-only {
+    display: block !important;
+}
 
-    /* each card must stay at 50% so 2 are visible */
-    .catalogue .block.container-xxxl .col{
-        flex: 0 0 50%;
-        width: 50%;
-        min-width: 50%;
-        max-width: 50%;
-        scroll-snap-align: start;
-        display: flex;
-        flex-direction: column;
-        box-sizing: border-box;
-        border-left: none;
-        border-top: none;
-    }
+.wb-next-btn {
+    position: absolute;
+    right: -18px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: transparent;
+    border: 0;
+    padding: 0;
+    z-index: 30;
+    line-height: 0;
+    cursor: pointer;
+}
 
-    /* image wrappers */
-    .catalogue .block.container-xxxl .element,
-    .catalogue .block.container-xxxl .element picture,
-    .catalogue .block.container-xxxl .element-text picture{
-        display: block;
-        width: 100%;
-    }
+.wb-round-icon {
+    width: 56px;
+    height: 56px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    opacity: 1;
+    pointer-events: none;
+}
 
-    .catalogue .block.container-xxxl .element img,
-    .catalogue .block.container-xxxl .element-text picture img{
-        display: block;
-        width: 100% !important;
-        height: auto !important;
-        max-height: none !important;
-        object-fit: cover;
-    }
-
-    /* info rows */
-    .catalogue .block.container-xxxl .element-info .column{
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-    }
+.wb-round-icon svg {
+    width: 34px;
+    height: 34px;
+    display: block;
+}
 
 }
 
