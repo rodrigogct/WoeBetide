@@ -1,496 +1,392 @@
-body {
-    text-transform: uppercase;
+/* Start of item.css */
+
+/* General details */
+
+html {
+    height: 100%;
+    overflow: hidden;
 }
 
-.menu {
-    border-bottom: 1px solid black;
-    position: relative;
+body { 
+    height: 100%;
 }
 
-.menu h1 {
-    position: sticky;
-    top: var(--navH);
-    height: var(--heroH);
-    z-index: 10;
-    font-size: 90px;
-    font-weight: 500;
-    color: black;
+.display-1 {
+    font-size: calc(3.2rem + 4.5vw);
+}
+
+/* Prevent background scroll when overlay is open */
+body.lock-scroll {
+    overflow: hidden;
+    height: 100%;
+    position: fixed;
+    width: 100%;
+  }
+  
+/* Images */
+
+.item {
     display: grid;
+    grid-template-columns: 1fr 0.65fr;
+    overflow-x: hidden;
 }
 
-.menu p {
-    font-size: 18px;
-    color: black;
-    padding-top: 60px;
-    margin-left: 50px;
-    position: absolute;
-    margin: 30px 0 16px 50px;
-}
-
-:root {
-    --navH: 55px;
-}
-
-:root {
-    --heroH: 120px;
-}
-
-.menu .woe,
-.menu .image-container {
-    margin-top: calc(-1 * var(--heroH));
-}
-
-:root {
-    --navH: 55px;
-    --heroH: 110px;
-    --heroRows: 3;
-}
-
-.menu .hero {
-    position: sticky;
-    top: var(--navH);
-    height: var(--heroH);
-    margin: 0;
-    display: grid;
-    font-size: 90px;
-    font-weight: 500;
-    line-height: 1;
-    color: white;
-    z-index: 10;
-}
-
-.menu .woe,
-.menu .image-container {
-    margin-top: calc(-1 * var(--heroH) * var(--heroRows));
-}
-
-.hero:nth-child(1) { opacity: 0.2; }
-.hero:nth-child(2) { opacity: 0.4; }
-.hero:nth-child(3) { opacity: 0.6; }
-
-.elements p {
-    margin: 0;
-}
-
-.vintage {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    border: 3px solid #D2D1CD;
-    border-bottom: none;
-    border-right: none;
-}
-
-.catalogue {
+.images {
     display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    background-color: #D2D1CD;
+    border: 1px solid black;
+    border-top: none;
 }
 
-.vintage
-.shop-all,
-.staff-picks,
-.tees,
-.sweatshirts,
-.outerwear,
-.jewerly,
-.necklaces,
-.about-us,
-.archive {
-    display: flex;
-    justify-content: center;
-    border-bottom: 3px solid #D2D1CD;
-    position: relative;
-    text-decoration: none;
-    color: inherit;
-    overflow: visible;
-}
-
-.cat-hero {
-    position: absolute;
-}
-
-.catalogue a.recents {
-    color: black;
-    text-decoration: none;
-    margin-left: 50px;
-    font-size: 24px;
-}
-
-.vintage
-.shop-all a,
-.staff-picks a,
-.tees a,
-.sweatshirts a,
-.outerwear a,
-.archive a {
-    color: white;
-    display: flex;
-    justify-content: center;
-    font-size: 50px;
-    text-decoration: none;
-    font-weight: 500;
-}
-
-.catalogue h1,
-.vintage
-.shop-all h1,
-.staff-picks h1,
-.tees h1,
-.sweatshirts h1,
-.outerwear h1,
-.archive h1,
-.about-us h1 {
-    color: black;
-    text-decoration: none;
-    font-size: 48px;
-    margin-top: 30px;
-    margin-left: 50px;
-    position: absolute;
-}
-
-.about-us a {
-    text-decoration: none;
-    color: black;
-}
-
-.jewerly
-.necklaces a {
-    color: black;
-    text-decoration: none;
-    font-size: 28px;
-    margin-left: 50px;
-}
-
-.image-container {
+.main-images {
+    width: 100%;
     display: grid;
     grid-template-columns: 1fr 1fr;
-    flex-direction: row;
-    flex-wrap: wrap;
-    width: 100%;
 }
 
-.img1,
-.img2,
-.img3 {
-    box-sizing: border-box;
-}
-
-.img1 img {
-    border-right: 3px solid #D2D1CD;
+.main-images img {
     width: 100%;
-    height: 700px;
+    height: 100%;
+    min-height: 500px;
     object-fit: cover;
+    grid-template-columns: 1fr 1fr;
+    cursor: zoom-in;
 }
 
-.img2 img,
-.img3 img {
-    width: 100%;
-    height: 300px;
-}
+/* Apply border rules for images in a grid */
 
-.single-image {
+
+.main-images picture img {
     display: block;
-}
-
-.single-image .img1 img {
     width: 100%;
-}
+    border: none;
+  }
 
-.two-images {
-    grid-template-columns: 0.5fr 1fr;
-}
+.main-images .img-1 img {
+    border-right: 1px solid black;
+  }
+  
+.main-images .img-3 img {
+    border-top: 1px solid black;
+    border-right: 1px solid black;
+  }
+  
+.main-images .img-4 img {
+    border-top: 1px solid black;
+  }
+  
+.main-images .img-5 img {
+    border-top: 1px solid black;
+    border-right: 1px solid black;
+  }
 
-.two-images .img1 img {
-    height: 600px;
-}
+.main-images .img-6 img {
+    border-top: 1px solid black;
+  }
 
-.two-images .right-column {
-    display: flex;
-    flex-direction: column;
-}
+/* If there are two images (img-1, img-2) */
+.main-images picture:nth-child(2):nth-last-child(2) img {
+    border-bottom: 1px solid black;
+  }
 
-.two-images .img2 img {
-    border-left: 1px solid black;
+/* If there are three images (img-1, img-2, img-3) */
+.main-images picture:nth-child(1):nth-last-child(3) img {
+    border-bottom: 1px solid black;
+  }
+
+.main-images picture:nth-child(3):nth-last-child(1) img {
+    border-top: none;
+  }
+
+/* If there are five images (img-1, img-2, img-3, img-4, img-5) */
+.main-images picture:nth-child(4):nth-last-child(2) img {
+    border-bottom: 1px solid black;
+  }
+
+.main-images picture:nth-child(3):nth-last-child(3) img {
+    border-bottom: 1px solid black;
+  }
+
+.main-images picture:nth-child(5):nth-last-child(1) img {
+    border-top: none;
+  }
+
+.carousel-item {
+    touch-action: pan-y;
+  }
+  
+.carousel {
+    cursor: grab;
+    }
+  
+.carousel:active {
+    cursor: grabbing;
+  }
+
+.carousel img {
     object-fit: cover;
-    height: 600px;
+    border-top: none;
 }
 
-.extra-info {
-    border-left: 3px solid #D2D1CD;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-}
-
-/* ===== Mobile-only hanging next button ===== */
-:root {
-    --wbBtn: 100px;
-    --wbBtnBg: #2f2f2f;
-}
-
-.wb-scroller-wrap {
-    position: relative;
-    overflow: visible;
-}
-
-.wb-mobile-only {
+.item-carousel {
     display: none;
 }
 
-@media (max-width: 600px) {
-    .wb-mobile-only {
-        display: block;
-    }
+.item-carousel .main-images img:nth-child(1) {
+    border-bottom: none;
 }
 
-.wb-next-btn {
+.carousel-inner {
+    overflow: hidden;
+  }
+  
+.carousel-item img {
+    pointer-events: auto;  
+    user-select: none;
+    -webkit-user-drag: none;
+  }
+
+/* Zoomed image view */
+
+.image-selector {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    background-color: black;
+    pointer-events: none;
+    opacity: 0;
+    transition: 1s;
+    transition: opacity 0.3s ease;
+    touch-action: pan-x pan-y;
+    z-index: 9999;
+    overflow-y: hidden;
+    overscroll-behavior: contain;
+}
+
+.image-selector.active {
+    visibility: visible;
+    opacity: 1;
+}
+
+.image-selector img {
+    max-width: 90%;
+    max-height: 90%;
+    background-attachment: fixed;
+    object-fit: cover;
     position: absolute;
-    right: calc(-0.5 * var(--wbBtn));
-    top: 45%;
+    top: 48%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    cursor: zoom-in;
+}
+
+.close {
+    position: absolute;
+    left: 90%;
+    bottom: 94%;
+    border: none;
+    background:none;
+    padding: none;
+    color: white;
+}
+
+.image-selector .zoomed-carousel-controls {
+    position: absolute;
+    top: 50%;
     transform: translateY(-50%);
-    background: transparent;
-    border: 0;
-    padding: 5px;
-    z-index: 10;
-    line-height: 0;
-    cursor: pointer;
-}
-
-.wb-round-icon {
-    width: var(--wbBtn);
-    height: var(--wbBtn);
-    display: inline-flex;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
     align-items: center;
-    border-radius: 50%;
-    color: #fff;
-    opacity: 0.8;
 }
 
-.wb-round-icon svg {
-    width: 60%;
+.image-container {
+    max-height: 90vh;
+    max-width: 90vw;
+    overflow: auto;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .photo {
     display: block;
+    height: auto;
+    max-width: 90%;
+    max-height: 90%;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
 }
 
-@media (max-width: 420px) {
-    :root {
-        --wbBtn: 90px;
-    }
+
+  
+/* Garment information */
+
+.information { 
+    display: flex;
+    justify-content: center;
+    text-align: justify;
+    border: 1px solid;
+    border-top: none;
+    border-left: none; 
+    width: 100%;
+    height: 100%;
 }
 
-@media (max-width: 360px) {
-    :root {
-        --wbBtn: 90px;
-    }
+.information .text {
+    height: 100%;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+
+}
+
+.information .text .section {
+    text-align: justify;
+    padding: 0 20px 0 20px;
+}
+
+h6 {
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+.information .text .measurements_information {
+    display: flex;
+    justify-content: center;
+}
+
+.information .text .measurements_information .measurements {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    margin: 20px 0 20px 0;
+}
+
+.information .text .measurements_information .measurements p {
+    margin: 0;
+    margin-right: 20px;
+    text-align: center;
+    font-size: 13px;
+}
+
+.information .text .measurements_information .measurements .info {
+    border: 1px solid;
+}
+
+.information .text .measurements_information .measurements .length,
+.information .text .measurements_information .measurements .width,
+.information .text .measurements_information .measurements .sleeve {
+    position: relative;
+    display: flex;
+    width: 100%;
+    align-items: center;
+    border: 1px solid;
+}
+
+.information .text .measurements_information .measurements .length img,
+.information .text .measurements_information .measurements .width img,
+.information .text .measurements_information .measurements .sleeve img {
+    width: 12px;
+}
+
+.information .text .measurements_information .measurements .length .measurements-img img,
+.information .text .measurements_information .measurements .width .measurements-img img,
+.information .text .measurements_information .measurements .sleeve .measurements-img img {
+    display: none;
+    position: absolute;
+    z-index: 1;
+    width: 200px;
+}
+
+.buy-buttons {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.information .buy-buttons button {
+    padding: 0;
+    display: grid;
+    align-content: center;
+    width: 250px;
+    height: 32px;
+    border: 1px solid black;
+    background-color: #9E9C98;
+}
+
+.information .buy-buttons .btn-buy:hover {
+    color: white !important;
+}
+
+.disclaimer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0 20px 0 20px;
+    font-size: 14px;
+}
+
+.add-cart {
+    padding: 0 20px 0 20px;
 }
 
 @media (max-width: 1050px) {
-    .image-container {
+
+    .item {
         display: block;
-    }
-
-    .woe .img1 {
-        display: none;
-    }
-
-    .right-column {
-        border-bottom: none !important;
-    }
-
-    .img1 img {
-        height: 700px;
-    }
-
-    .vintage {
-        grid-template-columns: 1fr 1fr;
-    }
-}
-
-@media (max-width: 800px) {
-    .vintage .img1 img,
-    .extra-info .img1 img {
-        height: 500px;
-    }
-
-    .vintage .shop-all a,
-    .staff-picks a,
-    .tees a,
-    .sweatshirts a,
-    .outerwear a,
-    .archive a {
-        z-index: 1000;
-        font-size: 35px;
     }
 }
 
 @media (max-width: 700px) {
-    .image-container {
-        display: flex;
-        flex-direction: column-reverse;
-    }
 
-    :root {
-        --navH: 55px;
-        --heroH: 80px;
-        --Gap: 12px;
-        --heroRows: 3;
-        --Row: 16px;
-    }
-
-    .image-container .right-column {
-        border-bottom: 1px solid black;
-    }
-
-    .menu .image-container .img1 img {
-        height: 70px !important;
-    }
-
-    .menu .hero {
-        position: sticky;
-        height: var(--heroH);
-        line-height: 1;
-        margin: 0;
-        font-size: 70px;
-    }
-}
-
-@media (max-width: 600px) {
-    .menu img {
-        height: 450px !important;
-    }
-
-    :root {
-        --navH: 55px;
-        --heroH: 60px;
-        --Gap: 12px;
-        --heroRows: 3;
-    }
-
-    .menu .hero {
-        position: sticky;
-        height: var(--heroH);
-        line-height: 1;
-        margin: 0;
-        font-size: 50px;
-    }
-
-    .vintage {
-        grid-template-columns: 1fr 1fr;
-    }
-
-    .vintage .img1 img,
-    .extra-info .img1 img {
-        height: 450px;
-    }
-
-    .catalogue a.recents {
-        margin-left: 25px;
-        font-size: 18px;
-    }
-
-    .vintage .shop-all a,
-    .staff-picks a,
-    .tees a,
-    .sweatshirts a,
-    .outerwear a,
-    .archive a {
-        z-index: 1000;
-        font-size: 25px;
-    }
-
-    .vintage .image-container,
-    .vintage .image-container .img1,
-    .vintage .image-container .img2,
-    .vintage .image-container .img3,
-    .vintage picture {
-        opacity: 1 !important;
-    }
-
-    .vintage .image-container img {
-        opacity: 1;
-        transition: filter .25s ease, opacity .25s ease;
-    }
-
-    .extra-info {
-        grid-template-columns: 1fr;
-    }
-
-    /* ===== MOBILE CAROUSEL FIXES FOR CLEAN INFINITE SCROLL ===== */
-    .catalogue .block.container-xxxl {
-        display: flex;
-        flex-wrap: nowrap;
-        overflow-x: auto;
-        overflow-y: hidden;
-        scroll-snap-type: x mandatory;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: none;
-        scroll-behavior: smooth;
-        gap: 0;
-    }
-
-    .catalogue .block.container-xxxl::-webkit-scrollbar {
+    .item {
         display: none;
     }
 
-    .catalogue .block.container-xxxl .col {
-        --cols: 2;
-        --gap: 0px;
-        flex: 0 0 calc((100% - (var(--cols) - 1) * var(--gap)) / var(--cols));
-        min-width: calc((100% - (var(--cols) - 1) * var(--gap)) / var(--cols));
-        max-width: calc((100% - (var(--cols) - 1) * var(--gap)) / var(--cols));
-        scroll-snap-align: start;
-        display: flex;
-        flex-direction: column;
-        border-left: none;
-        border-top: none;
-        box-sizing: border-box;
+    .item-carousel {
+        display: block;
     }
 
-    .catalogue .block.container-xxxl .element,
-    .catalogue .block.container-xxxl .element picture,
-    .catalogue .block.container-xxxl .element-text picture {
+    .main-images {
         display: block;
+    }
+
+    .main-images img {
         width: 100%;
+        height: 750px;
     }
 
-    .catalogue .block.container-xxxl .element img,
-    .catalogue .block.container-xxxl .element-text picture img {
-        display: block;
-        width: 100% !important;
-        height: auto !important;
-        max-height: none !important;
-        object-fit: cover;
+    .information button {
+        width: 150px;
     }
-
-    .catalogue .block.container-xxxl .element-info .column {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-    }
+    
 }
 
-@media (max-width: 599px) {
-    .vintage .shop-all a,
-    .staff-picks a,
-    .tees a,
-    .sweatshirts a,
-    .outerwear a,
-    .archive a {
-        font-size: 35px;
-    }
-}
+@media (max-width: 500px) {
 
-@media (max-width: 530px) {
-    .vintage .shop-all a,
-    .staff-picks a,
-    .tees a,
-    .sweatshirts a,
-    .outerwear a,
-    .archive a {
-        font-size: 25px;
+    .main-images img {
+        width: 100%;
+        min-height: 300px;
+        height: 450px;
     }
 
-    .vintage .img1 img,
-    .extra-info .img1 img {
-        height: 350px;
+    .photo {
+        height: 450px;
     }
+
+    .image-selector .zoomed-carousel-controls {
+        top: 90%;
+    }
+
+    .information button {
+        width: 150px;
+    }
+    
 }
+
+/* end of item.css */
