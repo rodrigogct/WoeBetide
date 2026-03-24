@@ -290,6 +290,7 @@ h6 {
 .information .text .measurements_information .measurements .width img,
 .information .text .measurements_information .measurements .sleeve img {
     width: 12px;
+    cursor: pointer;
 }
 
 .information .text .measurements_information .measurements .length .measurements-img img,
