@@ -1,5 +1,10 @@
-body {
+html, body {
+    overflow-x: clip; /* prevents page overflow but allows inner scroll */
     text-transform: uppercase;
+}
+
+body {
+
 }
 
 .menu {
