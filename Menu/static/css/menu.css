@@ -380,6 +380,11 @@ body {
         height: 450px !important;
     }
 
+    .catalogue a.recents {
+        font-size: 20px;
+        margin-left: 25px;
+    }
+
     :root{
         --navH: 55px; 
         --heroH: 60px;  
