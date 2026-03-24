@@ -6,14 +6,31 @@ document.addEventListener('DOMContentLoaded', () => {
   const nextBtn = wrap.querySelector('.wb-next-btn');
   if (!scroller || !nextBtn) return;
 
-  const MOBILE_BP = 600;
-  const originalHTML = scroller.innerHTML;
+  if (window.innerWidth > 600) return;
 
-  let cleanup = null;
+  const originalSlides = Array.from(scroller.children);
+  const realCount = originalSlides.length;
+  if (realCount <= 1) return;
 
-  function isMobile() {
-    return window.innerWidth <= MOBILE_BP;
-  }
+  let isAdjusting = false;
+  let clickLocked = false;
+  let scrollTimer = null;
+
+  // clone end
+  originalSlides.forEach(slide => {
+    const clone = slide.cloneNode(true);
+    clone.classList.add('is-clone');
+    clone.setAttribute('aria-hidden', 'true');
+    scroller.appendChild(clone);
+  });
+
+  // clone start
+  [...originalSlides].reverse().forEach(slide => {
+    const clone = slide.cloneNode(true);
+    clone.classList.add('is-clone');
+    clone.setAttribute('aria-hidden', 'true');
+    scroller.insertBefore(clone, scroller.firstChild);
+  });
 
   function getSlides() {
     return Array.from(scroller.querySelectorAll(':scope > .col'));
@@ -27,125 +44,63 @@ document.addEventListener('DOMContentLoaded', () => {
     return slides[1].offsetLeft - slides[0].offsetLeft;
   }
 
-  function setScrollInstant(left) {
+  function setInstantScroll(left) {
     scroller.style.scrollBehavior = 'auto';
     scroller.scrollLeft = left;
     scroller.offsetHeight;
     scroller.style.scrollBehavior = 'smooth';
   }
 
-  function destroyLoop() {
-    if (cleanup) {
-      cleanup();
-      cleanup = null;
-    }
-    scroller.innerHTML = originalHTML;
-    scroller.style.scrollBehavior = '';
-    scroller.scrollLeft = 0;
+  function moveToRealStart() {
+    const step = getStep();
+    if (!step) return;
+    setInstantScroll(step * realCount);
   }
 
-  function initLoop() {
-    if (!isMobile()) {
-      destroyLoop();
-      return;
+  function normalizeLoop() {
+    if (isAdjusting) return;
+
+    const step = getStep();
+    if (!step) return;
+
+    const startReal = step * realCount;
+    const endReal = step * realCount * 2;
+    const current = scroller.scrollLeft;
+
+    if (current < startReal - step / 2) {
+      isAdjusting = true;
+      setInstantScroll(current + step * realCount);
+      isAdjusting = false;
+    } else if (current >= endReal - step / 2) {
+      isAdjusting = true;
+      setInstantScroll(current - step * realCount);
+      isAdjusting = false;
     }
-
-    destroyLoop();
-
-    const realSlides = getSlides();
-    const realCount = realSlides.length;
-    if (realCount <= 1) return;
-
-    const fragStart = document.createDocumentFragment();
-    const fragEnd = document.createDocumentFragment();
-
-    realSlides.forEach(slide => {
-      const endClone = slide.cloneNode(true);
-      endClone.setAttribute('aria-hidden', 'true');
-      endClone.classList.add('is-clone');
-      fragEnd.appendChild(endClone);
-    });
-
-    [...realSlides].reverse().forEach(slide => {
-      const startClone = slide.cloneNode(true);
-      startClone.setAttribute('aria-hidden', 'true');
-      startClone.classList.add('is-clone');
-      fragStart.insertBefore(startClone, fragStart.firstChild);
-    });
-
-    scroller.insertBefore(fragStart, scroller.firstChild);
-    scroller.appendChild(fragEnd);
-
-    let isAdjusting = false;
-    let scrollTimer = null;
-    let clickLocked = false;
-
-    function resetToRealZone() {
-      if (isAdjusting) return;
-
-      const step = getStep();
-      if (!step) return;
-
-      const startReal = step * realCount;
-      const endReal = step * realCount * 2;
-      const x = scroller.scrollLeft;
-
-      if (x < startReal - step / 2) {
-        isAdjusting = true;
-        setScrollInstant(x + step * realCount);
-        isAdjusting = false;
-      } else if (x >= endReal - step / 2) {
-        isAdjusting = true;
-        setScrollInstant(x - step * realCount);
-        isAdjusting = false;
-      }
-    }
-
-    requestAnimationFrame(() => {
-      const step = getStep();
-      if (!step) return;
-      setScrollInstant(step * realCount);
-    });
-
-    function onScroll() {
-      clearTimeout(scrollTimer);
-      scrollTimer = setTimeout(() => {
-        resetToRealZone();
-        clickLocked = false;
-      }, 90);
-    }
-
-    function onNextClick() {
-      if (clickLocked) return;
-
-      const step = getStep();
-      if (!step) return;
-
-      clickLocked = true;
-      scroller.scrollBy({
-        left: step,
-        behavior: 'smooth'
-      });
-    }
-
-    scroller.addEventListener('scroll', onScroll, { passive: true });
-    nextBtn.addEventListener('click', onNextClick);
-
-    cleanup = () => {
-      clearTimeout(scrollTimer);
-      scroller.removeEventListener('scroll', onScroll);
-      nextBtn.removeEventListener('click', onNextClick);
-    };
   }
 
-  initLoop();
+  requestAnimationFrame(() => {
+    moveToRealStart();
+  });
 
-  let resizeTimer = null;
-  window.addEventListener('resize', () => {
-    clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(() => {
-      initLoop();
-    }, 150);
+  scroller.addEventListener('scroll', () => {
+    clearTimeout(scrollTimer);
+    scrollTimer = setTimeout(() => {
+      normalizeLoop();
+      clickLocked = false;
+    }, 80);
+  }, { passive: true });
+
+  nextBtn.addEventListener('click', () => {
+    if (clickLocked) return;
+
+    const step = getStep();
+    if (!step) return;
+
+    clickLocked = true;
+    scroller.scrollBy({
+      left: step,
+      behavior: 'smooth'
+    });
   });
 });
 
