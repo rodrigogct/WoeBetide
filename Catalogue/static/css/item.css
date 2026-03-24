@@ -319,7 +319,7 @@ h6 {
     background-color: #9E9C98;
 }
 
-.information .buy-buttons .btn-buy a:hover {
+.information .buy-buttons .btn-buy:hover {
     color: white !important;
 }
 
