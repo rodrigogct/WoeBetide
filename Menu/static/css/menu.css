@@ -3,10 +3,6 @@ html, body {
     text-transform: uppercase;
 }
 
-body {
-
-}
-
 .menu {
     border-bottom: 1px solid black;
     position: relative;
