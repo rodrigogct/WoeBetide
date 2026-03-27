@@ -1,9 +1,8 @@
 // item-zoom.js
 // desktop: tpl-desktop
 // mobile: tpl-unified-v2
-// zoom overlay: swipeable carousel with arrow wrap-around
-// desktop zoom: click exact point to zoom in, click again to zoom out
-// while zoomed: real 2-axis scroll with trackpad + click-drag pan
+// overlay zoom: click to zoom at point, click again to unzoom
+// zoomed image supports trackpad scroll + click-drag pan
 
 document.addEventListener("DOMContentLoaded", () => {
   const root = document.getElementById("item-layout-root-v2");
@@ -25,11 +24,8 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   const zoomTrack = overlay.querySelector("[data-zoom-track]");
-
   if (!zoomTrack) {
-    console.warn(
-      "[item-zoom] missing zoom track. Add: <div class='zoom-track' data-zoom-track></div>"
-    );
+    console.warn("[item-zoom] missing [data-zoom-track]");
     return;
   }
 
@@ -47,11 +43,10 @@ document.addEventListener("DOMContentLoaded", () => {
     overlay.prepend(backdrop);
   }
 
-  const DESKTOP_ZOOM_SCALE = 2.2;
-
   const mq = window.matchMedia("(max-width: 700px)");
-  let cleanupFns = [];
+  const DESKTOP_ZOOM_SCALE = 2.25;
 
+  let cleanupFns = [];
   let zoomIndex = 0;
   let zoomSourceImgs = [];
   let zoomScrollRaf = null;
@@ -69,14 +64,14 @@ document.addEventListener("DOMContentLoaded", () => {
     moved: false,
   };
 
+  const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
+
   const ensureSrc = (img) => {
     if (!img) return;
     if (img.getAttribute("src")) return;
     const ds = img.getAttribute("data-src");
     if (ds) img.setAttribute("src", ds);
   };
-
-  const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
 
   const normalizeZoomIndex = (idx) => {
     const total = zoomSourceImgs.length || 1;
@@ -88,6 +83,26 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const getZoomedSlide = () =>
     zoomTrack.querySelector('.zoom-slide[data-zoomed="true"]');
+
+  const hideChrome = () => {
+    catalogue.forEach((el) => {
+      el.dataset.prevDisplay = el.style.display;
+      el.style.display = "none";
+    });
+    navbar.forEach((el) => {
+      el.dataset.prevDisplay = el.style.display;
+      el.style.display = "none";
+    });
+  };
+
+  const showChrome = () => {
+    catalogue.forEach((el) => {
+      el.style.display = el.dataset.prevDisplay || "";
+    });
+    navbar.forEach((el) => {
+      el.style.display = el.dataset.prevDisplay || "";
+    });
+  };
 
   const setOverlayClosed = () => {
     overlay.style.display = "none";
@@ -105,30 +120,6 @@ document.addEventListener("DOMContentLoaded", () => {
     overlay.classList.add("active");
     document.body.classList.add("lock-scroll");
   };
-
-  const hideChrome = () => {
-    catalogue.forEach((el) => {
-      el.dataset.prevDisplay = el.style.display;
-      el.style.display = "none";
-    });
-
-    navbar.forEach((el) => {
-      el.dataset.prevDisplay = el.style.display;
-      el.style.display = "none";
-    });
-  };
-
-  const showChrome = () => {
-    catalogue.forEach((el) => {
-      el.style.display = el.dataset.prevDisplay || "";
-    });
-
-    navbar.forEach((el) => {
-      el.style.display = el.dataset.prevDisplay || "";
-    });
-  };
-
-  setOverlayClosed();
 
   const buildZoomCarousel = (sourceImgs) => {
     zoomTrack.innerHTML = "";
@@ -166,7 +157,6 @@ document.addEventListener("DOMContentLoaded", () => {
     slide.setAttribute("data-zoomed", "false");
 
     if (inner) {
-      inner.classList.remove("is-zoomed");
       inner.style.width = "";
       inner.style.height = "";
     }
@@ -190,6 +180,7 @@ document.addEventListener("DOMContentLoaded", () => {
     dragState.active = false;
     dragState.pointerId = null;
     dragState.slide = null;
+    dragState.moved = false;
   };
 
   const zoomSlideAtPoint = (slide, clientX, clientY) => {
@@ -217,7 +208,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     slide.classList.add("is-zoomed");
     slide.setAttribute("data-zoomed", "true");
-    inner.classList.add("is-zoomed");
 
     inner.style.width = `${zoomW}px`;
     inner.style.height = `${zoomH}px`;
@@ -301,7 +291,7 @@ document.addEventListener("DOMContentLoaded", () => {
     zoomScrollRaf = requestAnimationFrame(check);
   };
 
-  const attachZoomCarouselListeners = () => {
+  const attachOverlayListeners = () => {
     const onZoomTrackScroll = () => {
       if (!overlay.classList.contains("active")) return;
       if (zoomTrack.classList.contains("is-locked")) return;
@@ -312,13 +302,11 @@ document.addEventListener("DOMContentLoaded", () => {
       const zoomedSlide = getZoomedSlide();
       if (!zoomedSlide) return;
 
-      // Let trackpad / mouse wheel move the zoomed image freely on both axes.
       e.preventDefault();
 
       zoomedSlide.scrollLeft += e.deltaX;
       zoomedSlide.scrollTop += e.deltaY;
 
-      // Shift + wheel fallback for some mice
       if (e.shiftKey && e.deltaY !== 0 && e.deltaX === 0) {
         zoomedSlide.scrollLeft += e.deltaY;
       }
@@ -328,14 +316,22 @@ document.addEventListener("DOMContentLoaded", () => {
       if (window.innerWidth <= 700) return;
       if (dragState.moved) return;
 
-      const img = e.target.closest(".zoom-slide img");
-      if (!img) return;
-
-      const slide = img.closest(".zoom-slide");
+      const slide = e.target.closest(".zoom-slide");
       if (!slide) return;
+
+      const isZoomed = slide.getAttribute("data-zoomed") === "true";
 
       e.preventDefault();
       e.stopPropagation();
+
+      if (isZoomed) {
+        clearSlideZoom(slide, true);
+        zoomTrack.classList.remove("is-locked");
+        return;
+      }
+
+      const img = e.target.closest(".zoom-slide img");
+      if (!img) return;
 
       toggleSlideZoomAtPoint(slide, e.clientX, e.clientY);
     };
@@ -407,6 +403,31 @@ document.addEventListener("DOMContentLoaded", () => {
       }, 0);
     };
 
+    const onBackdropClick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      closeZoomCarousel();
+    };
+
+    const onClose = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      closeZoomCarousel();
+    };
+
+    const onKeyDown = (e) => {
+      if (!overlay.classList.contains("active")) return;
+
+      if (e.key === "Escape") closeZoomCarousel();
+      if (e.key === "ArrowLeft") window.prevImageV2();
+      if (e.key === "ArrowRight") window.nextImageV2();
+    };
+
+    const onResize = () => {
+      if (!overlay.classList.contains("active")) return;
+      scrollZoomTo(zoomIndex, false);
+    };
+
     zoomTrack.addEventListener("scroll", onZoomTrackScroll);
     zoomTrack.addEventListener("wheel", onWheel, { passive: false });
     zoomTrack.addEventListener("click", onClick);
@@ -415,6 +436,11 @@ document.addEventListener("DOMContentLoaded", () => {
     zoomTrack.addEventListener("pointerup", endPointerDrag);
     zoomTrack.addEventListener("pointercancel", endPointerDrag);
 
+    backdrop.addEventListener("click", onBackdropClick);
+    if (closeButton) closeButton.addEventListener("click", onClose);
+    document.addEventListener("keydown", onKeyDown);
+    window.addEventListener("resize", onResize);
+
     cleanupFns.push(() => zoomTrack.removeEventListener("scroll", onZoomTrackScroll));
     cleanupFns.push(() => zoomTrack.removeEventListener("wheel", onWheel));
     cleanupFns.push(() => zoomTrack.removeEventListener("click", onClick));
@@ -422,13 +448,16 @@ document.addEventListener("DOMContentLoaded", () => {
     cleanupFns.push(() => zoomTrack.removeEventListener("pointermove", onPointerMove));
     cleanupFns.push(() => zoomTrack.removeEventListener("pointerup", endPointerDrag));
     cleanupFns.push(() => zoomTrack.removeEventListener("pointercancel", endPointerDrag));
+    cleanupFns.push(() => backdrop.removeEventListener("click", onBackdropClick));
+    if (closeButton) cleanupFns.push(() => closeButton.removeEventListener("click", onClose));
+    cleanupFns.push(() => document.removeEventListener("keydown", onKeyDown));
+    cleanupFns.push(() => window.removeEventListener("resize", onResize));
   };
 
   const openZoomCarousel = (sourceImgs, index) => {
     buildZoomCarousel(sourceImgs);
     setOverlayOpen();
     hideChrome();
-    attachZoomCarouselListeners();
     scrollZoomTo(index, false);
   };
 
@@ -449,66 +478,6 @@ document.addEventListener("DOMContentLoaded", () => {
   window.nextImageV2 = () => {
     if (!overlay.classList.contains("active")) return;
     scrollZoomTo(zoomIndex + 1, true);
-  };
-
-  const mount = (isMobile) => {
-    cleanupFns.forEach((fn) => fn());
-    cleanupFns = [];
-
-    closeZoomCarousel();
-
-    root.innerHTML = "";
-    root.appendChild((isMobile ? tplMobile : tplDesktop).content.cloneNode(true));
-
-    const activeRoot = isMobile
-      ? root.querySelector(".item-carousel-v2")
-      : root.querySelector(".item");
-
-    if (!activeRoot) {
-      console.warn("[item-zoom] active root not found", { isMobile });
-      return;
-    }
-
-    if (isMobile) {
-      mountMobile(activeRoot);
-    } else {
-      mountDesktop(activeRoot);
-    }
-
-    const onBackdropClick = (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      closeZoomCarousel();
-    };
-    backdrop.addEventListener("click", onBackdropClick);
-    cleanupFns.push(() => backdrop.removeEventListener("click", onBackdropClick));
-
-    if (closeButton) {
-      const onClose = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        closeZoomCarousel();
-      };
-      closeButton.addEventListener("click", onClose);
-      cleanupFns.push(() => closeButton.removeEventListener("click", onClose));
-    }
-
-    const onKeyDown = (e) => {
-      if (!overlay.classList.contains("active")) return;
-
-      if (e.key === "Escape") closeZoomCarousel();
-      if (e.key === "ArrowLeft") window.prevImageV2();
-      if (e.key === "ArrowRight") window.nextImageV2();
-    };
-    document.addEventListener("keydown", onKeyDown);
-    cleanupFns.push(() => document.removeEventListener("keydown", onKeyDown));
-
-    const onResize = () => {
-      if (!overlay.classList.contains("active")) return;
-      scrollZoomTo(zoomIndex, false);
-    };
-    window.addEventListener("resize", onResize);
-    cleanupFns.push(() => window.removeEventListener("resize", onResize));
   };
 
   const mountDesktop = (activeRoot) => {
@@ -846,6 +815,34 @@ document.addEventListener("DOMContentLoaded", () => {
     cleanupFns.push(() => window.removeEventListener("resize", onResize));
   };
 
+  const mount = (isMobile) => {
+    cleanupFns.forEach((fn) => fn());
+    cleanupFns = [];
+
+    closeZoomCarousel();
+
+    root.innerHTML = "";
+    root.appendChild((isMobile ? tplMobile : tplDesktop).content.cloneNode(true));
+
+    const activeRoot = isMobile
+      ? root.querySelector(".item-carousel-v2")
+      : root.querySelector(".item");
+
+    if (!activeRoot) {
+      console.warn("[item-zoom] active root not found", { isMobile });
+      return;
+    }
+
+    attachOverlayListeners();
+
+    if (isMobile) {
+      mountMobile(activeRoot);
+    } else {
+      mountDesktop(activeRoot);
+    }
+  };
+
+  setOverlayClosed();
   mount(mq.matches);
 
   const onMqChange = (e) => mount(e.matches);
