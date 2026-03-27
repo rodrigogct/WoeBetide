@@ -96,7 +96,21 @@
                 <div class="image-container {% if not shop_all.img2 and not shop_all.img3 %}single-image{% elif not shop_all.img3 %}two-images{% endif %}">
                     {% if shop_all.img1 %}
                     <div class="img1">
-                        <img src="{{ shop_all.img1.url|cld_menu }}" loading="lazy" alt="Image 1">
+                        <picture>
+                            <source 
+                              media="(max-width: 600px)" 
+                              srcset="{{ menu.img1.url|cld_menu_mobile }}"
+                            >
+                            <img
+                              src="{{ menu.img1.url|cld_menu }}"
+                              loading="eager"
+                              fetchpriority="high"
+                              decoding="async"
+                              alt="Image 1"
+                              style="border-right: none;"
+                            >
+                          </picture>
+                        
                     </div>
                     {% endif %}
                     {% if shop_all.img2 or shop_all.img3 %}
