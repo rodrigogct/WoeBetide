@@ -266,7 +266,7 @@ body.lock-scroll {
 .image-selector .zoomed-carousel-controls,
 .image-selector.image-selector-v2 .zoomed-carousel-controls {
     position: absolute;
-    top: 92%;
+    top: 50%;
     left: 0;
     right: 0;
     transform: translateY(-50%);
@@ -444,6 +444,11 @@ h6 {
         max-width: 100vw;
         max-height: 100vh;
     }
+
+    .image-selector .zoomed-carousel-controls,
+    .image-selector.image-selector-v2 .zoomed-carousel-controls {
+    top: 92%;
+}
 }
 
 @media (max-width: 500px) {
