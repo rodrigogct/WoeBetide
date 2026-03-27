@@ -54,9 +54,9 @@ def menu(request):
 
     # featured "new items" (with fallback)
     new_items_qs = Item.objects.filter(is_featured=True, is_sold=False).order_by('-created')
-    new_items = list(new_items_qs[:5])
-    if len(new_items) < 5:
-        remaining = 5 - len(new_items)
+    new_items = list(new_items_qs[:4])
+    if len(new_items) < 4:
+        remaining = 4 - len(new_items)
         filler = list(Item.objects.filter(is_featured=False, is_sold=False)
                                .order_by('-created')[:remaining])
         new_items += filler
