@@ -2,7 +2,8 @@
 // desktop: tpl-desktop
 // mobile: tpl-unified-v2
 // zoom overlay: swipeable carousel with arrow wrap-around
-// desktop zoom: click once to zoom in, click again to zoom out, pan by scrolling while zoomed
+// desktop zoom: click exact point to zoom in, click again to zoom out
+// while zoomed: real 2-axis scroll with trackpad + click-drag pan
 
 document.addEventListener("DOMContentLoaded", () => {
   const root = document.getElementById("item-layout-root-v2");
@@ -46,12 +47,47 @@ document.addEventListener("DOMContentLoaded", () => {
     overlay.prepend(backdrop);
   }
 
+  const DESKTOP_ZOOM_SCALE = 2.2;
+
+  const mq = window.matchMedia("(max-width: 700px)");
+  let cleanupFns = [];
+
+  let zoomIndex = 0;
+  let zoomSourceImgs = [];
+  let zoomScrollRaf = null;
+  let zoomLastScrollLeft = 0;
+  let zoomStableFrames = 0;
+
+  let dragState = {
+    active: false,
+    pointerId: null,
+    slide: null,
+    startX: 0,
+    startY: 0,
+    startScrollLeft: 0,
+    startScrollTop: 0,
+    moved: false,
+  };
+
   const ensureSrc = (img) => {
     if (!img) return;
     if (img.getAttribute("src")) return;
     const ds = img.getAttribute("data-src");
     if (ds) img.setAttribute("src", ds);
   };
+
+  const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
+
+  const normalizeZoomIndex = (idx) => {
+    const total = zoomSourceImgs.length || 1;
+    return ((idx % total) + total) % total;
+  };
+
+  const getZoomSlides = () =>
+    Array.from(zoomTrack.querySelectorAll("[data-zoom-slide]"));
+
+  const getZoomedSlide = () =>
+    zoomTrack.querySelector('.zoom-slide[data-zoomed="true"]');
 
   const setOverlayClosed = () => {
     overlay.style.display = "none";
@@ -94,23 +130,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   setOverlayClosed();
 
-  const mq = window.matchMedia("(max-width: 700px)");
-  let cleanupFns = [];
-
-  // ----------------------------------------
-  // Zoom overlay carousel state
-  // ----------------------------------------
-  let zoomIndex = 0;
-  let zoomSourceImgs = [];
-  let zoomScrollRaf = null;
-  let zoomLastScrollLeft = 0;
-  let zoomStableFrames = 0;
-
-  const normalizeZoomIndex = (idx) => {
-    const total = zoomSourceImgs.length || 1;
-    return ((idx % total) + total) % total;
-  };
-
   const buildZoomCarousel = (sourceImgs) => {
     zoomTrack.innerHTML = "";
     zoomSourceImgs = sourceImgs.slice();
@@ -123,48 +142,117 @@ document.addEventListener("DOMContentLoaded", () => {
       slide.setAttribute("data-zoom-slide", "");
       slide.setAttribute("data-zoomed", "false");
 
+      const inner = document.createElement("div");
+      inner.className = "zoom-slide-inner";
+
       const zoomImg = document.createElement("img");
       zoomImg.src = img.getAttribute("src") || img.getAttribute("data-src") || "";
       zoomImg.alt = img.getAttribute("alt") || `Image ${index + 1}`;
       zoomImg.draggable = false;
 
-      slide.appendChild(zoomImg);
+      inner.appendChild(zoomImg);
+      slide.appendChild(inner);
       zoomTrack.appendChild(slide);
     });
   };
 
-  const getZoomSlides = () =>
-    Array.from(zoomTrack.querySelectorAll("[data-zoom-slide]"));
+  const clearSlideZoom = (slide, resetScroll = true) => {
+    if (!slide) return;
 
-  const resetZoomState = () => {
-    getZoomSlides().forEach((slide) => {
-      slide.classList.remove("is-zoomed");
-      slide.setAttribute("data-zoomed", "false");
-      slide.scrollTop = 0;
+    const inner = slide.querySelector(".zoom-slide-inner");
+    const img = slide.querySelector("img");
+
+    slide.classList.remove("is-zoomed", "is-dragging");
+    slide.setAttribute("data-zoomed", "false");
+
+    if (inner) {
+      inner.classList.remove("is-zoomed");
+      inner.style.width = "";
+      inner.style.height = "";
+    }
+
+    if (img) {
+      img.style.width = "";
+      img.style.height = "";
+      img.style.maxWidth = "";
+      img.style.maxHeight = "";
+    }
+
+    if (resetScroll) {
       slide.scrollLeft = 0;
-    });
-
-    zoomTrack.classList.remove("is-locked");
+      slide.scrollTop = 0;
+    }
   };
 
-  const toggleSlideZoom = (slide) => {
+  const resetZoomState = () => {
+    getZoomSlides().forEach((slide) => clearSlideZoom(slide, true));
+    zoomTrack.classList.remove("is-locked");
+    dragState.active = false;
+    dragState.pointerId = null;
+    dragState.slide = null;
+  };
+
+  const zoomSlideAtPoint = (slide, clientX, clientY) => {
+    if (!slide) return;
+
+    const inner = slide.querySelector(".zoom-slide-inner");
+    const img = slide.querySelector("img");
+    if (!inner || !img) return;
+
+    const imgRect = img.getBoundingClientRect();
+    const slideRect = slide.getBoundingClientRect();
+
+    if (!imgRect.width || !imgRect.height) return;
+
+    const relX = clamp((clientX - imgRect.left) / imgRect.width, 0, 1);
+    const relY = clamp((clientY - imgRect.top) / imgRect.height, 0, 1);
+
+    const viewportOffsetX = clientX - slideRect.left;
+    const viewportOffsetY = clientY - slideRect.top;
+
+    const zoomW = Math.round(imgRect.width * DESKTOP_ZOOM_SCALE);
+    const zoomH = Math.round(imgRect.height * DESKTOP_ZOOM_SCALE);
+
+    resetZoomState();
+
+    slide.classList.add("is-zoomed");
+    slide.setAttribute("data-zoomed", "true");
+    inner.classList.add("is-zoomed");
+
+    inner.style.width = `${zoomW}px`;
+    inner.style.height = `${zoomH}px`;
+
+    img.style.width = `${zoomW}px`;
+    img.style.height = `${zoomH}px`;
+    img.style.maxWidth = "none";
+    img.style.maxHeight = "none";
+
+    zoomTrack.classList.add("is-locked");
+
+    requestAnimationFrame(() => {
+      const maxLeft = Math.max(0, slide.scrollWidth - slide.clientWidth);
+      const maxTop = Math.max(0, slide.scrollHeight - slide.clientHeight);
+
+      const targetLeft = relX * zoomW - viewportOffsetX;
+      const targetTop = relY * zoomH - viewportOffsetY;
+
+      slide.scrollLeft = clamp(targetLeft, 0, maxLeft);
+      slide.scrollTop = clamp(targetTop, 0, maxTop);
+    });
+  };
+
+  const toggleSlideZoomAtPoint = (slide, clientX, clientY) => {
     if (!slide) return;
 
     const isZoomed = slide.getAttribute("data-zoomed") === "true";
 
     if (isZoomed) {
-      slide.classList.remove("is-zoomed");
-      slide.setAttribute("data-zoomed", "false");
-      slide.scrollTop = 0;
-      slide.scrollLeft = 0;
+      clearSlideZoom(slide, true);
       zoomTrack.classList.remove("is-locked");
       return;
     }
 
-    resetZoomState();
-    slide.classList.add("is-zoomed");
-    slide.setAttribute("data-zoomed", "true");
-    zoomTrack.classList.add("is-locked");
+    zoomSlideAtPoint(slide, clientX, clientY);
   };
 
   const scrollZoomTo = (index, smooth = true) => {
@@ -214,30 +302,126 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   const attachZoomCarouselListeners = () => {
-    const onZoomScroll = () => {
+    const onZoomTrackScroll = () => {
       if (!overlay.classList.contains("active")) return;
       if (zoomTrack.classList.contains("is-locked")) return;
       watchZoomScrollSettled();
     };
 
-    const onZoomClick = (e) => {
+    const onWheel = (e) => {
+      const zoomedSlide = getZoomedSlide();
+      if (!zoomedSlide) return;
+
+      // Let trackpad / mouse wheel move the zoomed image freely on both axes.
+      e.preventDefault();
+
+      zoomedSlide.scrollLeft += e.deltaX;
+      zoomedSlide.scrollTop += e.deltaY;
+
+      // Shift + wheel fallback for some mice
+      if (e.shiftKey && e.deltaY !== 0 && e.deltaX === 0) {
+        zoomedSlide.scrollLeft += e.deltaY;
+      }
+    };
+
+    const onClick = (e) => {
       if (window.innerWidth <= 700) return;
+      if (dragState.moved) return;
 
       const img = e.target.closest(".zoom-slide img");
       if (!img) return;
 
+      const slide = img.closest(".zoom-slide");
+      if (!slide) return;
+
       e.preventDefault();
       e.stopPropagation();
 
-      const slide = img.closest(".zoom-slide");
-      toggleSlideZoom(slide);
+      toggleSlideZoomAtPoint(slide, e.clientX, e.clientY);
     };
 
-    zoomTrack.addEventListener("scroll", onZoomScroll);
-    zoomTrack.addEventListener("click", onZoomClick);
+    const onPointerDown = (e) => {
+      if (window.innerWidth <= 700) return;
 
-    cleanupFns.push(() => zoomTrack.removeEventListener("scroll", onZoomScroll));
-    cleanupFns.push(() => zoomTrack.removeEventListener("click", onZoomClick));
+      const slide = e.target.closest(".zoom-slide");
+      if (!slide) return;
+      if (slide.getAttribute("data-zoomed") !== "true") return;
+
+      dragState.active = true;
+      dragState.pointerId = e.pointerId;
+      dragState.slide = slide;
+      dragState.startX = e.clientX;
+      dragState.startY = e.clientY;
+      dragState.startScrollLeft = slide.scrollLeft;
+      dragState.startScrollTop = slide.scrollTop;
+      dragState.moved = false;
+
+      slide.classList.add("is-dragging");
+
+      if (slide.setPointerCapture) {
+        try {
+          slide.setPointerCapture(e.pointerId);
+        } catch (_) {}
+      }
+
+      e.preventDefault();
+    };
+
+    const onPointerMove = (e) => {
+      if (!dragState.active) return;
+      if (dragState.pointerId !== e.pointerId) return;
+      if (!dragState.slide) return;
+
+      const dx = e.clientX - dragState.startX;
+      const dy = e.clientY - dragState.startY;
+
+      if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
+        dragState.moved = true;
+      }
+
+      dragState.slide.scrollLeft = dragState.startScrollLeft - dx;
+      dragState.slide.scrollTop = dragState.startScrollTop - dy;
+
+      e.preventDefault();
+    };
+
+    const endPointerDrag = (e) => {
+      if (!dragState.active) return;
+      if (dragState.pointerId !== e.pointerId) return;
+
+      if (dragState.slide) {
+        dragState.slide.classList.remove("is-dragging");
+        if (dragState.slide.releasePointerCapture) {
+          try {
+            dragState.slide.releasePointerCapture(e.pointerId);
+          } catch (_) {}
+        }
+      }
+
+      dragState.active = false;
+      dragState.pointerId = null;
+      dragState.slide = null;
+
+      setTimeout(() => {
+        dragState.moved = false;
+      }, 0);
+    };
+
+    zoomTrack.addEventListener("scroll", onZoomTrackScroll);
+    zoomTrack.addEventListener("wheel", onWheel, { passive: false });
+    zoomTrack.addEventListener("click", onClick);
+    zoomTrack.addEventListener("pointerdown", onPointerDown);
+    zoomTrack.addEventListener("pointermove", onPointerMove);
+    zoomTrack.addEventListener("pointerup", endPointerDrag);
+    zoomTrack.addEventListener("pointercancel", endPointerDrag);
+
+    cleanupFns.push(() => zoomTrack.removeEventListener("scroll", onZoomTrackScroll));
+    cleanupFns.push(() => zoomTrack.removeEventListener("wheel", onWheel));
+    cleanupFns.push(() => zoomTrack.removeEventListener("click", onClick));
+    cleanupFns.push(() => zoomTrack.removeEventListener("pointerdown", onPointerDown));
+    cleanupFns.push(() => zoomTrack.removeEventListener("pointermove", onPointerMove));
+    cleanupFns.push(() => zoomTrack.removeEventListener("pointerup", endPointerDrag));
+    cleanupFns.push(() => zoomTrack.removeEventListener("pointercancel", endPointerDrag));
   };
 
   const openZoomCarousel = (sourceImgs, index) => {
@@ -267,9 +451,6 @@ document.addEventListener("DOMContentLoaded", () => {
     scrollZoomTo(zoomIndex + 1, true);
   };
 
-  // ----------------------------------------
-  // Main mount switcher
-  // ----------------------------------------
   const mount = (isMobile) => {
     cleanupFns.forEach((fn) => fn());
     cleanupFns = [];
@@ -330,9 +511,6 @@ document.addEventListener("DOMContentLoaded", () => {
     cleanupFns.push(() => window.removeEventListener("resize", onResize));
   };
 
-  // ----------------------------------------
-  // Desktop
-  // ----------------------------------------
   const mountDesktop = (activeRoot) => {
     const imgsWithDataSrc = Array.from(
       activeRoot.querySelectorAll(".main-images img[data-src]")
@@ -362,9 +540,6 @@ document.addEventListener("DOMContentLoaded", () => {
     );
   };
 
-  // ----------------------------------------
-  // Mobile
-  // ----------------------------------------
   const mountMobile = (activeRoot) => {
     const host = activeRoot.querySelector("[data-wb-snap]");
     const track = activeRoot.querySelector("[data-wb-track]");

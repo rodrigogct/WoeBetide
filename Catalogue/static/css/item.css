@@ -7,7 +7,7 @@ html {
     overflow: hidden;
 }
 
-body { 
+body {
     height: 100%;
 }
 
@@ -15,7 +15,6 @@ body {
     font-size: calc(3.2rem + 4.5vw);
 }
 
-/* Prevent background scroll when overlay is open */
 body.lock-scroll {
     overflow: hidden;
     height: 100%;
@@ -52,8 +51,6 @@ body.lock-scroll {
     cursor: zoom-in;
 }
 
-/* Apply border rules for images in a grid */
-
 .main-images picture img {
     display: block;
     width: 100%;
@@ -63,16 +60,16 @@ body.lock-scroll {
 .main-images .img-1 img {
     border-right: 1px solid black;
 }
-  
+
 .main-images .img-3 img {
     border-top: 1px solid black;
     border-right: 1px solid black;
 }
-  
+
 .main-images .img-4 img {
     border-top: 1px solid black;
 }
-  
+
 .main-images .img-5 img {
     border-top: 1px solid black;
     border-right: 1px solid black;
@@ -82,12 +79,10 @@ body.lock-scroll {
     border-top: 1px solid black;
 }
 
-/* If there are two images (img-1, img-2) */
 .main-images picture:nth-child(2):nth-last-child(2) img {
     border-bottom: 1px solid black;
 }
 
-/* If there are three images (img-1, img-2, img-3) */
 .main-images picture:nth-child(1):nth-last-child(3) img {
     border-bottom: 1px solid black;
 }
@@ -96,7 +91,6 @@ body.lock-scroll {
     border-top: none;
 }
 
-/* If there are five images (img-1, img-2, img-3, img-4, img-5) */
 .main-images picture:nth-child(4):nth-last-child(2) img {
     border-bottom: 1px solid black;
 }
@@ -112,11 +106,11 @@ body.lock-scroll {
 .carousel-item {
     touch-action: pan-y;
 }
-  
+
 .carousel {
     cursor: grab;
 }
-  
+
 .carousel:active {
     cursor: grabbing;
 }
@@ -137,16 +131,14 @@ body.lock-scroll {
 .carousel-inner {
     overflow: hidden;
 }
-  
+
 .carousel-item img {
-    pointer-events: auto;  
+    pointer-events: auto;
     user-select: none;
     -webkit-user-drag: none;
 }
 
-/* ----------------------------- */
-/* Zoom overlay v2 */
-/* ----------------------------- */
+/* Zoom overlay */
 
 .image-selector,
 .image-selector.image-selector-v2 {
@@ -211,6 +203,12 @@ body.lock-scroll {
     -webkit-overflow-scrolling: touch;
     cursor: zoom-in;
     position: relative;
+    scrollbar-width: none;
+}
+
+.image-container.image-container-v2 .zoom-slide::-webkit-scrollbar,
+.image-selector .zoom-slide::-webkit-scrollbar {
+    display: none;
 }
 
 .image-container.image-container-v2 .zoom-slide.is-zoomed,
@@ -227,41 +225,29 @@ body.lock-scroll {
 .image-selector .zoom-slide-inner {
     min-width: 100%;
     min-height: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    padding: 4vh 5vw;
+    display: grid;
+    place-items: center;
     box-sizing: border-box;
 }
 
-.image-container.image-container-v2 .zoom-slide.is-zoomed .zoom-slide-inner,
-.image-selector .zoom-slide.is-zoomed .zoom-slide-inner {
-    width: max-content;
-    min-width: 100%;
-    min-height: 100%;
+.image-container.image-container-v2 .zoom-slide-inner.is-zoomed,
+.image-selector .zoom-slide-inner.is-zoomed {
+    min-width: 0;
+    min-height: 0;
     display: block;
-    padding: 4vh 5vw;
-    box-sizing: border-box;
 }
 
 .image-container.image-container-v2 .zoom-slide img,
 .image-selector .zoom-slide img {
     display: block;
-    max-width: 90vw;
-    max-height: 90vh;
     width: auto;
     height: auto;
+    max-width: 90vw;
+    max-height: 90vh;
     object-fit: contain;
-    position: static;
     user-select: none;
     -webkit-user-drag: none;
     pointer-events: auto;
-}
-
-.image-container.image-container-v2 .zoom-slide.is-zoomed img,
-.image-selector .zoom-slide.is-zoomed img {
-    max-width: none;
-    max-height: none;
 }
 
 .image-container.image-container-v2 .zoom-track.is-locked,
@@ -321,13 +307,13 @@ body.lock-scroll {
 
 /* Garment information */
 
-.information { 
+.information {
     display: flex;
     justify-content: center;
     text-align: justify;
     border: 1px solid;
     border-top: none;
-    border-left: none; 
+    border-left: none;
     width: 100%;
     height: 100%;
 }
