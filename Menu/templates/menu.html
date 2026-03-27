@@ -20,7 +20,7 @@
                 <div class="img1">
                     <picture>
                         <source 
-                          media="(max-width: 600px)" 
+                          media="(max-width: 768px)" 
                           srcset="{{ menu.img1.url|cld_menu_mobile }}"
                         >
                         <img
@@ -109,7 +109,18 @@
                 <div class="image-container {% if not shop_all.img2 and not shop_all.img3 %}single-image{% elif not shop_all.img3 %}two-images{% endif %}">
                     {% if shop_all.img1 %}
                     <div class="img1">
-                        <img src="{{ shop_all.img1.url|cld_menu }}" loading="lazy" alt="Image 1">  
+                        <picture>
+                            <source 
+                              media="(max-width: 768x)" 
+                              srcset="{{ shop_all.img1.url|cld_menu_mobile }}"
+                            >
+                            <img
+                              src="{{ shop_all.img1.url|cld_menu }}"
+                              loading="lazy"
+                              decoding="async"
+                              alt="Image 1"
+                            >
+                          </picture> 
                     </div>
                     {% endif %}
                     {% if shop_all.img2 or shop_all.img3 %}
@@ -139,7 +150,18 @@
                 <div class="image-container {% if not staff_pick.img2 and not staff_pick.img3 %}single-image{% elif not staff_pick.img3 %}two-images{% endif %}">
                     {% if staff_pick.img1 %}
                         <div class="img1">
-                            <img src="{{ staff_pick.img1.url|cld_menu }}" loading="lazy" alt="Image 1">
+                            <picture>
+                                <source 
+                                  media="(max-width: 768px)" 
+                                  srcset="{{ staff_pick.img1.url|cld_menu_mobile }}"
+                                >
+                                <img
+                                  src="{{ staff_pick.img1.url|cld_menu }}"
+                                  loading="lazy"
+                                  decoding="async"
+                                  alt="Image 1"
+                                >
+                              </picture>
                         </div>
                     {% endif %}
                     {% if staff_pick.img2 or staff_pick.img3 %}
@@ -170,7 +192,18 @@
                 <div class="image-container {% if not tees.img2 and not tees.img3 %}single-image{% elif not tees.img3 %}two-images{% endif %}">
                     {% if tees.img1 %}
                         <div class="img1">
-                            <img src="{{ tees.img1.url|cld_menu }}" loading="lazy" alt="Image 1">
+                            <picture>
+                                <source 
+                                  media="(max-width: 768px)" 
+                                  srcset="{{ tees.img1.url|cld_menu_mobile }}"
+                                >
+                                <img
+                                  src="{{ tees.img1.url|cld_menu }}"
+                                  loading="lazy"
+                                  decoding="async"
+                                  alt="Image 1"
+                                >
+                            </picture>
                         </div>
                     {% endif %}
                     {% if tees.img2 or tees.img3 %}
@@ -201,7 +234,18 @@
                 <div class="image-container {% if not outerwear.img2 and not outerwear.img3 %}single-image{% elif not outerwear.img3 %}two-images{% endif %}">
                     {% if outerwear.img1 %}
                         <div class="img1">
-                            <img src="{{ outerwear.img1.url|cld_menu }}" loading="lazy" alt="Image 1">
+                            <picture>
+                                <source 
+                                  media="(max-width: 768px)" 
+                                  srcset="{{ outerwear.img1.url|cld_menu_mobile }}"
+                                >
+                                <img
+                                  src="{{ outerwear.img1.url|cld_menu }}"
+                                  loading="lazy"
+                                  decoding="async"
+                                  alt="Image 1"
+                                >
+                              </picture>
                         </div>
                     {% endif %}
                     {% if outerwear.img2 or outerwear.img3 %}
@@ -232,7 +276,18 @@
                 <div class="image-container {% if not sweatshirts.img2 and not sweatshirts.img3 %}single-image{% elif not sweatshirts.img3 %}two-images{% endif %}">
                     {% if sweatshirts.img1 %}
                         <div class="img1">
-                            <img src="{{ sweatshirts.img1.url|cld_menu }}" loading="lazy" alt="Image 1">
+                            <picture>
+                                <source 
+                                  media="(max-width: 768px)" 
+                                  srcset="{{ sweatshirts.img1.url|cld_menu_mobile }}"
+                                >
+                                <img
+                                  src="{{ sweatshirts.img1.url|cld_menu }}"
+                                  loading="lazy"
+                                  decoding="async"
+                                  alt="Image 1"
+                                >
+                              </picture>
                         </div>
                     {% endif %}
                     {% if sweatshirts.img2 or sweatshirts.img3 %}
@@ -263,7 +318,18 @@
             <div class="image-container {% if not archive.img2 and not archive.img3 %}single-image{% elif not archive.img3 %}two-images{% endif %}">
                 {% if archive.img1 %}
                     <div class="img1">
-                        <img src="{{ archive.img1.url|cld_menu }}" loading="lazy" alt="Image 1">
+                        <picture>
+                            <source 
+                              media="(max-width: 600px)" 
+                              srcset="{{ archive.img1.url|cld_menu_mobile }}"
+                            >
+                            <img
+                              src="{{ archive.img1.url|cld_menu }}"
+                              loading="lazy"
+                              decoding="async"
+                              alt="Image 1"
+                            >
+                          </picture>
                     </div>
                 {% endif %}
                 {% if archive.img2 or archive.img3 %}
