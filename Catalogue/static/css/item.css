@@ -266,7 +266,7 @@ body.lock-scroll {
 .image-selector .zoomed-carousel-controls,
 .image-selector.image-selector-v2 .zoomed-carousel-controls {
     position: absolute;
-    top: 50%;
+    top: 92%;
     left: 0;
     right: 0;
     transform: translateY(-50%);
