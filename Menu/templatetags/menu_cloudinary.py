@@ -20,5 +20,8 @@ def cld_catalog(url):
 
 @register.filter
 def cld_menu_mobile(url):
-    return _cld(url, "f_webp,q_auto,a_auto,w_800,c_limit")
+    return _cld(url, "f_webp,q_auto,a_auto,w_770,c_limit")
 
+@register.filter
+def cld_catalog_mobile(url):
+    return _cld(url, "f_webp,q_auto,a_auto,w_420,c_limit")
