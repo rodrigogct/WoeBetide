@@ -2,6 +2,7 @@
 // desktop: tpl-desktop
 // mobile: tpl-unified-v2
 // zoom overlay: swipeable carousel with arrow wrap-around
+// desktop zoom: click once to zoom in, click again to zoom out, pan by scrolling while zoomed
 
 document.addEventListener("DOMContentLoaded", () => {
   const root = document.getElementById("item-layout-root-v2");
@@ -25,7 +26,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const zoomTrack = overlay.querySelector("[data-zoom-track]");
 
   if (!zoomTrack) {
-    console.warn("[item-zoom] missing zoom track. Add: <div class='zoom-track' data-zoom-track></div>");
+    console.warn(
+      "[item-zoom] missing zoom track. Add: <div class='zoom-track' data-zoom-track></div>"
+    );
     return;
   }
 
@@ -118,6 +121,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const slide = document.createElement("div");
       slide.className = "zoom-slide";
       slide.setAttribute("data-zoom-slide", "");
+      slide.setAttribute("data-zoomed", "false");
 
       const zoomImg = document.createElement("img");
       zoomImg.src = img.getAttribute("src") || img.getAttribute("data-src") || "";
@@ -129,10 +133,45 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   };
 
+  const getZoomSlides = () =>
+    Array.from(zoomTrack.querySelectorAll("[data-zoom-slide]"));
+
+  const resetZoomState = () => {
+    getZoomSlides().forEach((slide) => {
+      slide.classList.remove("is-zoomed");
+      slide.setAttribute("data-zoomed", "false");
+      slide.scrollTop = 0;
+      slide.scrollLeft = 0;
+    });
+
+    zoomTrack.classList.remove("is-locked");
+  };
+
+  const toggleSlideZoom = (slide) => {
+    if (!slide) return;
+
+    const isZoomed = slide.getAttribute("data-zoomed") === "true";
+
+    if (isZoomed) {
+      slide.classList.remove("is-zoomed");
+      slide.setAttribute("data-zoomed", "false");
+      slide.scrollTop = 0;
+      slide.scrollLeft = 0;
+      zoomTrack.classList.remove("is-locked");
+      return;
+    }
+
+    resetZoomState();
+    slide.classList.add("is-zoomed");
+    slide.setAttribute("data-zoomed", "true");
+    zoomTrack.classList.add("is-locked");
+  };
+
   const scrollZoomTo = (index, smooth = true) => {
     const slides = zoomTrack.querySelectorAll("[data-zoom-slide]");
     if (!slides.length) return;
 
+    resetZoomState();
     zoomIndex = normalizeZoomIndex(index);
 
     zoomTrack.scrollTo({
@@ -177,11 +216,28 @@ document.addEventListener("DOMContentLoaded", () => {
   const attachZoomCarouselListeners = () => {
     const onZoomScroll = () => {
       if (!overlay.classList.contains("active")) return;
+      if (zoomTrack.classList.contains("is-locked")) return;
       watchZoomScrollSettled();
     };
 
+    const onZoomClick = (e) => {
+      if (window.innerWidth <= 700) return;
+
+      const img = e.target.closest(".zoom-slide img");
+      if (!img) return;
+
+      e.preventDefault();
+      e.stopPropagation();
+
+      const slide = img.closest(".zoom-slide");
+      toggleSlideZoom(slide);
+    };
+
     zoomTrack.addEventListener("scroll", onZoomScroll);
+    zoomTrack.addEventListener("click", onZoomClick);
+
     cleanupFns.push(() => zoomTrack.removeEventListener("scroll", onZoomScroll));
+    cleanupFns.push(() => zoomTrack.removeEventListener("click", onZoomClick));
   };
 
   const openZoomCarousel = (sourceImgs, index) => {
@@ -196,6 +252,7 @@ document.addEventListener("DOMContentLoaded", () => {
     cancelAnimationFrame(zoomScrollRaf);
     zoomScrollRaf = null;
     zoomStableFrames = 0;
+    resetZoomState();
     setOverlayClosed();
     showChrome();
   };
@@ -237,7 +294,6 @@ document.addEventListener("DOMContentLoaded", () => {
       mountDesktop(activeRoot);
     }
 
-    // shared overlay listeners
     const onBackdropClick = (e) => {
       e.preventDefault();
       e.stopPropagation();
@@ -332,7 +388,6 @@ document.addEventListener("DOMContentLoaded", () => {
       dots.forEach((d, i) => d.classList.toggle("is-active", i === idx));
     };
 
-    // real infinite loop with clones
     const cloneFirst = originalSlides[0].cloneNode(true);
     const cloneLast = originalSlides[originalSlides.length - 1].cloneNode(true);
 
@@ -522,7 +577,6 @@ document.addEventListener("DOMContentLoaded", () => {
       settleRaf = requestAnimationFrame(check);
     };
 
-    // initial position
     instantScrollTo(slideW());
     syncUI(0);
 
@@ -580,7 +634,6 @@ document.addEventListener("DOMContentLoaded", () => {
       cleanupFns.push(() => prevBtn.removeEventListener("click", onPrev));
     }
 
-    // open zoom overlay from real image only
     const onPointerUp = (e) => {
       if (overlay.classList.contains("active")) return;
 

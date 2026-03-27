@@ -21,8 +21,8 @@ body.lock-scroll {
     height: 100%;
     position: fixed;
     width: 100%;
-  }
-  
+}
+
 /* Images */
 
 .item {
@@ -54,73 +54,72 @@ body.lock-scroll {
 
 /* Apply border rules for images in a grid */
 
-
 .main-images picture img {
     display: block;
     width: 100%;
     border: none;
-  }
+}
 
 .main-images .img-1 img {
     border-right: 1px solid black;
-  }
+}
   
 .main-images .img-3 img {
     border-top: 1px solid black;
     border-right: 1px solid black;
-  }
+}
   
 .main-images .img-4 img {
     border-top: 1px solid black;
-  }
+}
   
 .main-images .img-5 img {
     border-top: 1px solid black;
     border-right: 1px solid black;
-  }
+}
 
 .main-images .img-6 img {
     border-top: 1px solid black;
-  }
+}
 
 /* If there are two images (img-1, img-2) */
 .main-images picture:nth-child(2):nth-last-child(2) img {
     border-bottom: 1px solid black;
-  }
+}
 
 /* If there are three images (img-1, img-2, img-3) */
 .main-images picture:nth-child(1):nth-last-child(3) img {
     border-bottom: 1px solid black;
-  }
+}
 
 .main-images picture:nth-child(3):nth-last-child(1) img {
     border-top: none;
-  }
+}
 
 /* If there are five images (img-1, img-2, img-3, img-4, img-5) */
 .main-images picture:nth-child(4):nth-last-child(2) img {
     border-bottom: 1px solid black;
-  }
+}
 
 .main-images picture:nth-child(3):nth-last-child(3) img {
     border-bottom: 1px solid black;
-  }
+}
 
 .main-images picture:nth-child(5):nth-last-child(1) img {
     border-top: none;
-  }
+}
 
 .carousel-item {
     touch-action: pan-y;
-  }
+}
   
 .carousel {
     cursor: grab;
-    }
+}
   
 .carousel:active {
     cursor: grabbing;
-  }
+}
 
 .carousel img {
     object-fit: cover;
@@ -137,68 +136,151 @@ body.lock-scroll {
 
 .carousel-inner {
     overflow: hidden;
-  }
+}
   
 .carousel-item img {
     pointer-events: auto;  
     user-select: none;
     -webkit-user-drag: none;
-  }
+}
 
-/* Zoomed image view */
+/* ----------------------------- */
+/* Zoom overlay v2 */
+/* ----------------------------- */
 
-.image-selector {
+.image-selector,
+.image-selector.image-selector-v2 {
     position: fixed;
-    width: 100%;
-    height: 100%;
-    top: 0;
-    left: 0;
-    background-color: black;
-    pointer-events: none;
-    opacity: 0;
-    transition: 1s;
-    transition: opacity 0.3s ease;
-    touch-action: pan-x pan-y;
+    inset: 0;
+    background: black;
     z-index: 9999;
-    overflow-y: hidden;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s ease;
+    overflow: hidden;
     overscroll-behavior: contain;
 }
 
-.image-selector.active {
-    visibility: visible;
+.image-selector.active,
+.image-selector.image-selector-v2.active {
     opacity: 1;
+    pointer-events: auto;
+    visibility: visible;
 }
 
-.image-selector img {
-    max-width: 90%;
-    max-height: 90%;
-    background-attachment: fixed;
-    object-fit: cover;
+.zoom-backdrop {
     position: absolute;
-    top: 48%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+    inset: 0;
+    z-index: 0;
+}
+
+.image-container.image-container-v2 {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    z-index: 1;
+}
+
+.image-container.image-container-v2 .zoom-track,
+.image-selector [data-zoom-track] {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    position: relative;
+    z-index: 2;
+}
+
+.image-container.image-container-v2 .zoom-track::-webkit-scrollbar,
+.image-selector [data-zoom-track]::-webkit-scrollbar {
+    display: none;
+}
+
+.image-container.image-container-v2 .zoom-slide,
+.image-selector .zoom-slide {
+    flex: 0 0 100%;
+    width: 100%;
+    height: 100%;
+    scroll-snap-align: start;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
     cursor: zoom-in;
+    position: relative;
 }
 
-.close {
+.image-container.image-container-v2 .zoom-slide.is-zoomed,
+.image-selector .zoom-slide.is-zoomed {
+    cursor: zoom-out;
+}
+
+.image-container.image-container-v2 .zoom-slide img,
+.image-selector .zoom-slide img {
+    display: block;
+    max-width: 90vw;
+    max-height: 90vh;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    position: static;
+    transform: scale(1);
+    transform-origin: center center;
+    transition: transform 0.2s ease;
+    user-select: none;
+    -webkit-user-drag: none;
+    pointer-events: auto;
+}
+
+.image-container.image-container-v2 .zoom-slide.is-zoomed img,
+.image-selector .zoom-slide.is-zoomed img {
+    transform: scale(2.2);
+    transform-origin: center center;
+}
+
+.image-container.image-container-v2 .zoom-track.is-locked,
+.image-selector [data-zoom-track].is-locked {
+    overflow-x: hidden;
+}
+
+.close,
+.close.close-v2 {
     position: absolute;
-    left: 90%;
-    bottom: 94%;
+    top: 18px;
+    right: 18px;
+    left: auto;
+    bottom: auto;
     border: none;
-    background:none;
-    padding: none;
+    background: transparent;
+    padding: 0;
     color: white;
+    z-index: 10001;
 }
 
-.image-selector .zoomed-carousel-controls {
+.image-selector .zoomed-carousel-controls,
+.image-selector.image-selector-v2 .zoomed-carousel-controls {
     position: absolute;
     top: 50%;
+    left: 0;
+    right: 0;
     transform: translateY(-50%);
     width: 100%;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    pointer-events: none;
+    z-index: 10000;
+}
+
+.image-selector .zoomed-carousel-controls button,
+.image-selector.image-selector-v2 .zoomed-carousel-controls button {
+    pointer-events: auto;
 }
 
 .image-container {
@@ -208,21 +290,15 @@ body.lock-scroll {
     display: flex;
     justify-content: center;
     align-items: center;
-  }
+}
 
-  .photo {
+.photo {
     display: block;
     height: auto;
     max-width: 90%;
     max-height: 90%;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
 }
 
-
-  
 /* Garment information */
 
 .information { 
@@ -241,7 +317,6 @@ body.lock-scroll {
     padding: 0;
     display: flex;
     flex-direction: column;
-
 }
 
 .information .text .section {
@@ -337,14 +412,12 @@ h6 {
 }
 
 @media (max-width: 1050px) {
-
     .item {
         display: block;
     }
 }
 
 @media (max-width: 700px) {
-
     .item {
         display: none;
     }
@@ -365,11 +438,15 @@ h6 {
     .information button {
         width: 150px;
     }
-    
+
+    .image-container.image-container-v2 .zoom-slide img,
+    .image-selector .zoom-slide img {
+        max-width: 100vw;
+        max-height: 100vh;
+    }
 }
 
 @media (max-width: 500px) {
-
     .main-images img {
         width: 100%;
         min-height: 300px;
@@ -387,7 +464,6 @@ h6 {
     .information button {
         width: 150px;
     }
-    
 }
 
 /* end of item.css */
