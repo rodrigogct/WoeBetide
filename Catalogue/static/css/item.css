@@ -307,9 +307,10 @@ body.lock-scroll {
     pointer-events: auto;
 }
 
-.carousel-control-prev-icon,
-.carousel-control-next-icon {
-    filter: invert(1); /* makes it black */
+.zoomed-carousel-controls button {
+    background: transparent;
+    border: none;
+    padding: 10px;
 }
 
 .image-container {
