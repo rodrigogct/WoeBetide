@@ -308,6 +308,11 @@ body.lock-scroll {
     pointer-events: auto;
 }
 
+.carousel-control-prev-icon,
+.carousel-control-next-icon {
+    filter: invert(1); /* turns white → black */
+}
+
 .zoomed-carousel-controls button {
     background: transparent;
     border: none;
