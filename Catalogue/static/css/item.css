@@ -144,7 +144,7 @@ body.lock-scroll {
 .image-selector.image-selector-v2 {
     position: fixed;
     inset: 0;
-    background: #9E9C98;
+    background: #D2D1CD;
     /* background:black; */
     z-index: 9999;
     opacity: 0;
