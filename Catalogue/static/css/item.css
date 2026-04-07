@@ -284,7 +284,7 @@ body.lock-scroll {
     border: none;
     background: transparent;
     padding: 0;
-    /* color: white; */
+    color: black;
     z-index: 10001;
 }
 
