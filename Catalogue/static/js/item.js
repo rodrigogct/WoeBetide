@@ -64,6 +64,19 @@ document.addEventListener("DOMContentLoaded", () => {
     moved: false,
   };
 
+  let swipeCloseState = {
+    active: false,
+    startX: 0,
+    startY: 0,
+    deltaX: 0,
+    deltaY: 0,
+    lockedDirection: null, // "x" | "y" | null
+  };
+
+  const SWIPE_CLOSE_THRESHOLD = 140;
+  const SWIPE_CLOSE_DIRECTION_LOCK = 12;
+  const SWIPE_CLOSE_MAX_HORIZONTAL = 90;
+
   const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
 
   const ensureSrc = (img) => {
@@ -104,10 +117,19 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   };
 
+  const resetOverlayDragVisual = (animate = true) => {
+    overlay.style.transition = animate
+      ? "opacity 0.25s ease, transform 0.25s ease"
+      : "";
+    overlay.style.transform = "translateY(0)";
+    overlay.style.opacity = "1";
+  };
+
   const setOverlayClosed = () => {
     overlay.style.display = "none";
     overlay.style.opacity = "0";
     overlay.style.pointerEvents = "none";
+    overlay.style.transform = "translateY(0)";
     overlay.classList.remove("active");
     document.body.classList.remove("lock-scroll");
     zoomTrack.innerHTML = "";
@@ -117,6 +139,7 @@ document.addEventListener("DOMContentLoaded", () => {
     overlay.style.display = "block";
     overlay.style.opacity = "1";
     overlay.style.pointerEvents = "auto";
+    overlay.style.transform = "translateY(0)";
     overlay.classList.add("active");
     document.body.classList.add("lock-scroll");
   };
@@ -403,6 +426,85 @@ document.addEventListener("DOMContentLoaded", () => {
       }, 0);
     };
 
+    const onTouchStart = (e) => {
+      if (!overlay.classList.contains("active")) return;
+      if (window.innerWidth > 700) return;
+      if (!e.touches || e.touches.length !== 1) return;
+      if (getZoomedSlide()) return;
+
+      const targetSlide = e.target.closest(".zoom-slide");
+      if (!targetSlide) return;
+
+      swipeCloseState.active = true;
+      swipeCloseState.startX = e.touches[0].clientX;
+      swipeCloseState.startY = e.touches[0].clientY;
+      swipeCloseState.deltaX = 0;
+      swipeCloseState.deltaY = 0;
+      swipeCloseState.lockedDirection = null;
+
+      overlay.style.transition = "none";
+    };
+
+    const onTouchMove = (e) => {
+      if (!swipeCloseState.active) return;
+      if (window.innerWidth > 700) return;
+      if (!e.touches || e.touches.length !== 1) return;
+      if (getZoomedSlide()) return;
+
+      const touch = e.touches[0];
+      swipeCloseState.deltaX = touch.clientX - swipeCloseState.startX;
+      swipeCloseState.deltaY = touch.clientY - swipeCloseState.startY;
+
+      if (!swipeCloseState.lockedDirection) {
+        const absX = Math.abs(swipeCloseState.deltaX);
+        const absY = Math.abs(swipeCloseState.deltaY);
+
+        if (
+          absX < SWIPE_CLOSE_DIRECTION_LOCK &&
+          absY < SWIPE_CLOSE_DIRECTION_LOCK
+        ) {
+          return;
+        }
+
+        swipeCloseState.lockedDirection = absY > absX ? "y" : "x";
+      }
+
+      if (swipeCloseState.lockedDirection !== "y") return;
+      if (swipeCloseState.deltaY <= 0) return;
+      if (Math.abs(swipeCloseState.deltaX) > SWIPE_CLOSE_MAX_HORIZONTAL) return;
+
+      const dragY = swipeCloseState.deltaY * 0.55;
+      const fade = Math.max(0.55, 1 - swipeCloseState.deltaY / 420);
+
+      overlay.style.transform = `translateY(${dragY}px)`;
+      overlay.style.opacity = String(fade);
+    };
+
+    const onTouchEnd = () => {
+      if (!swipeCloseState.active) return;
+
+      const shouldClose =
+        swipeCloseState.lockedDirection === "y" &&
+        swipeCloseState.deltaY > SWIPE_CLOSE_THRESHOLD &&
+        Math.abs(swipeCloseState.deltaX) < SWIPE_CLOSE_MAX_HORIZONTAL &&
+        !getZoomedSlide();
+
+      swipeCloseState.active = false;
+
+      if (shouldClose) {
+        closeZoomCarousel();
+        return;
+      }
+
+      resetOverlayDragVisual(true);
+    };
+
+    const onTouchCancel = () => {
+      if (!swipeCloseState.active) return;
+      swipeCloseState.active = false;
+      resetOverlayDragVisual(true);
+    };
+
     const onBackdropClick = (e) => {
       e.preventDefault();
       e.stopPropagation();
@@ -426,6 +528,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const onResize = () => {
       if (!overlay.classList.contains("active")) return;
       scrollZoomTo(zoomIndex, false);
+      resetOverlayDragVisual(false);
     };
 
     zoomTrack.addEventListener("scroll", onZoomTrackScroll);
@@ -435,6 +538,11 @@ document.addEventListener("DOMContentLoaded", () => {
     zoomTrack.addEventListener("pointermove", onPointerMove);
     zoomTrack.addEventListener("pointerup", endPointerDrag);
     zoomTrack.addEventListener("pointercancel", endPointerDrag);
+
+    overlay.addEventListener("touchstart", onTouchStart, { passive: true });
+    overlay.addEventListener("touchmove", onTouchMove, { passive: true });
+    overlay.addEventListener("touchend", onTouchEnd);
+    overlay.addEventListener("touchcancel", onTouchCancel);
 
     backdrop.addEventListener("click", onBackdropClick);
     if (closeButton) closeButton.addEventListener("click", onClose);
@@ -448,6 +556,12 @@ document.addEventListener("DOMContentLoaded", () => {
     cleanupFns.push(() => zoomTrack.removeEventListener("pointermove", onPointerMove));
     cleanupFns.push(() => zoomTrack.removeEventListener("pointerup", endPointerDrag));
     cleanupFns.push(() => zoomTrack.removeEventListener("pointercancel", endPointerDrag));
+
+    cleanupFns.push(() => overlay.removeEventListener("touchstart", onTouchStart));
+    cleanupFns.push(() => overlay.removeEventListener("touchmove", onTouchMove));
+    cleanupFns.push(() => overlay.removeEventListener("touchend", onTouchEnd));
+    cleanupFns.push(() => overlay.removeEventListener("touchcancel", onTouchCancel));
+
     cleanupFns.push(() => backdrop.removeEventListener("click", onBackdropClick));
     if (closeButton) cleanupFns.push(() => closeButton.removeEventListener("click", onClose));
     cleanupFns.push(() => document.removeEventListener("keydown", onKeyDown));
@@ -458,6 +572,7 @@ document.addEventListener("DOMContentLoaded", () => {
     buildZoomCarousel(sourceImgs);
     setOverlayOpen();
     hideChrome();
+    resetOverlayDragVisual(false);
     scrollZoomTo(index, false);
   };
 
@@ -465,7 +580,14 @@ document.addEventListener("DOMContentLoaded", () => {
     cancelAnimationFrame(zoomScrollRaf);
     zoomScrollRaf = null;
     zoomStableFrames = 0;
+
+    swipeCloseState.active = false;
+    swipeCloseState.deltaX = 0;
+    swipeCloseState.deltaY = 0;
+    swipeCloseState.lockedDirection = null;
+
     resetZoomState();
+    resetOverlayDragVisual(false);
     setOverlayClosed();
     showChrome();
   };
