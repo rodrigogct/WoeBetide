@@ -307,6 +307,11 @@ body.lock-scroll {
     pointer-events: auto;
 }
 
+.carousel-control-prev-icon,
+.carousel-control-next-icon {
+    filter: invert(1); /* makes it black */
+}
+
 .image-container {
     max-height: 90vh;
     max-width: 90vw;
