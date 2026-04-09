@@ -1,5 +1,4 @@
 (function () {
-  // --- Endpoints (must exist in urls.py and be exposed in base.html) ---
   const cfg = window.WB_CART_ENDPOINTS || {};
   const CART_COUNT_URL = cfg.count;
   const UPDATE_CART_URL = cfg.update;
@@ -16,7 +15,6 @@
     setVisible(emptyMsg, !hasItems);
   }
 
-  // --- Helpers ---
   function getCookie(name) {
     let c = null;
     if (document.cookie) {
@@ -181,73 +179,24 @@
   }
 
   function getAddToCartButtonFromEventTarget(target) {
-    return target.closest(
-      '.add-to-cart, button[data-item-id][data-quantity][data-max-qty]'
-    );
+    return target.closest('.add-to-cart, button[data-item-id][data-quantity][data-max-qty]');
   }
 
-  // --- Add to cart (product/listing pages) ---
-  document.addEventListener("click", async (e) => {
-    const btn = getAddToCartButtonFromEventTarget(e.target);
-    if (!btn) return;
-
-    const form = btn.closest("form");
-
-    // only intercept actual add-to-cart forms/buttons
-    if (!form && !btn.classList.contains("add-to-cart")) return;
-
-    e.preventDefault();
-    await addToCartAjax(btn);
-  });
-
-  // fallback: if form still submits for any reason, intercept it
-  document.addEventListener("submit", async (e) => {
-    const form = e.target;
-    if (!(form instanceof HTMLFormElement)) return;
-
-    const btn = form.querySelector(
-      '.add-to-cart, button[data-item-id][data-quantity][data-max-qty]'
-    );
-
-    if (!btn) return;
-
-    e.preventDefault();
-    await addToCartAjax(btn);
-  });
-
-  // Allow manual typing in qty input (cart page)
-  document.addEventListener("change", async (e) => {
-    const input = e.target.closest(".quantity-control .qty-input");
-    if (!input) return;
-
-    const row = input.closest("tr.cart-line");
-    const vid = row?.dataset?.variantId || input.getAttribute("data-variant-id");
-    if (!vid) return;
-
-    let v = parseInt(input.value, 10);
-    if (Number.isNaN(v) || v < 0) v = 0;
-
-    if (row) row.querySelectorAll(".qty-input").forEach((inp) => (inp.value = v));
-
-    if (v === 0 && row) {
-      row.remove();
-      reconcileCartEmptyState();
-    }
-
-    try {
-      const data = await postQty(vid, v);
-      applyCartSummary(data);
-    } catch (err) {
-      console.error(err);
-      alert("Update failed — check Network tab for status.");
-    }
-  });
-
-  // --- Remove line / minus (cart page) ---
   document.addEventListener("click", async (e) => {
     const minusBtn = e.target.closest(".btn-qty.minus");
     const removeBtn = e.target.closest(".cart-remove");
-    if (!minusBtn && !removeBtn) return;
+
+    if (!minusBtn && !removeBtn) {
+      const btn = getAddToCartButtonFromEventTarget(e.target);
+      if (!btn) return;
+
+      const form = btn.closest("form");
+      if (!form && !btn.classList.contains("add-to-cart")) return;
+
+      e.preventDefault();
+      await addToCartAjax(btn);
+      return;
+    }
 
     const row = e.target.closest("tr.cart-line");
     const vid =
@@ -298,7 +247,6 @@
       if (v <= 0) return;
 
       v -= 1;
-
       row.querySelectorAll(".qty-input").forEach((inp) => (inp.value = v));
 
       if (v === 0) {
@@ -313,6 +261,44 @@
         console.error(err);
         window.location.reload();
       }
+    }
+  });
+
+  document.addEventListener("submit", async (e) => {
+    const form = e.target;
+    if (!(form instanceof HTMLFormElement)) return;
+
+    const btn = form.querySelector('.add-to-cart, button[data-item-id][data-quantity][data-max-qty]');
+    if (!btn) return;
+
+    e.preventDefault();
+    await addToCartAjax(btn);
+  });
+
+  document.addEventListener("change", async (e) => {
+    const input = e.target.closest(".quantity-control .qty-input");
+    if (!input) return;
+
+    const row = input.closest("tr.cart-line");
+    const vid = row?.dataset?.variantId || input.getAttribute("data-variant-id");
+    if (!vid) return;
+
+    let v = parseInt(input.value, 10);
+    if (Number.isNaN(v) || v < 0) v = 0;
+
+    if (row) row.querySelectorAll(".qty-input").forEach((inp) => (inp.value = v));
+
+    if (v === 0 && row) {
+      row.remove();
+      reconcileCartEmptyState();
+    }
+
+    try {
+      const data = await postQty(vid, v);
+      applyCartSummary(data);
+    } catch (err) {
+      console.error(err);
+      alert("Update failed — check Network tab for status.");
     }
   });
 
