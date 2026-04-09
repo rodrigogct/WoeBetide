@@ -182,6 +182,8 @@ document.addEventListener("DOMContentLoaded", () => {
     if (inner) {
       inner.style.width = "";
       inner.style.height = "";
+      inner.style.minWidth = "";
+      inner.style.minHeight = "";
     }
 
     if (img) {
@@ -224,8 +226,20 @@ document.addEventListener("DOMContentLoaded", () => {
     const viewportOffsetX = clientX - slideRect.left;
     const viewportOffsetY = clientY - slideRect.top;
 
-    const zoomW = Math.round(imgRect.width * DESKTOP_ZOOM_SCALE);
-    const zoomH = Math.round(imgRect.height * DESKTOP_ZOOM_SCALE);
+    // Important fix:
+    // make the zoomed image bigger than the viewport in both axes
+    // so portrait images can also pan left/right on desktop
+    const minScaleForHorizontalPan = (slideRect.width + 120) / imgRect.width;
+    const minScaleForVerticalPan = (slideRect.height + 120) / imgRect.height;
+
+    const scale = Math.max(
+      DESKTOP_ZOOM_SCALE,
+      minScaleForHorizontalPan,
+      minScaleForVerticalPan
+    );
+
+    const zoomW = Math.round(imgRect.width * scale);
+    const zoomH = Math.round(imgRect.height * scale);
 
     resetZoomState();
 
@@ -234,6 +248,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     inner.style.width = `${zoomW}px`;
     inner.style.height = `${zoomH}px`;
+    inner.style.minWidth = `${zoomW}px`;
+    inner.style.minHeight = `${zoomH}px`;
 
     img.style.width = `${zoomW}px`;
     img.style.height = `${zoomH}px`;
