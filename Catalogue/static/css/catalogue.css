@@ -321,12 +321,12 @@ footer a {
 /* SOLD ITEMS ONLY IN LIVE CATALOGUE */
 
 .catalogue-sold .element img {
-    opacity: 0.45;
+    opacity: 0.8;
     filter: grayscale(20%);
 }
 
 .catalogue-sold .element:hover img {
-    opacity: 0.45;
+    opacity: 0.8;
     transform: scale(1.2);
 }
 

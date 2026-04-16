@@ -34,10 +34,6 @@
                         <div class="element">
                             <div class="element-text">
                                 <a href="{% url is_archive|yesno:'ArchiveItem,Item' item.id %}" style="height:100%; position:relative; display:block;">
-                                    
-                                    {% if item.is_sold and not is_archive %}
-                                        <span class="sold-badge">SOLD</span>
-                                    {% endif %}
 
                                     {% with n_eager=6 %}
                                     <img
@@ -60,7 +56,6 @@
                                 </a>
                             </div>
                         </div>
-
                         <div class="element-info {% if item.is_sold and not is_archive %}sold{% endif %}">
                             <div class="column" style="border-top:1px solid;">
                                 <a href="{% url is_archive|yesno:'ArchiveItem,Item' item.id %}" class="lead {% if item.is_sold and not is_archive %}sold-text{% endif %}">
