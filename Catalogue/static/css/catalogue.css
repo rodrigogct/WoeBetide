@@ -348,7 +348,6 @@ footer a {
 .element-info.sold .lead,
 .element-info .sold-text {
     text-decoration: line-through;
-    opacity: 0.65;
 }
 
 @media (max-width: 1200px) {
