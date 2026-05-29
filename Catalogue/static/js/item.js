@@ -3,6 +3,7 @@
 // mobile: tpl-unified-v2
 // overlay zoom: click to zoom at point, click again to unzoom
 // zoomed image supports trackpad scroll + click-drag pan
+// desktop overlay carousel supports Mac trackpad horizontal swipe
 
 document.addEventListener("DOMContentLoaded", () => {
   const root = document.getElementById("item-layout-root-v2");
@@ -337,9 +338,19 @@ document.addEventListener("DOMContentLoaded", () => {
       watchZoomScrollSettled();
     };
 
-    let wheelLock = false;
     let wheelAccumX = 0;
-    let wheelResetTimer = null;
+    let wheelGestureTimer = null;
+    let wheelHasTriggered = false;
+
+    const resetWheelGesture = () => {
+      wheelAccumX = 0;
+      wheelHasTriggered = false;
+
+      if (wheelGestureTimer) {
+        clearTimeout(wheelGestureTimer);
+        wheelGestureTimer = null;
+      }
+    };
 
     const onWheel = (e) => {
       if (!overlay.classList.contains("active")) return;
@@ -374,39 +385,34 @@ document.addEventListener("DOMContentLoaded", () => {
 
       e.preventDefault();
 
+      // Important:
+      // Mac trackpads continue firing wheel events after your fingers stop moving.
+      // We treat the full momentum sequence as ONE gesture.
+      if (wheelGestureTimer) clearTimeout(wheelGestureTimer);
+
+      wheelGestureTimer = setTimeout(() => {
+        resetWheelGesture();
+      }, 220);
+
+      // Once one image change has happened during this gesture,
+      // ignore the remaining inertia so it doesn't bounce back.
+      if (wheelHasTriggered) return;
+
       wheelAccumX += e.deltaX;
 
-      if (wheelResetTimer) clearTimeout(wheelResetTimer);
-      wheelResetTimer = setTimeout(() => {
-        wheelAccumX = 0;
-      }, 180);
-
-      // Prevent one long Mac trackpad gesture from skipping multiple photos.
-      if (wheelLock) return;
-
-      const WHEEL_THRESHOLD = 45;
-      const WHEEL_COOLDOWN = 450;
+      const WHEEL_THRESHOLD = 55;
 
       if (wheelAccumX > WHEEL_THRESHOLD) {
-        wheelLock = true;
+        wheelHasTriggered = true;
         wheelAccumX = 0;
         window.nextImageV2();
-
-        setTimeout(() => {
-          wheelLock = false;
-        }, WHEEL_COOLDOWN);
-
         return;
       }
 
       if (wheelAccumX < -WHEEL_THRESHOLD) {
-        wheelLock = true;
+        wheelHasTriggered = true;
         wheelAccumX = 0;
         window.prevImageV2();
-
-        setTimeout(() => {
-          wheelLock = false;
-        }, WHEEL_COOLDOWN);
       }
     };
 
