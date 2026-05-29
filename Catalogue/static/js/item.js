@@ -337,17 +337,76 @@ document.addEventListener("DOMContentLoaded", () => {
       watchZoomScrollSettled();
     };
 
+    let wheelLock = false;
+    let wheelAccumX = 0;
+    let wheelResetTimer = null;
+
     const onWheel = (e) => {
+      if (!overlay.classList.contains("active")) return;
+
       const zoomedSlide = getZoomedSlide();
-      if (!zoomedSlide) return;
+
+      // If the image itself is zoomed-in, keep the existing behavior:
+      // trackpad / mouse wheel pans around the enlarged image.
+      if (zoomedSlide) {
+        e.preventDefault();
+
+        zoomedSlide.scrollLeft += e.deltaX;
+        zoomedSlide.scrollTop += e.deltaY;
+
+        if (e.shiftKey && e.deltaY !== 0 && e.deltaX === 0) {
+          zoomedSlide.scrollLeft += e.deltaY;
+        }
+
+        return;
+      }
+
+      // Do not touch mobile behavior.
+      // Phone swipe remains controlled by the touch handlers below.
+      if (window.innerWidth <= 700) return;
+
+      const absX = Math.abs(e.deltaX);
+      const absY = Math.abs(e.deltaY);
+
+      // Only react to clearly horizontal trackpad gestures.
+      // This avoids accidental image changes from vertical scrolling.
+      if (absX < 8 || absX < absY * 1.2) return;
 
       e.preventDefault();
 
-      zoomedSlide.scrollLeft += e.deltaX;
-      zoomedSlide.scrollTop += e.deltaY;
+      wheelAccumX += e.deltaX;
 
-      if (e.shiftKey && e.deltaY !== 0 && e.deltaX === 0) {
-        zoomedSlide.scrollLeft += e.deltaY;
+      if (wheelResetTimer) clearTimeout(wheelResetTimer);
+      wheelResetTimer = setTimeout(() => {
+        wheelAccumX = 0;
+      }, 180);
+
+      // Prevent one long Mac trackpad gesture from skipping multiple photos.
+      if (wheelLock) return;
+
+      const WHEEL_THRESHOLD = 45;
+      const WHEEL_COOLDOWN = 450;
+
+      if (wheelAccumX > WHEEL_THRESHOLD) {
+        wheelLock = true;
+        wheelAccumX = 0;
+        window.nextImageV2();
+
+        setTimeout(() => {
+          wheelLock = false;
+        }, WHEEL_COOLDOWN);
+
+        return;
+      }
+
+      if (wheelAccumX < -WHEEL_THRESHOLD) {
+        wheelLock = true;
+        wheelAccumX = 0;
+        window.prevImageV2();
+
+        setTimeout(() => {
+          wheelLock = false;
+        }, WHEEL_COOLDOWN);
       }
     };
 
