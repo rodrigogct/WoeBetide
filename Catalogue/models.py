@@ -417,8 +417,8 @@ class Jewelry(models.Model):
     updated=models.DateTimeField(auto_now_add=True)
 
     class Meta:
-        verbose_name='Jewerly'
-        verbose_name_plural='Jewerly'
+        verbose_name='Jewelry'
+        verbose_name_plural='Jewelry'
      
     def __str__(self):
         return self.name
