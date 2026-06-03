@@ -111,7 +111,7 @@
                     <div class="img1">
                         <picture>
                             <source 
-                              media="(max-width: 768x)" 
+                              media="(max-width: 768px)" 
                               srcset="{{ shop_all.img1.url|cld_menu_mobile }}"
                             >
                             <img
@@ -351,6 +351,15 @@
             </a>
         </div>
         {% endif %}
+        {% if jewelry_items %}
+        <div class="jewelry">
+            <div class="necklaces">
+                <h1>JEWERLY</h1>
+                <a href="">Necklaces</a>
+                <img src="" alt="">
+            </div>
+        </div>
+        {% endif %}
     </div>
     {% endif %}
 
@@ -407,16 +416,6 @@
         </div>
         {% endif %}
     </div> 
-
-    {% if jewerly_items %}
-    <div class="jewerly">
-        <div class="necklaces">
-            <h1>JEWERLY</h1>
-            <a href="">Necklaces</a>
-            <img src="" alt="">
-        </div>
-    </div>
-    {% endif %}
 
 
     <script src="{% static 'js/menu.js' %}"></script>
