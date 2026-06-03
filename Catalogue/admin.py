@@ -197,5 +197,4 @@ class AdminJewelry(admin.ModelAdmin):
             obj.img2 = None
 
         super().save_model(request, obj, form, change)
-
 admin.site.register(Jewelry, AdminJewelry)
