@@ -1,4 +1,4 @@
-from Catalogue.models import Item, Jewerly
+from Catalogue.models import Item, Jewelry
 
 # shop/utils/cart.py
 CART_KEY = "wb_cart"  # session key
