@@ -1,6 +1,5 @@
 from django.contrib import admin
-from .models import Item, Jewerly
-from django.contrib import admin
+from .models import Item, Jewelry
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.conf import settings
@@ -116,8 +115,87 @@ class AdminItem(admin.ModelAdmin):
 
 admin.site.register(Item, AdminItem)
 
-class AdminJewerly(admin.ModelAdmin): 
-    readonly_fields=('created','updated')
-admin.site.register(Jewerly, AdminJewerly)
+class AdminJewelry(admin.ModelAdmin):
+    list_display = [
+        "name",
+        "jewelry_type",
+        "price",
+        "is_sold",
+        "sold_price",
+        "shopify_variant_id",
+        "shopify_handle",
+    ]
 
+    list_filter = [
+        "is_sold",
+        "is_archive",
+        "is_featured",
+        "staff_pick",
+        "jewelry_type",
+    ]
 
+    search_fields = [
+        "name",
+        "description",
+        "material",
+        "shopify_handle",
+        "shopify_variant_id",
+    ]
+
+    readonly_fields = (
+        "img2",
+        "sold_at",
+        "sold_price",
+        "created",
+        "updated",
+    )
+
+    fieldsets = (
+        (None, {
+            "fields": (
+                "name",
+                "jewelry_type",
+                "staff_pick",
+                "is_featured",
+                "is_sold",
+                "sold_at",
+                "is_archive",
+                "price",
+                "sold_price",
+                "description",
+                "material",
+                "chain_length",
+                "pendant_size",
+                "condition",
+                ("img1", "img2"),
+                "img3",
+                "img4",
+                "img5",
+                "img6",
+                "img7",
+                "shopify_variant_id",
+                "shopify_handle",
+                "created",
+                "updated",
+            )
+        }),
+    )
+
+    def save_model(self, request, obj, form, change):
+        # Keep sold_at in sync with the checkbox
+        if "is_sold" in form.changed_data:
+            if obj.is_sold:
+                if not obj.sold_at:
+                    obj.sold_at = timezone.now()
+            else:
+                obj.sold_at = None
+
+        if "img1" in form.changed_data:
+            # Reset derived image so your model save() regenerates img2
+            if obj.img2:
+                obj.img2.delete(save=False)
+            obj.img2 = None
+
+        super().save_model(request, obj, form, change)
+
+admin.site.register(Jewelry, AdminJewelry)

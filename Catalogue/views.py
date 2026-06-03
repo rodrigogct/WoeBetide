@@ -5,7 +5,7 @@ from django.urls import reverse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views.decorators.http import require_POST, require_GET
 from .utils import cart as cart_utils
-from .models import Item, Jewerly
+from .models import Item, Jewelry
 from django.db.models import F, Q, DecimalField
 from decimal import Decimal
 from django.db.models.functions import Cast
@@ -310,26 +310,70 @@ def cart_view(request):
     })
 
 
+def jewelry(request):
+    sort = request.GET.get("sort", "date_new")
+
+    qs = Jewelry.objects.all()
+
+    if sort == "price_low":
+        qs = qs.annotate(
+            price_num=Cast("price", DecimalField(max_digits=10, decimal_places=2))
+        ).order_by(F("price_num").asc(nulls_last=True), "-created")
+
+    elif sort == "price_high":
+        qs = qs.annotate(
+            price_num=Cast("price", DecimalField(max_digits=10, decimal_places=2))
+        ).order_by(F("price_num").desc(nulls_last=True), "-created")
+
+    elif sort == "date_old":
+        qs = qs.order_by("created")
+
+    else:
+        qs = qs.order_by("-created")
+
+    return render(request, "catalogue.html", {
+        "items": qs,
+        "sort": sort,
+        "section": "jewelry",
+        "is_jewelry": True,
+        "is_archive": False,
+    })
 
 
 
 
+def jewelry_item(request, jewelry_item_id):
+    item = get_object_or_404(Jewelry, pk=jewelry_item_id)
 
-def jewerly(request):
-    jewerly_items = Jewerly.objects.all()
+    base_qs = Jewelry.objects.exclude(pk=item.pk)
 
-    return render(request, 'catalogue.html',
-                  {"jewerly_items": jewerly_items})
+    related_items = list(
+        base_qs
+        .filter(created__lt=item.created)
+        .order_by("-created", "-id")[:4]
+    )
 
-def jewerly_item(request, jewerly_item_id):
-    jewerly_item = get_object_or_404(Jewerly, pk=jewerly_item_id)
-    related_jewerly_item = Jewerly.objects.filter(id__gt=jewerly_item_id).order_by('id')[:4]
+    if len(related_items) < 4:
+        remaining = 4 - len(related_items)
 
-    if len(related_jewerly_item) < 4:
-        remaining_items = 4 - len(related_jewerly_item)
-        additional_items = Jewerly.objects.exclude(pk=jewerly_item_id).order_by('id')[:remaining_items]
-        related_jewerly_item = list(related_jewerly_item) + list(additional_items)
+        fill = list(
+            base_qs
+            .exclude(pk__in=[x.pk for x in related_items])
+            .filter(created__gt=item.created)
+            .order_by("-created", "-id")[:remaining]
+        )
 
-    return render(request, 'item.html', 
-                  {"jewerly_item": jewerly_item, 
-                   "related_jewerly_items": related_jewerly_item})
+        related_items += fill
+
+    images = []
+    for i in range(2, 8):
+        img = getattr(item, f"img{i}", None)
+        if img:
+            images.append(img)
+
+    return render(request, "item.html", {
+        "item": item,
+        "images": images,
+        "related_items": related_items,
+        "is_jewelry": True,
+    })

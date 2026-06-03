@@ -313,7 +313,93 @@ class Item(models.Model):
 
                 super().save(update_fields=["img2", "updated"])
 
-class Jewerly(models.Model):
+
+class Jewelry(models.Model):
+
+    JEWELRY_TYPE_CHOICES = [
+        ("Necklace", "Necklace"),
+    ]
+
+    # 1. Basic info
+    name = models.CharField(max_length=50)
+
+    # 2. Category/flags
+    jewelry_type = models.CharField(
+        max_length=50,
+        choices=JEWELRY_TYPE_CHOICES,
+        default="Necklace"
+    )
+    staff_pick = models.BooleanField(default=False, help_text="Check if this jewelry item is a staff pick.")
+    is_featured = models.BooleanField(default=False, help_text="Check if item appears in the curated 'Just In' section.")
+    is_sold = models.BooleanField(default=False, help_text="Check if this item has been sold.")
+    is_archive = models.BooleanField(default=False, help_text="Check if the item should go to archive or be removed.")
+    sold_at = models.DateTimeField(null=True, blank=True, db_index=True)
+
+    # 3. Price & description
+    price = models.DecimalField(max_digits=10, decimal_places=2, default=0, help_text="Price in MXN")
+    sold_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    description = models.CharField(max_length=250, null=True, blank=True, help_text="Information about the object")
+
+    # 4. Jewelry-specific details
+    material = models.CharField(max_length=100, default="NA", help_text="Example: silver, stainless steel, brass")
+    chain_length = models.CharField(max_length=50, default="NA", help_text="Chain length, e.g. 45 cm")
+    pendant_size = models.CharField(max_length=50, default="NA", help_text="Pendant size, if applicable")
+    condition = models.CharField(max_length=100, default="Vintage / pre-owned", help_text="Condition of the piece")
+
+    # 5. Images
+    img1_w = models.PositiveIntegerField(null=True, blank=True, editable=False)
+    img1_h = models.PositiveIntegerField(null=True, blank=True, editable=False)
+
+    img1 = models.ImageField(upload_to="jewelry/original", null=True, blank=True, max_length=500, help_text="Main jewelry image")
+    img2 = models.ImageField(upload_to="jewelry/original", null=True, blank=True, editable=False, max_length=500, help_text="Auto-generated quality image")
+    img3 = models.ImageField(upload_to="jewelry/original", null=True, blank=True, max_length=500, help_text="Additional image")
+    img4 = models.ImageField(upload_to="jewelry/original", null=True, blank=True, max_length=500, help_text="Zoom-in 1")
+    img5 = models.ImageField(upload_to="jewelry/original", null=True, blank=True, max_length=500, help_text="Zoom-in 2")
+    img6 = models.ImageField(upload_to="jewelry/original", null=True, blank=True, max_length=500, help_text="Zoom-in 3")
+    img7 = models.ImageField(upload_to="jewelry/original", null=True, blank=True, max_length=500, help_text="Zoom-in 4")
+
+    # 6. Shopify
+    shopify_variant_id = models.CharField(max_length=50, blank=True, null=True, help_text="Shopify Variant ID used for direct checkout")
+    shopify_handle = models.CharField(max_length=100, blank=True, null=True, unique=True, help_text="Used to match products between Shopify and Django")
+
+    # 7. Timestamps
+    created = models.DateTimeField(auto_now_add=True)
+    updated = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        import os
+        from django.core.files.base import ContentFile
+        from django.core.files.storage import default_storage
+        from django.utils import timezone
+
+        # Auto-mark sold if archived
+        if self.is_archive and not self.is_sold:
+            self.is_sold = True
+            if not self.sold_at:
+                self.sold_at = timezone.now()
+
+        # Save first
+        super().save(*args, **kwargs)
+
+        # Auto-create/refresh img2 from img1
+        if self.img1 and getattr(self.img1, "name", ""):
+            base, ext = os.path.splitext(os.path.basename(self.img1.name))
+            ext = (ext or ".jpg").lower()
+            img2_name = f"jewelry/original/{base}__quality{ext}"
+
+            if (not self.img2) or (self.img2.name != img2_name):
+                self.img1.open("rb")
+                data = self.img1.read()
+
+                if default_storage.exists(img2_name):
+                    default_storage.delete(img2_name)
+
+                self.img2.save(img2_name, ContentFile(data), save=False)
+
+                super().save(update_fields=["img2", "updated"])
+
+    def __str__(self):
+        return self.name
     name = models.CharField(max_length=50,default='NA')
     img1 = models.ImageField(upload_to='catalogue',null=True, blank=True, help_text="Front part of garment")
     img2 = models.ImageField(upload_to='catalogue',null=True, blank=True, help_text="Back part of garment")
