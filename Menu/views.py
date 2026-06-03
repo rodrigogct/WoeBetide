@@ -4,39 +4,6 @@ from Catalogue.models import Item
 
 # Create your views here.
 
-# def menu(request):
-#     items = Item.objects.all()
-#     menu = HomepageSection.objects.filter(section_type='menu')
-#     new_items = Item.objects.filter(is_featured = True).order_by('-created')[:4]
-#     shop_all = HomepageSection.objects.filter(section_type='shop_all')
-#     staff_picks =  HomepageSection.objects.filter(section_type='staff_picks')
-#     tees = HomepageSection.objects.filter(section_type='tees')
-#     sweatshirts = HomepageSection.objects.filter(section_type='sweatshirts')
-#     outerwear = HomepageSection.objects.filter(section_type='outerwear')
-#     archive = HomepageSection.objects.filter(section_type='archive')
-
-#     about = About.objects.filter(page_key='about').first()
-
-#     # If there aren't any or enough selected items, choose from latest.
-#     if new_items.count() < 4:
-#       remaining = 4 - new_items.count()
-#       filler_items = Item.objects.filter(is_featured=False, is_sold=False).order_by('-created')[:remaining]
-#       new_items = list(new_items) + list(filler_items)
-
-#     return render(request, 'menu.html',
-#                   { "items": items,
-#                     "staff_picks": staff_picks,
-#                     "new_items": new_items,
-#                     "menu": menu,
-#                     "shop_all" : shop_all,
-#                     "tees" : tees,
-#                     "sweatshirts" : sweatshirts,
-#                     "outerwear" : outerwear,
-#                     "archive": archive,
-#                     "about": about})
-
-
-
 def menu(request):
     items = Item.objects.all()
 
@@ -48,6 +15,7 @@ def menu(request):
     sweatshirts  = HomepageSection.objects.filter(section_type='sweatshirts')
     outerwear    = HomepageSection.objects.filter(section_type='outerwear')
     archive      = HomepageSection.objects.filter(section_type='archive')
+    jewelry = HomepageSection.objects.filter(section_type='jewelry')
 
     # ABOUT teaser comes from About model
     about = About.objects.filter(page_key='about').first()
@@ -80,6 +48,7 @@ def menu(request):
         "sweatshirts": sweatshirts,
         "outerwear": outerwear,
         "archive": archive,
+        "jewelry": jewelry,
 
         "about": about,
 

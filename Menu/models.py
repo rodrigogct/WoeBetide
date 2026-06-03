@@ -13,6 +13,7 @@ class HomepageSection(models.Model):
         ('sweatshirts', 'Sweatshirts'),
         ('outerwear', 'Outerwear'),
         ('archive', 'Archive'),
+        ('jewelry', 'Jewelry'),
     ]
 
     section_type = models.CharField(max_length=20, choices=SECTION_CHOICES)
@@ -21,59 +22,6 @@ class HomepageSection(models.Model):
     img3 = models.ImageField(upload_to='menu/original', null=True, blank=True)
     created = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now_add=True)
-
-    # def save(self, *args, **kwargs):
-    #     from PIL import Image
-    #     import os
-    #     from io import BytesIO
-    #     from django.conf import settings
-
-    #     super().save(*args, **kwargs)
-
-    #     # Same quality & size for all menu images
-    #     quality = 70
-    #     target_size = (1802, 1400)  # Width x Height
-
-    #         # If it's an "about" section, use higher quality & bigger size
-    #     if self.section_type == 'about':
-    #         quality = 100
-    #         target_size = (1800, 2160)
-
-    #     for field_name in ['img1', 'img2', 'img3']:
-    #         image_field = getattr(self, field_name)
-    #         if image_field and hasattr(image_field, 'path') and os.path.isfile(image_field.path):
-    #             try:
-    #                 image_field.open()
-    #                 img = Image.open(image_field)
-    #                 img = img.convert('RGB')
-
-    #                 # Resize while keeping aspect ratio
-    #                 img.thumbnail(target_size, Image.Resampling.LANCZOS)
-
-    #                 # Convert to WebP
-    #                 webp_io = BytesIO()
-    #                 img.save(webp_io, format='WEBP', quality=quality, method=6)  # method=6 = best compression
-
-    #                 # Save WebP in "menu/webp/"
-    #                 base_name = os.path.splitext(os.path.basename(image_field.name))[0]
-    #                 webp_path = f'menu/webp/{base_name}.webp'
-    #                 full_webp_path = os.path.join(settings.MEDIA_ROOT, webp_path)
-    #                 os.makedirs(os.path.dirname(full_webp_path), exist_ok=True)
-
-    #                 with open(full_webp_path, 'wb') as f:
-    #                     f.write(webp_io.getvalue())
-
-    #                 print(f"✅ Saved WebP: {webp_path}")
-
-    #             except Exception as e:
-    #                 print(f"⚠️ Error processing {field_name}: {e}")
-
-    #     def __str__(self):
-    #         return f"{self.get_section_type_display()} #{self.id}"
-
-    #     class Meta:
-    #         verbose_name = 'Homepage Section'
-    #         verbose_name_plural = 'Homepage Sections'
 
     def save(self, *args, **kwargs):
         from PIL import Image, ImageCms
