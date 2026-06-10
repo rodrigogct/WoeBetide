@@ -17,9 +17,12 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from django.urls import include
+from Menu.views import site_password
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('password/', site_password, name='site_password'),
+
     path('', include('Menu.urls')),
     path('', include('Catalogue.urls')),
 ]
