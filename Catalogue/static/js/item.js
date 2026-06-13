@@ -1,14 +1,7 @@
 // item-zoom.js
-// Desktop:
-// - click image to open selector
-// - opens directly on the selected image
-// - click to zoom / click again to unzoom
-// - drag or trackpad while zoomed to pan
-// - horizontal trackpad swipe changes image
-// - vertical trackpad swipe closes selector
-//
-// Mobile:
-// - keeps the existing snap carousel and touch behavior
+// Desktop overlay uses translate3d instead of scrollLeft.
+// This completely removes the scroll-snap / momentum bounce-back problem.
+// Mobile keeps its native snap carousel behavior.
 
 document.addEventListener("DOMContentLoaded", () => {
   const root = document.getElementById("item-layout-root-v2");
@@ -48,6 +41,8 @@ document.addEventListener("DOMContentLoaded", () => {
     document.querySelectorAll(".navbar")
   );
 
+  const mq = window.matchMedia("(max-width: 700px)");
+
   let backdrop = overlay.querySelector(".zoom-backdrop");
 
   if (!backdrop) {
@@ -56,21 +51,24 @@ document.addEventListener("DOMContentLoaded", () => {
     overlay.prepend(backdrop);
   }
 
-  const mq = window.matchMedia("(max-width: 700px)");
   const DESKTOP_ZOOM_SCALE = 2.25;
+  const DESKTOP_SLIDE_DURATION = 170;
+  const DESKTOP_WHEEL_THRESHOLD = 44;
+  const DESKTOP_WHEEL_RELEASE_DELAY = 260;
 
   let cleanupFns = [];
-
-  let zoomIndex = 0;
   let zoomSourceImgs = [];
+  let zoomIndex = 0;
 
-  let zoomScrollRaf = null;
-  let zoomLastScrollLeft = 0;
-  let zoomStableFrames = 0;
+  let desktopAnimating = false;
+  let desktopAnimationTimer = null;
 
-  let zoomAnimationRaf = null;
-  let isDesktopSlideAnimating = false;
-  let desktopSlideAnimationEndTimer = null;
+  let desktopWheelLocked = false;
+  let desktopWheelReleaseTimer = null;
+  let desktopWheelAccumX = 0;
+  let desktopWheelAccumY = 0;
+  let desktopWheelDirection = null;
+  let desktopWheelResetTimer = null;
 
   let dragState = {
     active: false,
@@ -83,25 +81,22 @@ document.addEventListener("DOMContentLoaded", () => {
     moved: false,
   };
 
-  let swipeCloseState = {
+  let mobileCloseState = {
     active: false,
     startX: 0,
     startY: 0,
     deltaX: 0,
     deltaY: 0,
-    lockedDirection: null,
+    direction: null,
   };
-
-  const SWIPE_CLOSE_THRESHOLD = 140;
-  const SWIPE_CLOSE_DIRECTION_LOCK = 12;
-  const SWIPE_CLOSE_MAX_HORIZONTAL = 90;
 
   const clamp = (value, min, max) =>
     Math.min(Math.max(value, min), max);
 
   const ensureSrc = (img) => {
-    if (!img) return;
-    if (img.getAttribute("src")) return;
+    if (!img || img.getAttribute("src")) {
+      return;
+    }
 
     const dataSrc = img.getAttribute("data-src");
 
@@ -112,6 +107,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const normalizeZoomIndex = (index) => {
     const total = zoomSourceImgs.length || 1;
+
     return ((index % total) + total) % total;
   };
 
@@ -153,32 +149,81 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   };
 
-  const resetOverlayDragVisual = (
+  const resetOverlayVisual = (
     animate = true
   ) => {
     overlay.style.transition = animate
-      ? "opacity 0.25s ease, transform 0.25s ease"
+      ? "opacity 0.22s ease, transform 0.22s ease"
       : "none";
 
     overlay.style.transform = "translateY(0)";
     overlay.style.opacity = "1";
   };
 
-  const setOverlayClosed = () => {
-    overlay.style.display = "none";
-    overlay.style.visibility = "hidden";
-    overlay.style.opacity = "0";
-    overlay.style.pointerEvents = "none";
-    overlay.style.transform = "translateY(0)";
-    overlay.style.transition = "none";
+  const clearDesktopTimers = () => {
+    if (desktopAnimationTimer) {
+      clearTimeout(desktopAnimationTimer);
+      desktopAnimationTimer = null;
+    }
 
-    overlay.classList.remove("active");
+    if (desktopWheelReleaseTimer) {
+      clearTimeout(desktopWheelReleaseTimer);
+      desktopWheelReleaseTimer = null;
+    }
 
-    document.body.classList.remove(
-      "lock-scroll"
-    );
+    if (desktopWheelResetTimer) {
+      clearTimeout(desktopWheelResetTimer);
+      desktopWheelResetTimer = null;
+    }
 
-    zoomTrack.innerHTML = "";
+    desktopAnimating = false;
+    desktopWheelLocked = false;
+    desktopWheelAccumX = 0;
+    desktopWheelAccumY = 0;
+    desktopWheelDirection = null;
+  };
+
+  const configureDesktopTrack = () => {
+    zoomTrack.style.display = "flex";
+    zoomTrack.style.width = "100%";
+    zoomTrack.style.height = "100%";
+    zoomTrack.style.overflow = "visible";
+    zoomTrack.style.scrollSnapType = "none";
+    zoomTrack.style.scrollBehavior = "auto";
+    zoomTrack.style.willChange = "transform";
+    zoomTrack.style.transition = "none";
+
+    zoomTrack.style.transform =
+      `translate3d(${-zoomIndex * 100}%, 0, 0)`;
+
+    getZoomSlides().forEach((slide) => {
+      slide.style.flex = "0 0 100%";
+      slide.style.width = "100%";
+      slide.style.minWidth = "100%";
+      slide.style.height = "100%";
+      slide.style.scrollSnapAlign = "none";
+    });
+  };
+
+  const configureMobileTrack = () => {
+    zoomTrack.style.display = "flex";
+    zoomTrack.style.width = "100%";
+    zoomTrack.style.height = "100%";
+    zoomTrack.style.overflowX = "auto";
+    zoomTrack.style.overflowY = "hidden";
+    zoomTrack.style.scrollSnapType = "x mandatory";
+    zoomTrack.style.scrollBehavior = "auto";
+    zoomTrack.style.willChange = "auto";
+    zoomTrack.style.transition = "none";
+    zoomTrack.style.transform = "none";
+
+    getZoomSlides().forEach((slide) => {
+      slide.style.flex = "0 0 100%";
+      slide.style.width = "100%";
+      slide.style.minWidth = "100%";
+      slide.style.height = "100%";
+      slide.style.scrollSnapAlign = "start";
+    });
   };
 
   const buildZoomCarousel = (
@@ -188,8 +233,8 @@ document.addEventListener("DOMContentLoaded", () => {
     zoomSourceImgs = sourceImgs.slice();
 
     zoomSourceImgs.forEach(
-      (img, index) => {
-        ensureSrc(img);
+      (sourceImg, index) => {
+        ensureSrc(sourceImg);
 
         const slide =
           document.createElement("div");
@@ -212,21 +257,21 @@ document.addEventListener("DOMContentLoaded", () => {
         inner.className =
           "zoom-slide-inner";
 
-        const zoomImg =
+        const img =
           document.createElement("img");
 
-        zoomImg.src =
-          img.getAttribute("src") ||
-          img.getAttribute("data-src") ||
+        img.src =
+          sourceImg.getAttribute("src") ||
+          sourceImg.getAttribute("data-src") ||
           "";
 
-        zoomImg.alt =
-          img.getAttribute("alt") ||
+        img.alt =
+          sourceImg.getAttribute("alt") ||
           `Image ${index + 1}`;
 
-        zoomImg.draggable = false;
+        img.draggable = false;
 
-        inner.appendChild(zoomImg);
+        inner.appendChild(img);
         slide.appendChild(inner);
         zoomTrack.appendChild(slide);
       }
@@ -237,11 +282,14 @@ document.addEventListener("DOMContentLoaded", () => {
     slide,
     resetScroll = true
   ) => {
-    if (!slide) return;
+    if (!slide) {
+      return;
+    }
 
-    const inner = slide.querySelector(
-      ".zoom-slide-inner"
-    );
+    const inner =
+      slide.querySelector(
+        ".zoom-slide-inner"
+      );
 
     const img =
       slide.querySelector("img");
@@ -255,6 +303,8 @@ document.addEventListener("DOMContentLoaded", () => {
       "data-zoomed",
       "false"
     );
+
+    slide.style.overflow = "";
 
     if (inner) {
       inner.style.width = "";
@@ -277,9 +327,11 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   const resetZoomState = () => {
-    getZoomSlides().forEach((slide) => {
-      clearSlideZoom(slide, true);
-    });
+    getZoomSlides().forEach(
+      (slide) => {
+        clearSlideZoom(slide, true);
+      }
+    );
 
     zoomTrack.classList.remove(
       "is-locked"
@@ -296,16 +348,21 @@ document.addEventListener("DOMContentLoaded", () => {
     clientX,
     clientY
   ) => {
-    if (!slide) return;
+    if (!slide) {
+      return;
+    }
 
-    const inner = slide.querySelector(
-      ".zoom-slide-inner"
-    );
+    const inner =
+      slide.querySelector(
+        ".zoom-slide-inner"
+      );
 
     const img =
       slide.querySelector("img");
 
-    if (!inner || !img) return;
+    if (!inner || !img) {
+      return;
+    }
 
     const imgRect =
       img.getBoundingClientRect();
@@ -340,36 +397,36 @@ document.addEventListener("DOMContentLoaded", () => {
     const viewportOffsetY =
       clientY - slideRect.top;
 
-    const minScaleForHorizontalPan =
-      (slideRect.width + 120) /
-      imgRect.width;
-
-    const minScaleForVerticalPan =
-      (slideRect.height + 120) /
-      imgRect.height;
-
     const scale = Math.max(
       DESKTOP_ZOOM_SCALE,
-      minScaleForHorizontalPan,
-      minScaleForVerticalPan
+      (slideRect.width + 120) /
+        imgRect.width,
+      (slideRect.height + 120) /
+        imgRect.height
     );
 
-    const zoomWidth = Math.round(
-      imgRect.width * scale
-    );
+    const zoomWidth =
+      Math.round(
+        imgRect.width * scale
+      );
 
-    const zoomHeight = Math.round(
-      imgRect.height * scale
-    );
+    const zoomHeight =
+      Math.round(
+        imgRect.height * scale
+      );
 
     resetZoomState();
 
-    slide.classList.add("is-zoomed");
+    slide.classList.add(
+      "is-zoomed"
+    );
 
     slide.setAttribute(
       "data-zoomed",
       "true"
     );
+
+    slide.style.overflow = "auto";
 
     inner.style.width =
       `${zoomWidth}px`;
@@ -397,351 +454,119 @@ document.addEventListener("DOMContentLoaded", () => {
     );
 
     requestAnimationFrame(() => {
-      const maxLeft = Math.max(
-        0,
-        slide.scrollWidth -
-          slide.clientWidth
-      );
-
-      const maxTop = Math.max(
-        0,
-        slide.scrollHeight -
-          slide.clientHeight
-      );
-
-      const targetLeft =
-        relativeX * zoomWidth -
-        viewportOffsetX;
-
-      const targetTop =
-        relativeY * zoomHeight -
-        viewportOffsetY;
-
       slide.scrollLeft = clamp(
-        targetLeft,
+        relativeX * zoomWidth -
+          viewportOffsetX,
         0,
-        maxLeft
+        Math.max(
+          0,
+          slide.scrollWidth -
+            slide.clientWidth
+        )
       );
 
       slide.scrollTop = clamp(
-        targetTop,
+        relativeY * zoomHeight -
+          viewportOffsetY,
         0,
-        maxTop
+        Math.max(
+          0,
+          slide.scrollHeight -
+            slide.clientHeight
+        )
       );
     });
   };
 
-  const toggleSlideZoomAtPoint = (
-    slide,
-    clientX,
-    clientY
-  ) => {
-    if (!slide) return;
-
-    const isZoomed =
-      slide.getAttribute(
-        "data-zoomed"
-      ) === "true";
-
-    if (isZoomed) {
-      clearSlideZoom(slide, true);
-
-      zoomTrack.classList.remove(
-        "is-locked"
-      );
-
-      return;
-    }
-
-    zoomSlideAtPoint(
-      slide,
-      clientX,
-      clientY
-    );
-  };
-
-  const syncZoomIndexFromScroll = () => {
-    const width =
-      zoomTrack.clientWidth || 1;
-
-    zoomIndex = Math.round(
-      zoomTrack.scrollLeft / width
-    );
-
-    zoomIndex = Math.max(
-      0,
-      Math.min(
-        zoomIndex,
-        zoomSourceImgs.length - 1
-      )
-    );
-  };
-
-  const clearDesktopSlideAnimationTimer = () => {
-    if (!desktopSlideAnimationEndTimer) {
-      return;
-    }
-
-    clearTimeout(
-      desktopSlideAnimationEndTimer
-    );
-
-    desktopSlideAnimationEndTimer = null;
-  };
-
-  const finishDesktopSlideAnimation = (
-    targetLeft,
-    previousSnapType,
-    previousScrollBehavior
-  ) => {
-    zoomTrack.scrollLeft = targetLeft;
-
-    requestAnimationFrame(() => {
-      zoomTrack.style.scrollSnapType =
-        previousSnapType;
-
-      zoomTrack.style.scrollBehavior =
-        previousScrollBehavior;
-
-      isDesktopSlideAnimating = false;
-      syncZoomIndexFromScroll();
-    });
-  };
-
-  const cancelZoomAnimation = () => {
-    if (zoomAnimationRaf) {
-      cancelAnimationFrame(
-        zoomAnimationRaf
-      );
-
-      zoomAnimationRaf = null;
-    }
-
-    clearDesktopSlideAnimationTimer();
-    isDesktopSlideAnimating = false;
-  };
-
-  const scrollZoomTo = (
+  const goToDesktopImage = (
     index,
-    smooth = true
+    animate = true
   ) => {
-    const slides =
-      zoomTrack.querySelectorAll(
-        "[data-zoom-slide]"
-      );
+    if (!zoomSourceImgs.length) {
+      return;
+    }
 
-    if (!slides.length) return;
+    if (desktopAnimating) {
+      return;
+    }
 
     resetZoomState();
-    cancelZoomAnimation();
 
     zoomIndex =
       normalizeZoomIndex(index);
 
-    const targetLeft =
-      zoomIndex *
-      zoomTrack.clientWidth;
+    if (!animate) {
+      zoomTrack.style.transition =
+        "none";
 
-    if (
-      !smooth ||
-      window.innerWidth <= 700
-    ) {
-      zoomTrack.scrollLeft =
-        targetLeft;
+      zoomTrack.style.transform =
+        `translate3d(${-zoomIndex * 100}%, 0, 0)`;
 
-      syncZoomIndexFromScroll();
       return;
     }
 
-    const startLeft =
-      zoomTrack.scrollLeft;
+    desktopAnimating = true;
+    desktopWheelLocked = true;
 
-    const distance =
-      targetLeft - startLeft;
+    zoomTrack.style.transition =
+      `transform ${DESKTOP_SLIDE_DURATION}ms cubic-bezier(0.22, 1, 0.36, 1)`;
 
-    if (Math.abs(distance) < 1) {
-      zoomTrack.scrollLeft =
-        targetLeft;
+    requestAnimationFrame(() => {
+      zoomTrack.style.transform =
+        `translate3d(${-zoomIndex * 100}%, 0, 0)`;
+    });
 
-      syncZoomIndexFromScroll();
-      return;
-    }
-
-    const previousSnapType =
-      zoomTrack.style.scrollSnapType;
-
-    const previousScrollBehavior =
-      zoomTrack.style.scrollBehavior;
-
-    zoomTrack.style.scrollSnapType =
-      "none";
-
-    zoomTrack.style.scrollBehavior =
-      "auto";
-
-    isDesktopSlideAnimating = true;
-
-    const duration = 175;
-    let startTime = null;
-
-    const easeOutQuart = (progress) =>
-      1 -
-      Math.pow(
-        1 - progress,
-        4
-      );
-
-    const animate = (timestamp) => {
-      if (startTime === null) {
-        startTime = timestamp;
-      }
-
-      const elapsed =
-        timestamp - startTime;
-
-      const progress = Math.min(
-        elapsed / duration,
-        1
-      );
-
-      const eased =
-        easeOutQuart(progress);
-
-      zoomTrack.scrollLeft =
-        startLeft +
-        distance * eased;
-
-      if (progress < 1) {
-        zoomAnimationRaf =
-          requestAnimationFrame(
-            animate
-          );
-      } else {
-        zoomAnimationRaf = null;
-
-        finishDesktopSlideAnimation(
-          targetLeft,
-          previousSnapType,
-          previousScrollBehavior
-        );
-      }
-    };
-
-    zoomAnimationRaf =
-      requestAnimationFrame(
-        animate
-      );
-
-    desktopSlideAnimationEndTimer =
+    desktopAnimationTimer =
       setTimeout(() => {
-        if (!isDesktopSlideAnimating) {
-          return;
-        }
+        zoomTrack.style.transition =
+          "none";
 
-        if (zoomAnimationRaf) {
-          cancelAnimationFrame(
-            zoomAnimationRaf
-          );
+        zoomTrack.style.transform =
+          `translate3d(${-zoomIndex * 100}%, 0, 0)`;
 
-          zoomAnimationRaf = null;
-        }
+        desktopAnimating = false;
+        desktopAnimationTimer = null;
 
-        finishDesktopSlideAnimation(
-          targetLeft,
-          previousSnapType,
-          previousScrollBehavior
-        );
-      }, duration + 80);
+        desktopWheelReleaseTimer =
+          setTimeout(() => {
+            desktopWheelLocked = false;
+            desktopWheelReleaseTimer = null;
+          }, DESKTOP_WHEEL_RELEASE_DELAY);
+      }, DESKTOP_SLIDE_DURATION + 25);
   };
 
-  const watchZoomScrollSettled = () => {
-    if (isDesktopSlideAnimating) {
-      return;
-    }
+  const syncMobileOverlayIndex = () => {
+    const width =
+      zoomTrack.clientWidth || 1;
 
-    cancelAnimationFrame(
-      zoomScrollRaf
+    zoomIndex = clamp(
+      Math.round(
+        zoomTrack.scrollLeft / width
+      ),
+      0,
+      Math.max(
+        0,
+        zoomSourceImgs.length - 1
+      )
     );
-
-    const check = () => {
-      if (isDesktopSlideAnimating) {
-        return;
-      }
-
-      const currentScrollLeft =
-        zoomTrack.scrollLeft;
-
-      if (
-        Math.abs(
-          currentScrollLeft -
-            zoomLastScrollLeft
-        ) < 0.5
-      ) {
-        zoomStableFrames += 1;
-      } else {
-        zoomStableFrames = 0;
-
-        zoomLastScrollLeft =
-          currentScrollLeft;
-      }
-
-      if (zoomStableFrames >= 3) {
-        syncZoomIndexFromScroll();
-
-        zoomStableFrames = 0;
-        return;
-      }
-
-      zoomScrollRaf =
-        requestAnimationFrame(
-          check
-        );
-    };
-
-    zoomLastScrollLeft =
-      zoomTrack.scrollLeft;
-
-    zoomStableFrames = 0;
-
-    zoomScrollRaf =
-      requestAnimationFrame(
-        check
-      );
-  };
-
-  const closeZoomCarousel = () => {
-    cancelAnimationFrame(
-      zoomScrollRaf
-    );
-
-    cancelZoomAnimation();
-
-    zoomScrollRaf = null;
-    zoomStableFrames = 0;
-
-    swipeCloseState.active = false;
-    swipeCloseState.deltaX = 0;
-    swipeCloseState.deltaY = 0;
-    swipeCloseState.lockedDirection =
-      null;
-
-    resetZoomState();
-    resetOverlayDragVisual(false);
-    setOverlayClosed();
-    showChrome();
   };
 
   const openZoomCarousel = (
     sourceImgs,
     index
   ) => {
+    clearDesktopTimers();
     buildZoomCarousel(sourceImgs);
+
+    zoomIndex =
+      normalizeZoomIndex(index);
 
     overlay.style.display = "block";
     overlay.style.visibility = "hidden";
     overlay.style.opacity = "0";
     overlay.style.pointerEvents = "none";
-    overlay.style.transform = "translateY(0)";
+    overlay.style.transform =
+      "translateY(0)";
     overlay.style.transition = "none";
 
     overlay.classList.add("active");
@@ -752,47 +577,60 @@ document.addEventListener("DOMContentLoaded", () => {
 
     hideChrome();
     resetZoomState();
-    cancelZoomAnimation();
-
-    zoomIndex =
-      normalizeZoomIndex(index);
 
     void overlay.offsetWidth;
-    void zoomTrack.offsetWidth;
 
-    const selectedPosition =
-      zoomIndex *
-      zoomTrack.clientWidth;
+    if (window.innerWidth > 700) {
+      configureDesktopTrack();
 
-    const previousSnap =
-      zoomTrack.style.scrollSnapType;
+      goToDesktopImage(
+        zoomIndex,
+        false
+      );
+    } else {
+      configureMobileTrack();
 
-    const previousBehavior =
-      zoomTrack.style.scrollBehavior;
-
-    zoomTrack.style.scrollSnapType =
-      "none";
-
-    zoomTrack.style.scrollBehavior =
-      "auto";
-
-    zoomTrack.scrollLeft =
-      selectedPosition;
+      zoomTrack.scrollLeft =
+        zoomIndex *
+        zoomTrack.clientWidth;
+    }
 
     void zoomTrack.offsetWidth;
 
-    requestAnimationFrame(() => {
-      zoomTrack.style.scrollSnapType =
-        previousSnap;
+    overlay.style.visibility =
+      "visible";
 
-      zoomTrack.style.scrollBehavior =
-        previousBehavior;
+    overlay.style.opacity = "1";
+    overlay.style.pointerEvents = "auto";
+  };
 
-      overlay.style.visibility = "visible";
-      overlay.style.opacity = "1";
-      overlay.style.pointerEvents = "auto";
-      overlay.style.transform = "translateY(0)";
-    });
+  const closeZoomCarousel = () => {
+    clearDesktopTimers();
+    resetZoomState();
+    resetOverlayVisual(false);
+
+    mobileCloseState.active = false;
+    mobileCloseState.deltaX = 0;
+    mobileCloseState.deltaY = 0;
+    mobileCloseState.direction = null;
+
+    overlay.style.display = "none";
+    overlay.style.visibility = "hidden";
+    overlay.style.opacity = "0";
+    overlay.style.pointerEvents = "none";
+    overlay.style.transform =
+      "translateY(0)";
+    overlay.style.transition = "none";
+
+    overlay.classList.remove("active");
+
+    document.body.classList.remove(
+      "lock-scroll"
+    );
+
+    zoomTrack.innerHTML = "";
+
+    showChrome();
   };
 
   window.prevImageV2 = () => {
@@ -804,14 +642,24 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    if (isDesktopSlideAnimating) {
-      return;
-    }
+    if (window.innerWidth > 700) {
+      goToDesktopImage(
+        zoomIndex - 1,
+        true
+      );
+    } else {
+      zoomIndex =
+        normalizeZoomIndex(
+          zoomIndex - 1
+        );
 
-    scrollZoomTo(
-      zoomIndex - 1,
-      true
-    );
+      zoomTrack.scrollTo({
+        left:
+          zoomIndex *
+          zoomTrack.clientWidth,
+        behavior: "smooth",
+      });
+    }
   };
 
   window.nextImageV2 = () => {
@@ -823,86 +671,56 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    if (isDesktopSlideAnimating) {
-      return;
-    }
+    if (window.innerWidth > 700) {
+      goToDesktopImage(
+        zoomIndex + 1,
+        true
+      );
+    } else {
+      zoomIndex =
+        normalizeZoomIndex(
+          zoomIndex + 1
+        );
 
-    scrollZoomTo(
-      zoomIndex + 1,
-      true
-    );
+      zoomTrack.scrollTo({
+        left:
+          zoomIndex *
+          zoomTrack.clientWidth,
+        behavior: "smooth",
+      });
+    }
   };
 
   const attachOverlayListeners = () => {
-    const onZoomTrackScroll = () => {
-      if (
-        !overlay.classList.contains(
-          "active"
-        )
-      ) {
-        return;
-      }
+    const resetDesktopWheelGesture =
+      () => {
+        desktopWheelAccumX = 0;
+        desktopWheelAccumY = 0;
+        desktopWheelDirection = null;
 
-      if (
-        zoomTrack.classList.contains(
-          "is-locked"
-        )
-      ) {
-        return;
-      }
+        if (desktopWheelResetTimer) {
+          clearTimeout(
+            desktopWheelResetTimer
+          );
+        }
 
-      if (isDesktopSlideAnimating) {
-        return;
-      }
+        desktopWheelResetTimer = null;
+      };
 
-      watchZoomScrollSettled();
-    };
+    const scheduleDesktopWheelReset =
+      () => {
+        if (desktopWheelResetTimer) {
+          clearTimeout(
+            desktopWheelResetTimer
+          );
+        }
 
-    let wheelAccumX = 0;
-    let wheelAccumY = 0;
-    let wheelDirection = null;
-    let wheelGestureTimer = null;
-    let horizontalCooldownUntil = 0;
-
-    const clearWheelTimer = () => {
-      if (!wheelGestureTimer) return;
-
-      clearTimeout(
-        wheelGestureTimer
-      );
-
-      wheelGestureTimer = null;
-    };
-
-    const resetWheelGesture = (
-      resetVisual = true
-    ) => {
-      wheelAccumX = 0;
-      wheelAccumY = 0;
-      wheelDirection = null;
-
-      clearWheelTimer();
-
-      if (
-        resetVisual &&
-        overlay.classList.contains(
-          "active"
-        )
-      ) {
-        resetOverlayDragVisual(true);
-      }
-    };
-
-    const scheduleWheelReset = () => {
-      clearWheelTimer();
-
-      wheelGestureTimer = setTimeout(
-        () => {
-          resetWheelGesture(true);
-        },
-        120
-      );
-    };
+        desktopWheelResetTimer =
+          setTimeout(
+            resetDesktopWheelGesture,
+            110
+          );
+      };
 
     const onWheel = (event) => {
       if (
@@ -927,8 +745,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (
           event.shiftKey &&
-          event.deltaY !== 0 &&
-          event.deltaX === 0
+          event.deltaY &&
+          !event.deltaX
         ) {
           zoomedSlide.scrollLeft +=
             event.deltaY;
@@ -941,41 +759,42 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      const absoluteX = Math.abs(
-        event.deltaX
-      );
-
-      const absoluteY = Math.abs(
-        event.deltaY
-      );
+      event.preventDefault();
 
       if (
-        absoluteX < 2 &&
-        absoluteY < 2
+        desktopWheelLocked ||
+        desktopAnimating
       ) {
         return;
       }
 
-      event.preventDefault();
+      const absX =
+        Math.abs(event.deltaX);
 
-      if (isDesktopSlideAnimating) {
+      const absY =
+        Math.abs(event.deltaY);
+
+      if (
+        absX < 2 &&
+        absY < 2
+      ) {
         return;
       }
 
-      scheduleWheelReset();
+      scheduleDesktopWheelReset();
 
-      if (!wheelDirection) {
+      if (!desktopWheelDirection) {
         if (
-          absoluteX >
-          absoluteY * 1.12
+          absX >
+          absY * 1.15
         ) {
-          wheelDirection =
+          desktopWheelDirection =
             "horizontal";
         } else if (
-          absoluteY >
-          absoluteX * 1.12
+          absY >
+          absX * 1.15
         ) {
-          wheelDirection =
+          desktopWheelDirection =
             "vertical";
         } else {
           return;
@@ -983,140 +802,123 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       if (
-        wheelDirection ===
+        desktopWheelDirection ===
         "horizontal"
       ) {
-        const currentTime =
-          performance.now();
+        desktopWheelAccumX +=
+          event.deltaX;
 
         if (
-          currentTime <
-          horizontalCooldownUntil
+          desktopWheelAccumX >=
+          DESKTOP_WHEEL_THRESHOLD
         ) {
-          return;
-        }
+          resetDesktopWheelGesture();
 
-        wheelAccumX += event.deltaX;
-
-        const HORIZONTAL_THRESHOLD = 42;
-        const HORIZONTAL_COOLDOWN = 220;
-
-        if (
-          wheelAccumX >
-          HORIZONTAL_THRESHOLD
+          goToDesktopImage(
+            zoomIndex + 1,
+            true
+          );
+        } else if (
+          desktopWheelAccumX <=
+          -DESKTOP_WHEEL_THRESHOLD
         ) {
-          wheelAccumX = 0;
+          resetDesktopWheelGesture();
 
-          horizontalCooldownUntil =
-            currentTime +
-            HORIZONTAL_COOLDOWN;
-
-          window.nextImageV2();
-          return;
-        }
-
-        if (
-          wheelAccumX <
-          -HORIZONTAL_THRESHOLD
-        ) {
-          wheelAccumX = 0;
-
-          horizontalCooldownUntil =
-            currentTime +
-            HORIZONTAL_COOLDOWN;
-
-          window.prevImageV2();
+          goToDesktopImage(
+            zoomIndex - 1,
+            true
+          );
         }
 
         return;
       }
 
-      if (
-        wheelDirection ===
-        "vertical"
-      ) {
-        if (
-          event.deltaY < 0 &&
-          wheelAccumY <= 0
-        ) {
-          wheelAccumY = Math.max(
-            wheelAccumY +
-              event.deltaY * 0.15,
+      desktopWheelAccumY +=
+        event.deltaY;
+
+      if (desktopWheelAccumY < 0) {
+        desktopWheelAccumY =
+          Math.max(
+            desktopWheelAccumY,
             -35
           );
-
-          overlay.style.transition =
-            "none";
-
-          overlay.style.transform =
-            `translateY(${wheelAccumY * 0.12}px)`;
-
-          overlay.style.opacity = "1";
-
-          return;
-        }
-
-        wheelAccumY += event.deltaY;
-
-        wheelAccumY = Math.max(
-          0,
-          wheelAccumY
-        );
-
-        const visualDistance =
-          Math.min(
-            wheelAccumY * 0.55,
-            window.innerHeight
-          );
-
-        const opacity = Math.max(
-          0.45,
-          1 - wheelAccumY / 430
-        );
 
         overlay.style.transition =
           "none";
 
         overlay.style.transform =
-          `translateY(${visualDistance}px)`;
+          `translateY(${desktopWheelAccumY * 0.12}px)`;
 
-        overlay.style.opacity =
-          String(opacity);
+        overlay.style.opacity = "1";
 
-        const VERTICAL_CLOSE_THRESHOLD =
-          115;
+        return;
+      }
 
-        if (
-          wheelAccumY >=
-          VERTICAL_CLOSE_THRESHOLD
-        ) {
-          resetWheelGesture(false);
-          closeZoomCarousel();
-        }
+      desktopWheelAccumY =
+        Math.max(
+          0,
+          desktopWheelAccumY
+        );
+
+      const distance = Math.min(
+        desktopWheelAccumY * 0.55,
+        window.innerHeight
+      );
+
+      overlay.style.transition =
+        "none";
+
+      overlay.style.transform =
+        `translateY(${distance}px)`;
+
+      overlay.style.opacity =
+        String(
+          Math.max(
+            0.45,
+            1 -
+              desktopWheelAccumY /
+                430
+          )
+        );
+
+      if (
+        desktopWheelAccumY >= 115
+      ) {
+        resetDesktopWheelGesture();
+        closeZoomCarousel();
+      }
+    };
+
+    const onOverlayScroll = () => {
+      if (window.innerWidth <= 700) {
+        syncMobileOverlayIndex();
       }
     };
 
     const onClick = (event) => {
-      if (window.innerWidth <= 700) {
+      if (
+        window.innerWidth <= 700 ||
+        dragState.moved
+      ) {
         return;
       }
-
-      if (dragState.moved) return;
 
       const slide =
         event.target.closest(
           ".zoom-slide"
         );
 
-      if (!slide) return;
+      if (!slide) {
+        return;
+      }
+
+      event.preventDefault();
+      event.stopPropagation();
 
       const isZoomed =
         slide.getAttribute(
           "data-zoomed"
         ) === "true";
-
-      event.preventDefault();
-      event.stopPropagation();
 
       if (isZoomed) {
         clearSlideZoom(
@@ -1136,9 +938,11 @@ document.addEventListener("DOMContentLoaded", () => {
           ".zoom-slide img"
         );
 
-      if (!img) return;
+      if (!img) {
+        return;
+      }
 
-      toggleSlideZoomAtPoint(
+      zoomSlideAtPoint(
         slide,
         event.clientX,
         event.clientY
@@ -1155,9 +959,8 @@ document.addEventListener("DOMContentLoaded", () => {
           ".zoom-slide"
         );
 
-      if (!slide) return;
-
       if (
+        !slide ||
         slide.getAttribute(
           "data-zoomed"
         ) !== "true"
@@ -1188,28 +991,27 @@ document.addEventListener("DOMContentLoaded", () => {
         "is-dragging"
       );
 
-      if (slide.setPointerCapture) {
-        try {
-          slide.setPointerCapture(
-            event.pointerId
-          );
-        } catch (_) {}
-      }
+      try {
+        slide.setPointerCapture?.(
+          event.pointerId
+        );
+      } catch (_) {}
 
       event.preventDefault();
     };
 
     const onPointerMove = (event) => {
-      if (!dragState.active) return;
-
       if (
+        !dragState.active ||
         dragState.pointerId !==
-        event.pointerId
+          event.pointerId
       ) {
         return;
       }
 
-      if (!dragState.slide) return;
+      if (!dragState.slide) {
+        return;
+      }
 
       const deltaX =
         event.clientX -
@@ -1238,11 +1040,10 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     const endPointerDrag = (event) => {
-      if (!dragState.active) return;
-
       if (
+        !dragState.active ||
         dragState.pointerId !==
-        event.pointerId
+          event.pointerId
       ) {
         return;
       }
@@ -1252,17 +1053,12 @@ document.addEventListener("DOMContentLoaded", () => {
           "is-dragging"
         );
 
-        if (
+        try {
           dragState.slide
-            .releasePointerCapture
-        ) {
-          try {
-            dragState.slide
-              .releasePointerCapture(
-                event.pointerId
-              );
-          } catch (_) {}
-        }
+            .releasePointerCapture?.(
+              event.pointerId
+            );
+        } catch (_) {}
       }
 
       dragState.active = false;
@@ -1294,28 +1090,29 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      if (getZoomedSlide()) return;
+      if (getZoomedSlide()) {
+        return;
+      }
 
-      const targetSlide =
-        event.target.closest(
+      if (
+        !event.target.closest(
           ".zoom-slide"
-        );
+        )
+      ) {
+        return;
+      }
 
-      if (!targetSlide) return;
+      mobileCloseState.active = true;
 
-      swipeCloseState.active = true;
-
-      swipeCloseState.startX =
+      mobileCloseState.startX =
         event.touches[0].clientX;
 
-      swipeCloseState.startY =
+      mobileCloseState.startY =
         event.touches[0].clientY;
 
-      swipeCloseState.deltaX = 0;
-      swipeCloseState.deltaY = 0;
-
-      swipeCloseState.lockedDirection =
-        null;
+      mobileCloseState.deltaX = 0;
+      mobileCloseState.deltaY = 0;
+      mobileCloseState.direction = null;
 
       overlay.style.transition =
         "none";
@@ -1323,12 +1120,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const onTouchMove = (event) => {
       if (
-        !swipeCloseState.active
+        !mobileCloseState.active ||
+        window.innerWidth > 700
       ) {
-        return;
-      }
-
-      if (window.innerWidth > 700) {
         return;
       }
 
@@ -1339,122 +1133,110 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      if (getZoomedSlide()) return;
+      if (getZoomedSlide()) {
+        return;
+      }
 
       const touch =
         event.touches[0];
 
-      swipeCloseState.deltaX =
+      mobileCloseState.deltaX =
         touch.clientX -
-        swipeCloseState.startX;
+        mobileCloseState.startX;
 
-      swipeCloseState.deltaY =
+      mobileCloseState.deltaY =
         touch.clientY -
-        swipeCloseState.startY;
+        mobileCloseState.startY;
 
-      if (
-        !swipeCloseState.lockedDirection
-      ) {
-        const absoluteX = Math.abs(
-          swipeCloseState.deltaX
-        );
+      if (!mobileCloseState.direction) {
+        const absX =
+          Math.abs(
+            mobileCloseState.deltaX
+          );
 
-        const absoluteY = Math.abs(
-          swipeCloseState.deltaY
-        );
+        const absY =
+          Math.abs(
+            mobileCloseState.deltaY
+          );
 
         if (
-          absoluteX <
-            SWIPE_CLOSE_DIRECTION_LOCK &&
-          absoluteY <
-            SWIPE_CLOSE_DIRECTION_LOCK
+          absX < 12 &&
+          absY < 12
         ) {
           return;
         }
 
-        swipeCloseState.lockedDirection =
-          absoluteY > absoluteX
+        mobileCloseState.direction =
+          absY > absX
             ? "y"
             : "x";
       }
 
       if (
-        swipeCloseState.lockedDirection !==
+        mobileCloseState.direction !==
         "y"
       ) {
         return;
       }
 
       if (
-        swipeCloseState.deltaY <= 0
+        mobileCloseState.deltaY <= 0
       ) {
         return;
       }
 
       if (
         Math.abs(
-          swipeCloseState.deltaX
-        ) >
-        SWIPE_CLOSE_MAX_HORIZONTAL
+          mobileCloseState.deltaX
+        ) > 90
       ) {
         return;
       }
 
-      const dragY =
-        swipeCloseState.deltaY *
-        0.55;
-
-      const fade = Math.max(
-        0.55,
-        1 -
-          swipeCloseState.deltaY /
-            420
-      );
-
       overlay.style.transform =
-        `translateY(${dragY}px)`;
+        `translateY(${mobileCloseState.deltaY * 0.55}px)`;
 
       overlay.style.opacity =
-        String(fade);
+        String(
+          Math.max(
+            0.55,
+            1 -
+              mobileCloseState.deltaY /
+                420
+          )
+        );
     };
 
     const onTouchEnd = () => {
-      if (
-        !swipeCloseState.active
-      ) {
+      if (!mobileCloseState.active) {
         return;
       }
 
       const shouldClose =
-        swipeCloseState
-          .lockedDirection === "y" &&
-        swipeCloseState.deltaY >
-          SWIPE_CLOSE_THRESHOLD &&
+        mobileCloseState.direction ===
+          "y" &&
+        mobileCloseState.deltaY > 140 &&
         Math.abs(
-          swipeCloseState.deltaX
-        ) <
-          SWIPE_CLOSE_MAX_HORIZONTAL &&
+          mobileCloseState.deltaX
+        ) < 90 &&
         !getZoomedSlide();
 
-      swipeCloseState.active = false;
+      mobileCloseState.active = false;
 
       if (shouldClose) {
         closeZoomCarousel();
-        return;
+      } else {
+        resetOverlayVisual(true);
       }
-
-      resetOverlayDragVisual(true);
     };
 
     const onTouchCancel = () => {
-      if (
-        !swipeCloseState.active
-      ) {
+      if (!mobileCloseState.active) {
         return;
       }
 
-      swipeCloseState.active = false;
-      resetOverlayDragVisual(true);
+      mobileCloseState.active = false;
+      resetOverlayVisual(true);
     };
 
     const onBackdropClick = (event) => {
@@ -1502,23 +1284,33 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      scrollZoomTo(
-        zoomIndex,
-        false
-      );
+      if (window.innerWidth > 700) {
+        configureDesktopTrack();
 
-      resetOverlayDragVisual(false);
+        goToDesktopImage(
+          zoomIndex,
+          false
+        );
+      } else {
+        configureMobileTrack();
+
+        zoomTrack.scrollLeft =
+          zoomIndex *
+          zoomTrack.clientWidth;
+      }
+
+      resetOverlayVisual(false);
     };
-
-    zoomTrack.addEventListener(
-      "scroll",
-      onZoomTrackScroll
-    );
 
     zoomTrack.addEventListener(
       "wheel",
       onWheel,
       { passive: false }
+    );
+
+    zoomTrack.addEventListener(
+      "scroll",
+      onOverlayScroll
     );
 
     zoomTrack.addEventListener(
@@ -1573,12 +1365,10 @@ document.addEventListener("DOMContentLoaded", () => {
       onBackdropClick
     );
 
-    if (closeButton) {
-      closeButton.addEventListener(
-        "click",
-        onClose
-      );
-    }
+    closeButton?.addEventListener(
+      "click",
+      onClose
+    );
 
     document.addEventListener(
       "keydown",
@@ -1592,15 +1382,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
     cleanupFns.push(() =>
       zoomTrack.removeEventListener(
-        "scroll",
-        onZoomTrackScroll
+        "wheel",
+        onWheel
       )
     );
 
     cleanupFns.push(() =>
       zoomTrack.removeEventListener(
-        "wheel",
-        onWheel
+        "scroll",
+        onOverlayScroll
       )
     );
 
@@ -1674,14 +1464,12 @@ document.addEventListener("DOMContentLoaded", () => {
       )
     );
 
-    if (closeButton) {
-      cleanupFns.push(() =>
-        closeButton.removeEventListener(
-          "click",
-          onClose
-        )
-      );
-    }
+    cleanupFns.push(() =>
+      closeButton?.removeEventListener(
+        "click",
+        onClose
+      )
+    );
 
     cleanupFns.push(() =>
       document.removeEventListener(
@@ -1701,27 +1489,15 @@ document.addEventListener("DOMContentLoaded", () => {
   const mountDesktop = (
     activeRoot
   ) => {
-    const imgsWithDataSrc =
-      Array.from(
-        activeRoot.querySelectorAll(
-          ".main-images img[data-src]"
-        )
-      );
-
-    imgsWithDataSrc.forEach(
-      ensureSrc
+    const images = Array.from(
+      activeRoot.querySelectorAll(
+        ".main-images img"
+      )
     );
 
-    const clickableImgs =
-      Array.from(
-        activeRoot.querySelectorAll(
-          ".main-images img"
-        )
-      );
+    images.forEach(ensureSrc);
 
-    const onPointerUp = (
-      event
-    ) => {
+    const onPointerUp = (event) => {
       if (
         overlay.classList.contains(
           "active"
@@ -1735,18 +1511,22 @@ document.addEventListener("DOMContentLoaded", () => {
           ".main-images img"
         );
 
-      if (!img) return;
+      if (!img) {
+        return;
+      }
 
       const index =
-        clickableImgs.indexOf(img);
+        images.indexOf(img);
 
-      if (index === -1) return;
+      if (index < 0) {
+        return;
+      }
 
       event.preventDefault();
       event.stopPropagation();
 
       openZoomCarousel(
-        clickableImgs,
+        images,
         index
       );
     };
@@ -1769,19 +1549,29 @@ document.addEventListener("DOMContentLoaded", () => {
   const mountMobile = (
     activeRoot
   ) => {
-    const host =
-      activeRoot.querySelector(
-        "[data-wb-snap]"
-      );
-
     const track =
       activeRoot.querySelector(
         "[data-wb-track]"
       );
 
-    if (!host || !track) {
+    const dotsWrap =
+      activeRoot.querySelector(
+        "[data-wb-dots]"
+      );
+
+    const prevButton =
+      activeRoot.querySelector(
+        "[data-wb-prev]"
+      );
+
+    const nextButton =
+      activeRoot.querySelector(
+        "[data-wb-next]"
+      );
+
+    if (!track) {
       console.warn(
-        "[item-zoom] mobile snap carousel elements not found"
+        "[item-zoom] mobile track not found"
       );
 
       return;
@@ -1799,40 +1589,20 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     ensureSrc(
-      track.querySelector(
-        "img[data-src]"
-      )
+      originalSlides[0]
+        .querySelector("img")
     );
 
-    const dotsWrap =
-      activeRoot.querySelector(
-        "[data-wb-dots]"
-      );
+    const realCount =
+      originalSlides.length;
 
-    const prevButton =
-      activeRoot.querySelector(
-        "[data-wb-prev]"
-      );
-
-    const nextButton =
-      activeRoot.querySelector(
-        "[data-wb-next]"
+    const realImgs =
+      originalSlides.map(
+        (slide) =>
+          slide.querySelector("img")
       );
 
     const dots = [];
-
-    const setActiveDot = (
-      index
-    ) => {
-      dots.forEach(
-        (dot, dotIndex) => {
-          dot.classList.toggle(
-            "is-active",
-            dotIndex === index
-          );
-        }
-      );
-    };
 
     const cloneFirst =
       originalSlides[0]
@@ -1840,7 +1610,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const cloneLast =
       originalSlides[
-        originalSlides.length - 1
+        realCount - 1
       ].cloneNode(true);
 
     cloneFirst.setAttribute(
@@ -1869,244 +1639,141 @@ document.addEventListener("DOMContentLoaded", () => {
         )
       );
 
-    const realCount =
-      originalSlides.length;
+    let currentRealIndex = 0;
+    let autoJumping = false;
+    let scrollEndTimer = null;
 
-    const realImgs =
-      originalSlides.map(
-        (slide) =>
-          slide.querySelector("img")
-      );
-
-    const slideWidth = () =>
+    const width = () =>
       track.clientWidth;
 
-    const realToDom = (
-      realIndex
-    ) => realIndex + 1;
-
-    const normalizeIndex = (
-      index
-    ) =>
+    const normalize = (index) =>
       (
         (index % realCount) +
         realCount
       ) %
       realCount;
 
-    let currentRealIndex = 0;
-    let isAutoJumping = false;
-    let isAnimatingByButton =
-      false;
+    const setDot = (index) => {
+      dots.forEach(
+        (dot, dotIndex) => {
+          dot.classList.toggle(
+            "is-active",
+            dotIndex === index
+          );
+        }
+      );
+    };
 
-    let settleRaf = null;
-    let lastScrollLeft =
-      track.scrollLeft;
-
-    let stableFrames = 0;
-
-    let activeScrollAnimation =
-      null;
-
-    const loadNeighbors = (
+    const loadAround = (
       realIndex
     ) => {
       const domIndex =
-        realToDom(realIndex);
+        realIndex + 1;
 
       ensureSrc(
         allSlides[
           domIndex
-        ]?.querySelector(
-          "img[data-src]"
-        )
+        ]?.querySelector("img")
       );
 
       ensureSrc(
         allSlides[
           domIndex - 1
-        ]?.querySelector(
-          "img[data-src]"
-        )
+        ]?.querySelector("img")
       );
 
       ensureSrc(
         allSlides[
           domIndex + 1
-        ]?.querySelector(
-          "img[data-src]"
-        )
+        ]?.querySelector("img")
       );
     };
 
-    const setScrollSnap = (
-      enabled
-    ) => {
-      track.style.scrollSnapType =
-        enabled ? "" : "none";
+    const sync = (index) => {
+      currentRealIndex =
+        normalize(index);
+
+      setDot(currentRealIndex);
+      loadAround(currentRealIndex);
     };
 
-    const instantScrollTo = (
-      left
-    ) => {
-      if (activeScrollAnimation) {
-        cancelAnimationFrame(
-          activeScrollAnimation
-        );
+    const instantTo = (left) => {
+      autoJumping = true;
 
-        activeScrollAnimation = null;
-      }
+      const previousSnap =
+        track.style.scrollSnapType;
 
-      isAutoJumping = true;
-      setScrollSnap(false);
+      const previousBehavior =
+        track.style.scrollBehavior;
+
+      track.style.scrollSnapType =
+        "none";
+
+      track.style.scrollBehavior =
+        "auto";
 
       track.scrollLeft = left;
 
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
-          setScrollSnap(true);
-          isAutoJumping = false;
+          track.style.scrollSnapType =
+            previousSnap;
+
+          track.style.scrollBehavior =
+            previousBehavior;
+
+          autoJumping = false;
         });
       });
     };
 
-    const syncUI = (
-      realIndex
-    ) => {
-      currentRealIndex =
-        normalizeIndex(realIndex);
-
-      setActiveDot(
-        currentRealIndex
-      );
-
-      loadNeighbors(
-        currentRealIndex
-      );
-    };
-
-    const animateScrollTo = (
-      targetLeft,
-      duration = 160
-    ) => {
-      if (activeScrollAnimation) {
-        cancelAnimationFrame(
-          activeScrollAnimation
-        );
-
-        activeScrollAnimation = null;
-      }
-
-      const startLeft =
-        track.scrollLeft;
-
-      const distance =
-        targetLeft - startLeft;
-
-      if (
-        !duration ||
-        duration <= 0 ||
-        Math.abs(distance) < 1
-      ) {
-        track.scrollLeft =
-          targetLeft;
-
-        return;
-      }
-
-      let startTime = null;
-
-      const easeOutCubic = (
-        progress
-      ) =>
-        1 -
-        Math.pow(
-          1 - progress,
-          3
-        );
-
-      const step = (
-        timestamp
-      ) => {
-        if (startTime === null) {
-          startTime = timestamp;
-        }
-
-        const elapsed =
-          timestamp - startTime;
-
-        const progress =
-          Math.min(
-            elapsed / duration,
-            1
-          );
-
-        const eased =
-          easeOutCubic(progress);
-
-        track.scrollLeft =
-          startLeft +
-          distance * eased;
-
-        if (progress < 1) {
-          activeScrollAnimation =
-            requestAnimationFrame(
-              step
-            );
-        } else {
-          activeScrollAnimation =
-            null;
-        }
-      };
-
-      activeScrollAnimation =
-        requestAnimationFrame(
-          step
-        );
-    };
-
-    const moveToDomIndex = (
-      domIndex,
-      smooth = true
-    ) => {
-      const left =
-        domIndex * slideWidth();
-
-      if (!smooth) {
-        if (
-          activeScrollAnimation
-        ) {
-          cancelAnimationFrame(
-            activeScrollAnimation
-          );
-
-          activeScrollAnimation =
-            null;
-        }
-
-        track.scrollLeft = left;
-        return;
-      }
-
-      animateScrollTo(
-        left,
-        160
-      );
-    };
-
-    const moveToRealIndex = (
-      realIndex,
+    const goToReal = (
+      index,
       smooth = true
     ) => {
       const normalized =
-        normalizeIndex(realIndex);
+        normalize(index);
 
-      syncUI(normalized);
+      sync(normalized);
 
-      moveToDomIndex(
-        realToDom(normalized),
-        smooth
-      );
+      track.scrollTo({
+        left:
+          (normalized + 1) *
+          width(),
+
+        behavior: smooth
+          ? "smooth"
+          : "auto",
+      });
+    };
+
+    const settle = () => {
+      if (autoJumping) {
+        return;
+      }
+
+      const domIndex =
+        Math.round(
+          track.scrollLeft /
+            (width() || 1)
+        );
+
+      if (domIndex === 0) {
+        instantTo(
+          realCount *
+          width()
+        );
+
+        sync(realCount - 1);
+      } else if (
+        domIndex ===
+        realCount + 1
+      ) {
+        instantTo(width());
+        sync(0);
+      } else {
+        sync(domIndex - 1);
+      }
     };
 
     if (dotsWrap) {
@@ -2117,299 +1784,142 @@ document.addEventListener("DOMContentLoaded", () => {
         index < realCount;
         index += 1
       ) {
-        const button =
+        const dot =
           document.createElement(
             "button"
           );
 
-        button.type = "button";
+        dot.type = "button";
 
-        button.className =
-          "wb-dot" +
-          (
-            index === 0
-              ? " is-active"
-              : ""
-          );
+        dot.className =
+          `wb-dot${index === 0 ? " is-active" : ""}`;
 
-        button.setAttribute(
+        dot.setAttribute(
           "aria-label",
           `Go to image ${index + 1}`
         );
 
-        button.addEventListener(
+        dot.addEventListener(
           "click",
           (event) => {
             event.preventDefault();
 
-            moveToRealIndex(
+            goToReal(
               index,
               true
             );
           }
         );
 
-        dotsWrap.appendChild(
-          button
-        );
-
-        dots.push(button);
+        dotsWrap.appendChild(dot);
+        dots.push(dot);
       }
     }
 
-    const getNearestDomIndex =
-      () => {
-        const width =
-          slideWidth();
+    instantTo(width());
+    sync(0);
 
-        if (!width) return 1;
+    const onScroll = () => {
+      if (autoJumping) {
+        return;
+      }
 
-        return Math.round(
-          track.scrollLeft / width
+      if (scrollEndTimer) {
+        clearTimeout(
+          scrollEndTimer
         );
-      };
+      }
 
-    const handleLoopRepositionIfNeeded =
-      () => {
-        const domIndex =
-          getNearestDomIndex();
-
-        if (domIndex === 0) {
-          instantScrollTo(
-            realCount *
-              slideWidth()
-          );
-
-          syncUI(
-            realCount - 1
-          );
-
-          return;
-        }
-
-        if (
-          domIndex ===
-          realCount + 1
-        ) {
-          instantScrollTo(
-            slideWidth()
-          );
-
-          syncUI(0);
-          return;
-        }
-
-        syncUI(
-          domIndex - 1
+      scrollEndTimer =
+        setTimeout(
+          settle,
+          90
         );
-      };
-
-    const onScrollSettled = () => {
-      handleLoopRepositionIfNeeded();
-
-      isAnimatingByButton =
-        false;
     };
 
-    const watchScrollSettled =
-      () => {
-        cancelAnimationFrame(
-          settleRaf
-        );
-
-        const check = () => {
-          const currentScrollLeft =
-            track.scrollLeft;
-
-          if (
-            Math.abs(
-              currentScrollLeft -
-                lastScrollLeft
-            ) < 0.5
-          ) {
-            stableFrames += 1;
-          } else {
-            stableFrames = 0;
-
-            lastScrollLeft =
-              currentScrollLeft;
-          }
-
-          if (
-            stableFrames >= 3
-          ) {
-            stableFrames = 0;
-
-            onScrollSettled();
-            return;
-          }
-
-          settleRaf =
-            requestAnimationFrame(
-              check
-            );
-        };
-
-        lastScrollLeft =
-          track.scrollLeft;
-
-        stableFrames = 0;
-
-        settleRaf =
-          requestAnimationFrame(
-            check
-          );
-      };
-
-    instantScrollTo(
-      slideWidth()
+    track.addEventListener(
+      "scroll",
+      onScroll
     );
 
-    syncUI(0);
-
-    if ("onscrollend" in track) {
-      const onScrollEnd = () => {
-        if (isAutoJumping) {
-          return;
-        }
-
-        onScrollSettled();
-      };
-
-      track.addEventListener(
-        "scrollend",
-        onScrollEnd
-      );
-
-      cleanupFns.push(() =>
-        track.removeEventListener(
-          "scrollend",
-          onScrollEnd
-        )
-      );
-    } else {
-      const onScroll = () => {
-        if (isAutoJumping) {
-          return;
-        }
-
-        watchScrollSettled();
-      };
-
-      track.addEventListener(
+    cleanupFns.push(() =>
+      track.removeEventListener(
         "scroll",
         onScroll
-      );
+      )
+    );
 
-      cleanupFns.push(() =>
-        track.removeEventListener(
-          "scroll",
-          onScroll
-        )
-      );
-    }
+    const onNext = (event) => {
+      event.preventDefault();
 
-    if (nextButton) {
-      const onNext = (
-        event
-      ) => {
-        event.preventDefault();
+      if (
+        currentRealIndex ===
+        realCount - 1
+      ) {
+        setDot(0);
+        loadAround(0);
 
-        if (
-          isAnimatingByButton
-        ) {
-          return;
-        }
+        track.scrollTo({
+          left:
+            (realCount + 1) *
+            width(),
 
-        isAnimatingByButton =
-          true;
+          behavior: "smooth",
+        });
+      } else {
+        goToReal(
+          currentRealIndex + 1,
+          true
+        );
+      }
+    };
 
-        if (
-          currentRealIndex ===
-          realCount - 1
-        ) {
-          setActiveDot(0);
-          loadNeighbors(0);
+    const onPrev = (event) => {
+      event.preventDefault();
 
-          moveToDomIndex(
-            realCount + 1,
-            true
-          );
-        } else {
-          moveToRealIndex(
-            currentRealIndex + 1,
-            true
-          );
-        }
-      };
+      if (
+        currentRealIndex === 0
+      ) {
+        setDot(realCount - 1);
+        loadAround(realCount - 1);
 
-      nextButton.addEventListener(
+        track.scrollTo({
+          left: 0,
+          behavior: "smooth",
+        });
+      } else {
+        goToReal(
+          currentRealIndex - 1,
+          true
+        );
+      }
+    };
+
+    nextButton?.addEventListener(
+      "click",
+      onNext
+    );
+
+    prevButton?.addEventListener(
+      "click",
+      onPrev
+    );
+
+    cleanupFns.push(() =>
+      nextButton?.removeEventListener(
         "click",
         onNext
-      );
+      )
+    );
 
-      cleanupFns.push(() =>
-        nextButton.removeEventListener(
-          "click",
-          onNext
-        )
-      );
-    }
-
-    if (prevButton) {
-      const onPrev = (
-        event
-      ) => {
-        event.preventDefault();
-
-        if (
-          isAnimatingByButton
-        ) {
-          return;
-        }
-
-        isAnimatingByButton =
-          true;
-
-        if (
-          currentRealIndex === 0
-        ) {
-          setActiveDot(
-            realCount - 1
-          );
-
-          loadNeighbors(
-            realCount - 1
-          );
-
-          moveToDomIndex(
-            0,
-            true
-          );
-        } else {
-          moveToRealIndex(
-            currentRealIndex - 1,
-            true
-          );
-        }
-      };
-
-      prevButton.addEventListener(
+    cleanupFns.push(() =>
+      prevButton?.removeEventListener(
         "click",
         onPrev
-      );
+      )
+    );
 
-      cleanupFns.push(() =>
-        prevButton.removeEventListener(
-          "click",
-          onPrev
-        )
-      );
-    }
-
-    const onPointerUp = (
-      event
-    ) => {
+    const onPointerUp = (event) => {
       if (
         overlay.classList.contains(
           "active"
@@ -2423,35 +1933,35 @@ document.addEventListener("DOMContentLoaded", () => {
           ".wb-snap__slide img"
         );
 
-      if (!img) return;
+      if (!img) {
+        return;
+      }
 
-      event.preventDefault();
-      event.stopPropagation();
-
-      const slideElement =
+      const slide =
         img.closest(
           "[data-wb-slide]"
         );
 
-      const indexInAll =
-        allSlides.indexOf(
-          slideElement
-        );
+      const domIndex =
+        allSlides.indexOf(slide);
 
       let realIndex;
 
-      if (indexInAll === 0) {
+      if (domIndex === 0) {
         realIndex =
           realCount - 1;
       } else if (
-        indexInAll ===
+        domIndex ===
         realCount + 1
       ) {
         realIndex = 0;
       } else {
         realIndex =
-          indexInAll - 1;
+          domIndex - 1;
       }
+
+      event.preventDefault();
+      event.stopPropagation();
 
       openZoomCarousel(
         realImgs,
@@ -2474,16 +1984,12 @@ document.addEventListener("DOMContentLoaded", () => {
     );
 
     const onResize = () => {
-      instantScrollTo(
-        realToDom(
-          currentRealIndex
-        ) *
-          slideWidth()
+      instantTo(
+        (currentRealIndex + 1) *
+        width()
       );
 
-      syncUI(
-        currentRealIndex
-      );
+      sync(currentRealIndex);
     };
 
     window.addEventListener(
@@ -2501,9 +2007,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const mount = (isMobile) => {
     cleanupFns.forEach(
-      (cleanup) => {
-        cleanup();
-      }
+      (cleanup) => cleanup()
     );
 
     cleanupFns = [];
@@ -2512,9 +2016,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     root.innerHTML = "";
 
-    const template = isMobile
-      ? tplMobile
-      : tplDesktop;
+    const template =
+      isMobile
+        ? tplMobile
+        : tplDesktop;
 
     root.appendChild(
       template.content.cloneNode(
@@ -2522,13 +2027,14 @@ document.addEventListener("DOMContentLoaded", () => {
       )
     );
 
-    const activeRoot = isMobile
-      ? root.querySelector(
-          ".item-carousel-v2"
-        )
-      : root.querySelector(
-          ".item"
-        );
+    const activeRoot =
+      isMobile
+        ? root.querySelector(
+            ".item-carousel-v2"
+          )
+        : root.querySelector(
+            ".item"
+          );
 
     if (!activeRoot) {
       console.warn(
@@ -2548,7 +2054,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
-  setOverlayClosed();
+  closeZoomCarousel();
   mount(mq.matches);
 
   const onMqChange = (event) => {
@@ -2561,8 +2067,6 @@ document.addEventListener("DOMContentLoaded", () => {
       onMqChange
     );
   } else {
-    mq.addListener(
-      onMqChange
-    );
+    mq.addListener(onMqChange);
   }
 });
