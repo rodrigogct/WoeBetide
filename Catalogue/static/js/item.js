@@ -3,11 +3,9 @@
 // mobile: tpl-unified-v2
 // overlay zoom: click to zoom at point, click again to unzoom
 // zoomed image supports trackpad scroll + click-drag pan
-// desktop overlay:
-// - horizontal trackpad slide changes images
-// - vertical trackpad slide closes selector
-// - faster, cancellable image transition
-// mobile behavior remains unchanged
+// desktop overlay carousel supports:
+// - horizontal two-finger trackpad swipe to change images
+// - vertical two-finger trackpad swipe to close the selector
 
 document.addEventListener("DOMContentLoaded", () => {
   const root = document.getElementById("item-layout-root-v2");
@@ -61,13 +59,9 @@ document.addEventListener("DOMContentLoaded", () => {
   let cleanupFns = [];
   let zoomIndex = 0;
   let zoomSourceImgs = [];
-
   let zoomScrollRaf = null;
   let zoomLastScrollLeft = 0;
   let zoomStableFrames = 0;
-
-  // Used only by the desktop overlay transition.
-  let zoomAnimationRaf = null;
 
   let dragState = {
     active: false,
@@ -109,7 +103,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const normalizeZoomIndex = (index) => {
     const total = zoomSourceImgs.length || 1;
-
     return ((index % total) + total) % total;
   };
 
@@ -125,16 +118,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const hideChrome = () => {
     catalogue.forEach((element) => {
-      element.dataset.prevDisplay =
-        element.style.display;
-
+      element.dataset.prevDisplay = element.style.display;
       element.style.display = "none";
     });
 
     navbar.forEach((element) => {
-      element.dataset.prevDisplay =
-        element.style.display;
-
+      element.dataset.prevDisplay = element.style.display;
       element.style.display = "none";
     });
   };
@@ -151,9 +140,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   };
 
-  const resetOverlayDragVisual = (
-    animate = true
-  ) => {
+  const resetOverlayDragVisual = (animate = true) => {
     overlay.style.transition = animate
       ? "opacity 0.25s ease, transform 0.25s ease"
       : "";
@@ -169,10 +156,7 @@ document.addEventListener("DOMContentLoaded", () => {
     overlay.style.transform = "translateY(0)";
 
     overlay.classList.remove("active");
-
-    document.body.classList.remove(
-      "lock-scroll"
-    );
+    document.body.classList.remove("lock-scroll");
 
     zoomTrack.innerHTML = "";
   };
@@ -184,62 +168,41 @@ document.addEventListener("DOMContentLoaded", () => {
     overlay.style.transform = "translateY(0)";
 
     overlay.classList.add("active");
-
-    document.body.classList.add(
-      "lock-scroll"
-    );
+    document.body.classList.add("lock-scroll");
   };
 
-  const buildZoomCarousel = (
-    sourceImgs
-  ) => {
+  const buildZoomCarousel = (sourceImgs) => {
     zoomTrack.innerHTML = "";
     zoomSourceImgs = sourceImgs.slice();
 
-    zoomSourceImgs.forEach(
-      (img, index) => {
-        ensureSrc(img);
+    zoomSourceImgs.forEach((img, index) => {
+      ensureSrc(img);
 
-        const slide =
-          document.createElement("div");
+      const slide = document.createElement("div");
+      slide.className = "zoom-slide";
+      slide.setAttribute("data-zoom-slide", "");
+      slide.setAttribute("data-zoomed", "false");
 
-        slide.className = "zoom-slide";
+      const inner = document.createElement("div");
+      inner.className = "zoom-slide-inner";
 
-        slide.setAttribute(
-          "data-zoom-slide",
-          ""
-        );
+      const zoomImg = document.createElement("img");
 
-        slide.setAttribute(
-          "data-zoomed",
-          "false"
-        );
+      zoomImg.src =
+        img.getAttribute("src") ||
+        img.getAttribute("data-src") ||
+        "";
 
-        const inner =
-          document.createElement("div");
+      zoomImg.alt =
+        img.getAttribute("alt") ||
+        `Image ${index + 1}`;
 
-        inner.className =
-          "zoom-slide-inner";
+      zoomImg.draggable = false;
 
-        const zoomImg =
-          document.createElement("img");
-
-        zoomImg.src =
-          img.getAttribute("src") ||
-          img.getAttribute("data-src") ||
-          "";
-
-        zoomImg.alt =
-          img.getAttribute("alt") ||
-          `Image ${index + 1}`;
-
-        zoomImg.draggable = false;
-
-        inner.appendChild(zoomImg);
-        slide.appendChild(inner);
-        zoomTrack.appendChild(slide);
-      }
-    );
+      inner.appendChild(zoomImg);
+      slide.appendChild(inner);
+      zoomTrack.appendChild(slide);
+    });
   };
 
   const clearSlideZoom = (
@@ -252,18 +215,14 @@ document.addEventListener("DOMContentLoaded", () => {
       ".zoom-slide-inner"
     );
 
-    const img =
-      slide.querySelector("img");
+    const img = slide.querySelector("img");
 
     slide.classList.remove(
       "is-zoomed",
       "is-dragging"
     );
 
-    slide.setAttribute(
-      "data-zoomed",
-      "false"
-    );
+    slide.setAttribute("data-zoomed", "false");
 
     if (inner) {
       inner.style.width = "";
@@ -290,9 +249,7 @@ document.addEventListener("DOMContentLoaded", () => {
       clearSlideZoom(slide, true);
     });
 
-    zoomTrack.classList.remove(
-      "is-locked"
-    );
+    zoomTrack.classList.remove("is-locked");
 
     dragState.active = false;
     dragState.pointerId = null;
@@ -311,34 +268,23 @@ document.addEventListener("DOMContentLoaded", () => {
       ".zoom-slide-inner"
     );
 
-    const img =
-      slide.querySelector("img");
+    const img = slide.querySelector("img");
 
     if (!inner || !img) return;
 
-    const imgRect =
-      img.getBoundingClientRect();
+    const imgRect = img.getBoundingClientRect();
+    const slideRect = slide.getBoundingClientRect();
 
-    const slideRect =
-      slide.getBoundingClientRect();
-
-    if (
-      !imgRect.width ||
-      !imgRect.height
-    ) {
-      return;
-    }
+    if (!imgRect.width || !imgRect.height) return;
 
     const relativeX = clamp(
-      (clientX - imgRect.left) /
-        imgRect.width,
+      (clientX - imgRect.left) / imgRect.width,
       0,
       1
     );
 
     const relativeY = clamp(
-      (clientY - imgRect.top) /
-        imgRect.height,
+      (clientY - imgRect.top) / imgRect.height,
       0,
       1
     );
@@ -350,12 +296,10 @@ document.addEventListener("DOMContentLoaded", () => {
       clientY - slideRect.top;
 
     const minScaleForHorizontalPan =
-      (slideRect.width + 120) /
-      imgRect.width;
+      (slideRect.width + 120) / imgRect.width;
 
     const minScaleForVerticalPan =
-      (slideRect.height + 120) /
-      imgRect.height;
+      (slideRect.height + 120) / imgRect.height;
 
     const scale = Math.max(
       DESKTOP_ZOOM_SCALE,
@@ -374,48 +318,29 @@ document.addEventListener("DOMContentLoaded", () => {
     resetZoomState();
 
     slide.classList.add("is-zoomed");
+    slide.setAttribute("data-zoomed", "true");
 
-    slide.setAttribute(
-      "data-zoomed",
-      "true"
-    );
+    inner.style.width = `${zoomWidth}px`;
+    inner.style.height = `${zoomHeight}px`;
+    inner.style.minWidth = `${zoomWidth}px`;
+    inner.style.minHeight = `${zoomHeight}px`;
 
-    inner.style.width =
-      `${zoomWidth}px`;
-
-    inner.style.height =
-      `${zoomHeight}px`;
-
-    inner.style.minWidth =
-      `${zoomWidth}px`;
-
-    inner.style.minHeight =
-      `${zoomHeight}px`;
-
-    img.style.width =
-      `${zoomWidth}px`;
-
-    img.style.height =
-      `${zoomHeight}px`;
-
+    img.style.width = `${zoomWidth}px`;
+    img.style.height = `${zoomHeight}px`;
     img.style.maxWidth = "none";
     img.style.maxHeight = "none";
 
-    zoomTrack.classList.add(
-      "is-locked"
-    );
+    zoomTrack.classList.add("is-locked");
 
     requestAnimationFrame(() => {
       const maxLeft = Math.max(
         0,
-        slide.scrollWidth -
-          slide.clientWidth
+        slide.scrollWidth - slide.clientWidth
       );
 
       const maxTop = Math.max(
         0,
-        slide.scrollHeight -
-          slide.clientHeight
+        slide.scrollHeight - slide.clientHeight
       );
 
       const targetLeft =
@@ -448,17 +373,11 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!slide) return;
 
     const isZoomed =
-      slide.getAttribute(
-        "data-zoomed"
-      ) === "true";
+      slide.getAttribute("data-zoomed") === "true";
 
     if (isZoomed) {
       clearSlideZoom(slide, true);
-
-      zoomTrack.classList.remove(
-        "is-locked"
-      );
-
+      zoomTrack.classList.remove("is-locked");
       return;
     }
 
@@ -469,9 +388,27 @@ document.addEventListener("DOMContentLoaded", () => {
     );
   };
 
+  const scrollZoomTo = (
+    index,
+    smooth = true
+  ) => {
+    const slides = zoomTrack.querySelectorAll(
+      "[data-zoom-slide]"
+    );
+
+    if (!slides.length) return;
+
+    resetZoomState();
+    zoomIndex = normalizeZoomIndex(index);
+
+    zoomTrack.scrollTo({
+      left: zoomIndex * zoomTrack.clientWidth,
+      behavior: smooth ? "smooth" : "auto",
+    });
+  };
+
   const syncZoomIndexFromScroll = () => {
-    const width =
-      zoomTrack.clientWidth || 1;
+    const width = zoomTrack.clientWidth || 1;
 
     zoomIndex = Math.round(
       zoomTrack.scrollLeft / width
@@ -486,134 +423,8 @@ document.addEventListener("DOMContentLoaded", () => {
     );
   };
 
-  /*
-   * This animation is used only for the
-   * desktop/computer full-screen selector.
-   *
-   * Mobile uses its original separate
-   * carousel animation below.
-   */
-  const scrollZoomTo = (
-    index,
-    smooth = true
-  ) => {
-    const slides =
-      zoomTrack.querySelectorAll(
-        "[data-zoom-slide]"
-      );
-
-    if (!slides.length) return;
-
-    resetZoomState();
-
-    zoomIndex =
-      normalizeZoomIndex(index);
-
-    const targetLeft =
-      zoomIndex *
-      zoomTrack.clientWidth;
-
-    /*
-     * Cancel the previous animation.
-     * This makes another swipe respond
-     * immediately rather than waiting.
-     */
-    if (zoomAnimationRaf) {
-      cancelAnimationFrame(
-        zoomAnimationRaf
-      );
-
-      zoomAnimationRaf = null;
-    }
-
-    /*
-     * Opening, resizing and mobile
-     * positioning remain immediate.
-     */
-    if (
-      !smooth ||
-      window.innerWidth <= 700
-    ) {
-      zoomTrack.scrollLeft =
-        targetLeft;
-
-      return;
-    }
-
-    const startLeft =
-      zoomTrack.scrollLeft;
-
-    const distance =
-      targetLeft - startLeft;
-
-    if (Math.abs(distance) < 1) {
-      zoomTrack.scrollLeft =
-        targetLeft;
-
-      syncZoomIndexFromScroll();
-      return;
-    }
-
-    /*
-     * Faster than native smooth scrolling.
-     * Lower this number for an even faster
-     * desktop transition.
-     */
-    const duration = 120;
-    let startTime = null;
-
-    const easeOutCubic = (progress) =>
-      1 -
-      Math.pow(
-        1 - progress,
-        3
-      );
-
-    const animate = (timestamp) => {
-      if (startTime === null) {
-        startTime = timestamp;
-      }
-
-      const elapsed =
-        timestamp - startTime;
-
-      const progress = Math.min(
-        elapsed / duration,
-        1
-      );
-
-      const eased =
-        easeOutCubic(progress);
-
-      zoomTrack.scrollLeft =
-        startLeft +
-        distance * eased;
-
-      if (progress < 1) {
-        zoomAnimationRaf =
-          requestAnimationFrame(
-            animate
-          );
-      } else {
-        zoomAnimationRaf = null;
-
-        zoomTrack.scrollLeft =
-          targetLeft;
-
-        syncZoomIndexFromScroll();
-      }
-    };
-
-    zoomAnimationRaf =
-      requestAnimationFrame(
-        animate
-      );
-  };
-
   const watchZoomScrollSettled = () => {
-    cancelAnimationFrame(
-      zoomScrollRaf
-    );
+    cancelAnimationFrame(zoomScrollRaf);
 
     const check = () => {
       const currentScrollLeft =
@@ -628,22 +439,18 @@ document.addEventListener("DOMContentLoaded", () => {
         zoomStableFrames += 1;
       } else {
         zoomStableFrames = 0;
-
         zoomLastScrollLeft =
           currentScrollLeft;
       }
 
       if (zoomStableFrames >= 3) {
         syncZoomIndexFromScroll();
-
         zoomStableFrames = 0;
         return;
       }
 
       zoomScrollRaf =
-        requestAnimationFrame(
-          check
-        );
+        requestAnimationFrame(check);
     };
 
     zoomLastScrollLeft =
@@ -652,17 +459,13 @@ document.addEventListener("DOMContentLoaded", () => {
     zoomStableFrames = 0;
 
     zoomScrollRaf =
-      requestAnimationFrame(
-        check
-      );
+      requestAnimationFrame(check);
   };
 
   const attachOverlayListeners = () => {
     const onZoomTrackScroll = () => {
       if (
-        !overlay.classList.contains(
-          "active"
-        )
+        !overlay.classList.contains("active")
       ) {
         return;
       }
@@ -678,74 +481,33 @@ document.addEventListener("DOMContentLoaded", () => {
       watchZoomScrollSettled();
     };
 
-    /*
-     * The variables below only affect
-     * desktop/computer trackpad behavior.
-     */
     let wheelAccumX = 0;
     let wheelAccumY = 0;
-
     let wheelGestureTimer = null;
+    let wheelHasTriggered = false;
     let wheelDirection = null;
 
-    /*
-     * After one desktop image change,
-     * briefly discard trackpad momentum.
-     * This prevents accidental double changes
-     * without making the selector feel stuck.
-     */
-    let horizontalCooldownUntil = 0;
-
-    const clearWheelGestureTimer = () => {
-      if (!wheelGestureTimer) return;
-
-      clearTimeout(
-        wheelGestureTimer
-      );
-
-      wheelGestureTimer = null;
-    };
-
-    const resetWheelGesture = (
-      resetVisual = true
-    ) => {
+    const resetWheelGesture = () => {
       wheelAccumX = 0;
       wheelAccumY = 0;
+      wheelHasTriggered = false;
       wheelDirection = null;
 
-      clearWheelGestureTimer();
+      if (wheelGestureTimer) {
+        clearTimeout(wheelGestureTimer);
+        wheelGestureTimer = null;
+      }
 
       if (
-        resetVisual &&
-        overlay.classList.contains(
-          "active"
-        )
+        overlay.classList.contains("active")
       ) {
         resetOverlayDragVisual(true);
       }
     };
 
-    const scheduleWheelReset = () => {
-      clearWheelGestureTimer();
-
-      /*
-       * Shorter than the previous 220ms.
-       * This prevents a noticeable temporary
-       * lock after changing images.
-       */
-      wheelGestureTimer = setTimeout(
-        () => {
-          resetWheelGesture(true);
-        },
-        95
-      );
-    };
-
     const onWheel = (event) => {
       if (
-        !overlay.classList.contains(
-          "active"
-        )
+        !overlay.classList.contains("active")
       ) {
         return;
       }
@@ -754,8 +516,8 @@ document.addEventListener("DOMContentLoaded", () => {
         getZoomedSlide();
 
       /*
-       * When zoomed, preserve trackpad
-       * panning around the enlarged image.
+       * When the image is zoomed, the trackpad
+       * moves around the enlarged image.
        */
       if (zoomedSlide) {
         event.preventDefault();
@@ -779,9 +541,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       /*
-       * Do not change cellphone behavior.
-       * Mobile continues using the original
-       * touch handlers and mountMobile code.
+       * Mobile keeps its existing touch behavior.
        */
       if (window.innerWidth <= 700) {
         return;
@@ -795,6 +555,9 @@ document.addEventListener("DOMContentLoaded", () => {
         event.deltaY
       );
 
+      /*
+       * Ignore tiny trackpad noise.
+       */
       if (
         absoluteX < 2 &&
         absoluteY < 2
@@ -804,79 +567,58 @@ document.addEventListener("DOMContentLoaded", () => {
 
       event.preventDefault();
 
-      scheduleWheelReset();
+      if (wheelGestureTimer) {
+        clearTimeout(wheelGestureTimer);
+      }
 
       /*
-       * Lock the current desktop trackpad
-       * gesture to its dominant direction.
+       * A Mac trackpad keeps sending momentum
+       * events after the fingers stop moving.
+       * Treat the momentum as one gesture.
+       */
+      wheelGestureTimer = setTimeout(() => {
+        resetWheelGesture();
+      }, 180);
+
+      /*
+       * Lock the gesture to whichever direction
+       * is dominant at the start.
        */
       if (!wheelDirection) {
         if (
           absoluteX >
-          absoluteY * 1.12
+          absoluteY * 1.15
         ) {
-          wheelDirection =
-            "horizontal";
+          wheelDirection = "horizontal";
         } else if (
           absoluteY >
-          absoluteX * 1.12
+          absoluteX * 1.15
         ) {
-          wheelDirection =
-            "vertical";
+          wheelDirection = "vertical";
         } else {
           return;
         }
       }
 
       /*
-       * DESKTOP ONLY:
-       * horizontal two-finger trackpad slide
-       * changes the full-screen image.
+       * Horizontal two-finger movement:
+       * change images.
        */
       if (
-        wheelDirection ===
-        "horizontal"
+        wheelDirection === "horizontal"
       ) {
-        const currentTime =
-          performance.now();
-
-        /*
-         * Discard only the brief momentum
-         * immediately after a completed change.
-         * Do not keep extending the cooldown.
-         */
-        if (
-          currentTime <
-          horizontalCooldownUntil
-        ) {
-          wheelAccumX = 0;
-          return;
-        }
+        if (wheelHasTriggered) return;
 
         wheelAccumX += event.deltaX;
 
-        /*
-         * Lower than the previous 55 threshold
-         * so a normal swipe responds sooner.
-         */
-        const HORIZONTAL_THRESHOLD = 38;
-
-        /*
-         * Short enough to allow another swipe
-         * quickly, but long enough to absorb
-         * the first gesture's momentum.
-         */
-        const HORIZONTAL_COOLDOWN = 145;
+        const HORIZONTAL_THRESHOLD = 55;
 
         if (
           wheelAccumX >
           HORIZONTAL_THRESHOLD
         ) {
+          wheelHasTriggered = true;
           wheelAccumX = 0;
-
-          horizontalCooldownUntil =
-            currentTime +
-            HORIZONTAL_COOLDOWN;
 
           window.nextImageV2();
           return;
@@ -886,11 +628,8 @@ document.addEventListener("DOMContentLoaded", () => {
           wheelAccumX <
           -HORIZONTAL_THRESHOLD
         ) {
+          wheelHasTriggered = true;
           wheelAccumX = 0;
-
-          horizontalCooldownUntil =
-            currentTime +
-            HORIZONTAL_COOLDOWN;
 
           window.prevImageV2();
         }
@@ -899,17 +638,15 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       /*
-       * DESKTOP ONLY:
-       * vertical two-finger trackpad slide
-       * moves the selector downward to close.
+       * Vertical two-finger movement:
+       * move the selector down and close it.
        */
       if (
-        wheelDirection ===
-        "vertical"
+        wheelDirection === "vertical"
       ) {
         /*
-         * Upward movement cannot close the
-         * selector and receives resistance.
+         * Upward movement gets slight resistance,
+         * but cannot close the selector.
          */
         if (
           event.deltaY < 0 &&
@@ -921,14 +658,12 @@ document.addEventListener("DOMContentLoaded", () => {
             -35
           );
 
-          overlay.style.transition =
-            "none";
+          overlay.style.transition = "none";
 
           overlay.style.transform =
             `translateY(${wheelAccumY * 0.12}px)`;
 
           overlay.style.opacity = "1";
-
           return;
         }
 
@@ -939,19 +674,17 @@ document.addEventListener("DOMContentLoaded", () => {
           wheelAccumY
         );
 
-        const visualDistance =
-          Math.min(
-            wheelAccumY * 0.55,
-            window.innerHeight
-          );
+        const visualDistance = Math.min(
+          wheelAccumY * 0.55,
+          window.innerHeight
+        );
 
         const opacity = Math.max(
           0.45,
           1 - wheelAccumY / 430
         );
 
-        overlay.style.transition =
-          "none";
+        overlay.style.transition = "none";
 
         overlay.style.transform =
           `translateY(${visualDistance}px)`;
@@ -959,14 +692,14 @@ document.addEventListener("DOMContentLoaded", () => {
         overlay.style.opacity =
           String(opacity);
 
-        const VERTICAL_CLOSE_THRESHOLD =
-          115;
+        const VERTICAL_CLOSE_THRESHOLD = 115;
 
         if (
           wheelAccumY >=
-          VERTICAL_CLOSE_THRESHOLD
+            VERTICAL_CLOSE_THRESHOLD &&
+          !wheelHasTriggered
         ) {
-          resetWheelGesture(false);
+          wheelHasTriggered = true;
           closeZoomCarousel();
         }
       }
@@ -979,26 +712,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (dragState.moved) return;
 
-      const slide =
-        event.target.closest(
-          ".zoom-slide"
-        );
+      const slide = event.target.closest(
+        ".zoom-slide"
+      );
 
       if (!slide) return;
 
       const isZoomed =
-        slide.getAttribute(
-          "data-zoomed"
-        ) === "true";
+        slide.getAttribute("data-zoomed") ===
+        "true";
 
       event.preventDefault();
       event.stopPropagation();
 
       if (isZoomed) {
-        clearSlideZoom(
-          slide,
-          true
-        );
+        clearSlideZoom(slide, true);
 
         zoomTrack.classList.remove(
           "is-locked"
@@ -1007,10 +735,9 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      const img =
-        event.target.closest(
-          ".zoom-slide img"
-        );
+      const img = event.target.closest(
+        ".zoom-slide img"
+      );
 
       if (!img) return;
 
@@ -1026,33 +753,24 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      const slide =
-        event.target.closest(
-          ".zoom-slide"
-        );
+      const slide = event.target.closest(
+        ".zoom-slide"
+      );
 
       if (!slide) return;
 
       if (
-        slide.getAttribute(
-          "data-zoomed"
-        ) !== "true"
+        slide.getAttribute("data-zoomed") !==
+        "true"
       ) {
         return;
       }
 
       dragState.active = true;
-
-      dragState.pointerId =
-        event.pointerId;
-
+      dragState.pointerId = event.pointerId;
       dragState.slide = slide;
-
-      dragState.startX =
-        event.clientX;
-
-      dragState.startY =
-        event.clientY;
+      dragState.startX = event.clientX;
+      dragState.startY = event.clientY;
 
       dragState.startScrollLeft =
         slide.scrollLeft;
@@ -1062,9 +780,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       dragState.moved = false;
 
-      slide.classList.add(
-        "is-dragging"
-      );
+      slide.classList.add("is-dragging");
 
       if (slide.setPointerCapture) {
         try {
@@ -1092,12 +808,10 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!dragState.slide) return;
 
       const deltaX =
-        event.clientX -
-        dragState.startX;
+        event.clientX - dragState.startX;
 
       const deltaY =
-        event.clientY -
-        dragState.startY;
+        event.clientY - dragState.startY;
 
       if (
         Math.abs(deltaX) > 3 ||
@@ -1137,10 +851,9 @@ document.addEventListener("DOMContentLoaded", () => {
             .releasePointerCapture
         ) {
           try {
-            dragState.slide
-              .releasePointerCapture(
-                event.pointerId
-              );
+            dragState.slide.releasePointerCapture(
+              event.pointerId
+            );
           } catch (error) {
             // Pointer capture is optional.
           }
@@ -1156,22 +869,14 @@ document.addEventListener("DOMContentLoaded", () => {
       }, 0);
     };
 
-    /*
-     * Original mobile close behavior.
-     * This section is unchanged.
-     */
     const onTouchStart = (event) => {
       if (
-        !overlay.classList.contains(
-          "active"
-        )
+        !overlay.classList.contains("active")
       ) {
         return;
       }
 
-      if (window.innerWidth > 700) {
-        return;
-      }
+      if (window.innerWidth > 700) return;
 
       if (
         !event.touches ||
@@ -1183,9 +888,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (getZoomedSlide()) return;
 
       const targetSlide =
-        event.target.closest(
-          ".zoom-slide"
-        );
+        event.target.closest(".zoom-slide");
 
       if (!targetSlide) return;
 
@@ -1203,20 +906,15 @@ document.addEventListener("DOMContentLoaded", () => {
       swipeCloseState.lockedDirection =
         null;
 
-      overlay.style.transition =
-        "none";
+      overlay.style.transition = "none";
     };
 
     const onTouchMove = (event) => {
-      if (
-        !swipeCloseState.active
-      ) {
+      if (!swipeCloseState.active) {
         return;
       }
 
-      if (window.innerWidth > 700) {
-        return;
-      }
+      if (window.innerWidth > 700) return;
 
       if (
         !event.touches ||
@@ -1227,8 +925,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (getZoomedSlide()) return;
 
-      const touch =
-        event.touches[0];
+      const touch = event.touches[0];
 
       swipeCloseState.deltaX =
         touch.clientX -
@@ -1271,30 +968,24 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      if (
-        swipeCloseState.deltaY <= 0
-      ) {
+      if (swipeCloseState.deltaY <= 0) {
         return;
       }
 
       if (
         Math.abs(
           swipeCloseState.deltaX
-        ) >
-        SWIPE_CLOSE_MAX_HORIZONTAL
+        ) > SWIPE_CLOSE_MAX_HORIZONTAL
       ) {
         return;
       }
 
       const dragY =
-        swipeCloseState.deltaY *
-        0.55;
+        swipeCloseState.deltaY * 0.55;
 
       const fade = Math.max(
         0.55,
-        1 -
-          swipeCloseState.deltaY /
-            420
+        1 - swipeCloseState.deltaY / 420
       );
 
       overlay.style.transform =
@@ -1305,21 +996,18 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     const onTouchEnd = () => {
-      if (
-        !swipeCloseState.active
-      ) {
+      if (!swipeCloseState.active) {
         return;
       }
 
       const shouldClose =
-        swipeCloseState
-          .lockedDirection === "y" &&
+        swipeCloseState.lockedDirection ===
+          "y" &&
         swipeCloseState.deltaY >
           SWIPE_CLOSE_THRESHOLD &&
         Math.abs(
           swipeCloseState.deltaX
-        ) <
-          SWIPE_CLOSE_MAX_HORIZONTAL &&
+        ) < SWIPE_CLOSE_MAX_HORIZONTAL &&
         !getZoomedSlide();
 
       swipeCloseState.active = false;
@@ -1333,20 +1021,15 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     const onTouchCancel = () => {
-      if (
-        !swipeCloseState.active
-      ) {
+      if (!swipeCloseState.active) {
         return;
       }
 
       swipeCloseState.active = false;
-
       resetOverlayDragVisual(true);
     };
 
-    const onBackdropClick = (
-      event
-    ) => {
+    const onBackdropClick = (event) => {
       event.preventDefault();
       event.stopPropagation();
 
@@ -1362,9 +1045,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const onKeyDown = (event) => {
       if (
-        !overlay.classList.contains(
-          "active"
-        )
+        !overlay.classList.contains("active")
       ) {
         return;
       }
@@ -1384,18 +1065,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const onResize = () => {
       if (
-        !overlay.classList.contains(
-          "active"
-        )
+        !overlay.classList.contains("active")
       ) {
         return;
       }
 
-      scrollZoomTo(
-        zoomIndex,
-        false
-      );
-
+      scrollZoomTo(zoomIndex, false);
       resetOverlayDragVisual(false);
     };
 
@@ -1595,25 +1270,11 @@ document.addEventListener("DOMContentLoaded", () => {
     setOverlayOpen();
     hideChrome();
     resetOverlayDragVisual(false);
-
-    scrollZoomTo(
-      index,
-      false
-    );
+    scrollZoomTo(index, false);
   };
 
   const closeZoomCarousel = () => {
-    cancelAnimationFrame(
-      zoomScrollRaf
-    );
-
-    if (zoomAnimationRaf) {
-      cancelAnimationFrame(
-        zoomAnimationRaf
-      );
-
-      zoomAnimationRaf = null;
-    }
+    cancelAnimationFrame(zoomScrollRaf);
 
     zoomScrollRaf = null;
     zoomStableFrames = 0;
@@ -1633,70 +1294,49 @@ document.addEventListener("DOMContentLoaded", () => {
 
   window.prevImageV2 = () => {
     if (
-      !overlay.classList.contains(
-        "active"
-      )
+      !overlay.classList.contains("active")
     ) {
       return;
     }
 
-    scrollZoomTo(
-      zoomIndex - 1,
-      true
-    );
+    scrollZoomTo(zoomIndex - 1, true);
   };
 
   window.nextImageV2 = () => {
     if (
-      !overlay.classList.contains(
-        "active"
-      )
+      !overlay.classList.contains("active")
     ) {
       return;
     }
 
-    scrollZoomTo(
-      zoomIndex + 1,
-      true
-    );
+    scrollZoomTo(zoomIndex + 1, true);
   };
 
-  const mountDesktop = (
-    activeRoot
-  ) => {
-    const imgsWithDataSrc =
-      Array.from(
-        activeRoot.querySelectorAll(
-          ".main-images img[data-src]"
-        )
-      );
-
-    imgsWithDataSrc.forEach(
-      ensureSrc
+  const mountDesktop = (activeRoot) => {
+    const imgsWithDataSrc = Array.from(
+      activeRoot.querySelectorAll(
+        ".main-images img[data-src]"
+      )
     );
 
-    const clickableImgs =
-      Array.from(
-        activeRoot.querySelectorAll(
-          ".main-images img"
-        )
-      );
+    imgsWithDataSrc.forEach(ensureSrc);
 
-    const onPointerUp = (
-      event
-    ) => {
+    const clickableImgs = Array.from(
+      activeRoot.querySelectorAll(
+        ".main-images img"
+      )
+    );
+
+    const onPointerUp = (event) => {
       if (
-        overlay.classList.contains(
-          "active"
-        )
+        overlay.classList.contains("active")
       ) {
         return;
       }
 
-      const img =
-        event.target.closest(
-          ".main-images img"
-        );
+      const img = event.target.closest(
+        ".main-images img"
+      );
 
       if (!img) return;
 
@@ -1729,22 +1369,14 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   };
 
-  /*
-   * Original mobile carousel.
-   * This entire function remains unchanged.
-   */
-  const mountMobile = (
-    activeRoot
-  ) => {
-    const host =
-      activeRoot.querySelector(
-        "[data-wb-snap]"
-      );
+  const mountMobile = (activeRoot) => {
+    const host = activeRoot.querySelector(
+      "[data-wb-snap]"
+    );
 
-    const track =
-      activeRoot.querySelector(
-        "[data-wb-track]"
-      );
+    const track = activeRoot.querySelector(
+      "[data-wb-track]"
+    );
 
     if (!host || !track) {
       console.warn(
@@ -1754,16 +1386,13 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    const originalSlides =
-      Array.from(
-        track.querySelectorAll(
-          "[data-wb-slide]"
-        )
-      );
+    const originalSlides = Array.from(
+      track.querySelectorAll(
+        "[data-wb-slide]"
+      )
+    );
 
-    if (!originalSlides.length) {
-      return;
-    }
+    if (!originalSlides.length) return;
 
     ensureSrc(
       track.querySelector(
@@ -1788,22 +1417,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const dots = [];
 
-    const setActiveDot = (
-      index
-    ) => {
-      dots.forEach(
-        (dot, dotIndex) => {
-          dot.classList.toggle(
-            "is-active",
-            dotIndex === index
-          );
-        }
-      );
+    const setActiveDot = (index) => {
+      dots.forEach((dot, dotIndex) => {
+        dot.classList.toggle(
+          "is-active",
+          dotIndex === index
+        );
+      });
     };
 
     const cloneFirst =
-      originalSlides[0]
-        .cloneNode(true);
+      originalSlides[0].cloneNode(true);
 
     const cloneLast =
       originalSlides[
@@ -1825,24 +1449,20 @@ document.addEventListener("DOMContentLoaded", () => {
       originalSlides[0]
     );
 
-    track.appendChild(
-      cloneFirst
-    );
+    track.appendChild(cloneFirst);
 
-    const allSlides =
-      Array.from(
-        track.querySelectorAll(
-          "[data-wb-slide]"
-        )
-      );
+    const allSlides = Array.from(
+      track.querySelectorAll(
+        "[data-wb-slide]"
+      )
+    );
 
     const realCount =
       originalSlides.length;
 
     const realImgs =
-      originalSlides.map(
-        (slide) =>
-          slide.querySelector("img")
+      originalSlides.map((slide) =>
+        slide.querySelector("img")
       );
 
     if (dotsWrap) {
@@ -1854,19 +1474,15 @@ document.addEventListener("DOMContentLoaded", () => {
         index += 1
       ) {
         const button =
-          document.createElement(
-            "button"
-          );
+          document.createElement("button");
 
         button.type = "button";
 
         button.className =
           "wb-dot" +
-          (
-            index === 0
-              ? " is-active"
-              : ""
-          );
+          (index === 0
+            ? " is-active"
+            : "");
 
         button.setAttribute(
           "aria-label",
@@ -1885,10 +1501,7 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         );
 
-        dotsWrap.appendChild(
-          button
-        );
-
+        dotsWrap.appendChild(button);
         dots.push(button);
       }
     }
@@ -1896,25 +1509,17 @@ document.addEventListener("DOMContentLoaded", () => {
     const slideWidth = () =>
       track.clientWidth;
 
-    const realToDom = (
-      realIndex
-    ) => realIndex + 1;
+    const realToDom = (realIndex) =>
+      realIndex + 1;
 
-    const normalizeIndex = (
-      index
-    ) =>
-      (
-        (index % realCount) +
-        realCount
-      ) %
+    const normalizeIndex = (index) =>
+      ((index % realCount) +
+        realCount) %
       realCount;
 
     let currentRealIndex = 0;
     let isAutoJumping = false;
-
-    let isAnimatingByButton =
-      false;
-
+    let isAnimatingByButton = false;
     let settleRaf = null;
 
     let lastScrollLeft =
@@ -1987,9 +1592,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     };
 
-    const syncUI = (
-      realIndex
-    ) => {
+    const syncUI = (realIndex) => {
       currentRealIndex =
         normalizeIndex(realIndex);
 
@@ -2025,26 +1628,20 @@ document.addEventListener("DOMContentLoaded", () => {
         duration <= 0 ||
         Math.abs(distance) < 1
       ) {
-        track.scrollLeft =
-          targetLeft;
-
+        track.scrollLeft = targetLeft;
         return;
       }
 
       let startTime = null;
 
-      const easeOutCubic = (
-        progress
-      ) =>
+      const easeOutCubic = (progress) =>
         1 -
         Math.pow(
           1 - progress,
           3
         );
 
-      const step = (
-        timestamp
-      ) => {
+      const step = (timestamp) => {
         if (startTime === null) {
           startTime = timestamp;
         }
@@ -2052,11 +1649,10 @@ document.addEventListener("DOMContentLoaded", () => {
         const elapsed =
           timestamp - startTime;
 
-        const progress =
-          Math.min(
-            elapsed / duration,
-            1
-          );
+        const progress = Math.min(
+          elapsed / duration,
+          1
+        );
 
         const eased =
           easeOutCubic(progress);
@@ -2067,9 +1663,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (progress < 1) {
           activeScrollAnimation =
-            requestAnimationFrame(
-              step
-            );
+            requestAnimationFrame(step);
         } else {
           activeScrollAnimation =
             null;
@@ -2077,9 +1671,7 @@ document.addEventListener("DOMContentLoaded", () => {
       };
 
       activeScrollAnimation =
-        requestAnimationFrame(
-          step
-        );
+        requestAnimationFrame(step);
     };
 
     const moveToDomIndex = (
@@ -2090,25 +1682,19 @@ document.addEventListener("DOMContentLoaded", () => {
         domIndex * slideWidth();
 
       if (!smooth) {
-        if (
-          activeScrollAnimation
-        ) {
+        if (activeScrollAnimation) {
           cancelAnimationFrame(
             activeScrollAnimation
           );
 
-          activeScrollAnimation =
-            null;
+          activeScrollAnimation = null;
         }
 
         track.scrollLeft = left;
         return;
       }
 
-      animateScrollTo(
-        left,
-        160
-      );
+      animateScrollTo(left, 160);
     };
 
     const moveToRealIndex = (
@@ -2126,17 +1712,15 @@ document.addEventListener("DOMContentLoaded", () => {
       );
     };
 
-    const getNearestDomIndex =
-      () => {
-        const width =
-          slideWidth();
+    const getNearestDomIndex = () => {
+      const width = slideWidth();
 
-        if (!width) return 1;
+      if (!width) return 1;
 
-        return Math.round(
-          track.scrollLeft / width
-        );
-      };
+      return Math.round(
+        track.scrollLeft / width
+      );
+    };
 
     const handleLoopRepositionIfNeeded =
       () => {
@@ -2145,14 +1729,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (domIndex === 0) {
           instantScrollTo(
-            realCount *
-              slideWidth()
+            realCount * slideWidth()
           );
 
-          syncUI(
-            realCount - 1
-          );
-
+          syncUI(realCount - 1);
           return;
         }
 
@@ -2168,80 +1748,61 @@ document.addEventListener("DOMContentLoaded", () => {
           return;
         }
 
-        syncUI(
-          domIndex - 1
-        );
+        syncUI(domIndex - 1);
       };
 
     const onScrollSettled = () => {
       handleLoopRepositionIfNeeded();
-
-      isAnimatingByButton =
-        false;
+      isAnimatingByButton = false;
     };
 
-    const watchScrollSettled =
-      () => {
-        cancelAnimationFrame(
-          settleRaf
-        );
+    const watchScrollSettled = () => {
+      cancelAnimationFrame(
+        settleRaf
+      );
 
-        const check = () => {
-          const currentScrollLeft =
-            track.scrollLeft;
-
-          if (
-            Math.abs(
-              currentScrollLeft -
-                lastScrollLeft
-            ) < 0.5
-          ) {
-            stableFrames += 1;
-          } else {
-            stableFrames = 0;
-
-            lastScrollLeft =
-              currentScrollLeft;
-          }
-
-          if (
-            stableFrames >= 3
-          ) {
-            stableFrames = 0;
-
-            onScrollSettled();
-            return;
-          }
-
-          settleRaf =
-            requestAnimationFrame(
-              check
-            );
-        };
-
-        lastScrollLeft =
+      const check = () => {
+        const currentScrollLeft =
           track.scrollLeft;
 
-        stableFrames = 0;
+        if (
+          Math.abs(
+            currentScrollLeft -
+              lastScrollLeft
+          ) < 0.5
+        ) {
+          stableFrames += 1;
+        } else {
+          stableFrames = 0;
+          lastScrollLeft =
+            currentScrollLeft;
+        }
+
+        if (stableFrames >= 3) {
+          stableFrames = 0;
+          onScrollSettled();
+          return;
+        }
 
         settleRaf =
-          requestAnimationFrame(
-            check
-          );
+          requestAnimationFrame(check);
       };
 
-    instantScrollTo(
-      slideWidth()
-    );
+      lastScrollLeft =
+        track.scrollLeft;
 
+      stableFrames = 0;
+
+      settleRaf =
+        requestAnimationFrame(check);
+    };
+
+    instantScrollTo(slideWidth());
     syncUI(0);
 
     if ("onscrollend" in track) {
       const onScrollEnd = () => {
-        if (isAutoJumping) {
-          return;
-        }
-
+        if (isAutoJumping) return;
         onScrollSettled();
       };
 
@@ -2258,10 +1819,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     } else {
       const onScroll = () => {
-        if (isAutoJumping) {
-          return;
-        }
-
+        if (isAutoJumping) return;
         watchScrollSettled();
       };
 
@@ -2279,19 +1837,14 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (nextButton) {
-      const onNext = (
-        event
-      ) => {
+      const onNext = (event) => {
         event.preventDefault();
 
-        if (
-          isAnimatingByButton
-        ) {
+        if (isAnimatingByButton) {
           return;
         }
 
-        isAnimatingByButton =
-          true;
+        isAnimatingByButton = true;
 
         if (
           currentRealIndex ===
@@ -2326,23 +1879,16 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (prevButton) {
-      const onPrev = (
-        event
-      ) => {
+      const onPrev = (event) => {
         event.preventDefault();
 
-        if (
-          isAnimatingByButton
-        ) {
+        if (isAnimatingByButton) {
           return;
         }
 
-        isAnimatingByButton =
-          true;
+        isAnimatingByButton = true;
 
-        if (
-          currentRealIndex === 0
-        ) {
+        if (currentRealIndex === 0) {
           setActiveDot(
             realCount - 1
           );
@@ -2351,10 +1897,7 @@ document.addEventListener("DOMContentLoaded", () => {
             realCount - 1
           );
 
-          moveToDomIndex(
-            0,
-            true
-          );
+          moveToDomIndex(0, true);
         } else {
           moveToRealIndex(
             currentRealIndex - 1,
@@ -2376,21 +1919,16 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     }
 
-    const onPointerUp = (
-      event
-    ) => {
+    const onPointerUp = (event) => {
       if (
-        overlay.classList.contains(
-          "active"
-        )
+        overlay.classList.contains("active")
       ) {
         return;
       }
 
-      const img =
-        event.target.closest(
-          ".wb-snap__slide img"
-        );
+      const img = event.target.closest(
+        ".wb-snap__slide img"
+      );
 
       if (!img) return;
 
@@ -2398,9 +1936,7 @@ document.addEventListener("DOMContentLoaded", () => {
       event.stopPropagation();
 
       const slideElement =
-        img.closest(
-          "[data-wb-slide]"
-        );
+        img.closest("[data-wb-slide]");
 
       const indexInAll =
         allSlides.indexOf(
@@ -2410,16 +1946,14 @@ document.addEventListener("DOMContentLoaded", () => {
       let realIndex;
 
       if (indexInAll === 0) {
-        realIndex =
-          realCount - 1;
+        realIndex = realCount - 1;
       } else if (
         indexInAll ===
         realCount + 1
       ) {
         realIndex = 0;
       } else {
-        realIndex =
-          indexInAll - 1;
+        realIndex = indexInAll - 1;
       }
 
       openZoomCarousel(
@@ -2446,13 +1980,10 @@ document.addEventListener("DOMContentLoaded", () => {
       instantScrollTo(
         realToDom(
           currentRealIndex
-        ) *
-          slideWidth()
+        ) * slideWidth()
       );
 
-      syncUI(
-        currentRealIndex
-      );
+      syncUI(currentRealIndex);
     };
 
     window.addEventListener(
@@ -2469,11 +2000,9 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   const mount = (isMobile) => {
-    cleanupFns.forEach(
-      (cleanup) => {
-        cleanup();
-      }
-    );
+    cleanupFns.forEach((cleanup) => {
+      cleanup();
+    });
 
     cleanupFns = [];
 
@@ -2486,18 +2015,14 @@ document.addEventListener("DOMContentLoaded", () => {
       : tplDesktop;
 
     root.appendChild(
-      template.content.cloneNode(
-        true
-      )
+      template.content.cloneNode(true)
     );
 
     const activeRoot = isMobile
       ? root.querySelector(
           ".item-carousel-v2"
         )
-      : root.querySelector(
-          ".item"
-        );
+      : root.querySelector(".item");
 
     if (!activeRoot) {
       console.warn(
@@ -2530,8 +2055,6 @@ document.addEventListener("DOMContentLoaded", () => {
       onMqChange
     );
   } else {
-    mq.addListener(
-      onMqChange
-    );
+    mq.addListener(onMqChange);
   }
 });
