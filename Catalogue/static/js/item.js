@@ -54,7 +54,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const DESKTOP_ZOOM_SCALE = 2.25;
   const DESKTOP_SLIDE_DURATION = 170;
   const DESKTOP_WHEEL_THRESHOLD = 44;
- const DESKTOP_WHEEL_RELEASE_DELAY = 100;
 
   let cleanupFns = [];
   let zoomSourceImgs = [];
@@ -63,12 +62,11 @@ document.addEventListener("DOMContentLoaded", () => {
   let desktopAnimating = false;
   let desktopAnimationTimer = null;
 
-  let desktopWheelLocked = false;
-  let desktopWheelReleaseTimer = null;
   let desktopWheelAccumX = 0;
   let desktopWheelAccumY = 0;
   let desktopWheelDirection = null;
-  let desktopWheelResetTimer = null;
+  let desktopWheelTriggeredDirection = null;
+  let desktopWheelGestureTimer = null;
 
   let dragState = {
     active: false,
@@ -166,38 +164,17 @@ document.addEventListener("DOMContentLoaded", () => {
       desktopAnimationTimer = null;
     }
 
-    if (desktopWheelReleaseTimer) {
-      clearTimeout(desktopWheelReleaseTimer);
-      desktopWheelReleaseTimer = null;
-    }
-
-    if (desktopWheelResetTimer) {
-      clearTimeout(desktopWheelResetTimer);
-      desktopWheelResetTimer = null;
+    if (desktopWheelGestureTimer) {
+      clearTimeout(desktopWheelGestureTimer);
+      desktopWheelGestureTimer = null;
     }
 
     desktopAnimating = false;
-    desktopWheelLocked = false;
+
     desktopWheelAccumX = 0;
     desktopWheelAccumY = 0;
     desktopWheelDirection = null;
-  };
-
-  const keepDesktopWheelLocked = () => {
-    desktopWheelLocked = true;
-  
-    if (desktopWheelReleaseTimer) {
-      clearTimeout(desktopWheelReleaseTimer);
-    }
-  
-    desktopWheelReleaseTimer = setTimeout(() => {
-      desktopWheelLocked = false;
-      desktopWheelReleaseTimer = null;
-  
-      desktopWheelAccumX = 0;
-      desktopWheelAccumY = 0;
-      desktopWheelDirection = null;
-    }, DESKTOP_WHEEL_RELEASE_DELAY);
+    desktopWheelTriggeredDirection = null;
   };
 
   const configureDesktopTrack = () => {
@@ -502,51 +479,43 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!zoomSourceImgs.length) {
       return;
     }
-  
+
     if (desktopAnimating) {
       return;
     }
-  
+
     resetZoomState();
-  
+
     zoomIndex =
       normalizeZoomIndex(index);
-  
+
     const destination =
       `translate3d(${-zoomIndex * 100}%, 0, 0)`;
-  
+
     if (!animate) {
       zoomTrack.style.transition = "none";
       zoomTrack.style.transform = destination;
       return;
     }
-  
+
     desktopAnimating = true;
-    keepDesktopWheelLocked();
-  
+
     zoomTrack.style.transition =
       `transform ${DESKTOP_SLIDE_DURATION}ms cubic-bezier(0.22, 1, 0.36, 1)`;
-  
+
     requestAnimationFrame(() => {
       zoomTrack.style.transform =
         destination;
     });
-  
+
     desktopAnimationTimer =
       setTimeout(() => {
         zoomTrack.style.transition = "none";
         zoomTrack.style.transform =
           destination;
-  
+
         desktopAnimating = false;
         desktopAnimationTimer = null;
-  
-        /*
-         * Do not unlock here.
-         * The wheel handler will keep extending the
-         * lock until the trackpad has completely stopped.
-         */
-        keepDesktopWheelLocked();
       }, DESKTOP_SLIDE_DURATION + 30);
   };
 
@@ -707,35 +676,27 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   const attachOverlayListeners = () => {
-    const resetDesktopWheelGesture =
-      () => {
-        desktopWheelAccumX = 0;
-        desktopWheelAccumY = 0;
-        desktopWheelDirection = null;
+    const resetDesktopWheelGesture = () => {
+      desktopWheelAccumX = 0;
+      desktopWheelAccumY = 0;
+      desktopWheelDirection = null;
+      desktopWheelTriggeredDirection = null;
 
-        if (desktopWheelResetTimer) {
-          clearTimeout(
-            desktopWheelResetTimer
-          );
-        }
+      if (desktopWheelGestureTimer) {
+        clearTimeout(desktopWheelGestureTimer);
+        desktopWheelGestureTimer = null;
+      }
+    };
 
-        desktopWheelResetTimer = null;
-      };
+    const scheduleDesktopWheelReset = () => {
+      if (desktopWheelGestureTimer) {
+        clearTimeout(desktopWheelGestureTimer);
+      }
 
-    const scheduleDesktopWheelReset =
-      () => {
-        if (desktopWheelResetTimer) {
-          clearTimeout(
-            desktopWheelResetTimer
-          );
-        }
-
-        desktopWheelResetTimer =
-          setTimeout(
-            resetDesktopWheelGesture,
-            110
-          );
-      };
+      desktopWheelGestureTimer = setTimeout(() => {
+        resetDesktopWheelGesture();
+      }, 140);
+    };
 
     const onWheel = (event) => {
       if (
@@ -760,8 +721,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (
           event.shiftKey &&
-          event.deltaY &&
-          !event.deltaX
+          event.deltaY !== 0 &&
+          event.deltaX === 0
         ) {
           zoomedSlide.scrollLeft +=
             event.deltaY;
@@ -776,56 +737,38 @@ document.addEventListener("DOMContentLoaded", () => {
 
       event.preventDefault();
 
-      if (desktopAnimating) {
-        return;
-      }
-      
-      if (desktopWheelLocked) {
-        const momentumIsSmall =
-          Math.abs(event.deltaX) < 12 &&
-          Math.abs(event.deltaY) < 12;
-      
-        if (momentumIsSmall) {
-          return;
-        }
-      
-        desktopWheelLocked = false;
-      
-        if (desktopWheelReleaseTimer) {
-          clearTimeout(desktopWheelReleaseTimer);
-          desktopWheelReleaseTimer = null;
-        }
-      
-        desktopWheelAccumX = 0;
-        desktopWheelAccumY = 0;
-        desktopWheelDirection = null;
-      }
+      const deltaX = event.deltaX;
+      const deltaY = event.deltaY;
 
-      const absX =
-        Math.abs(event.deltaX);
+      const absoluteX =
+        Math.abs(deltaX);
 
-      const absY =
-        Math.abs(event.deltaY);
+      const absoluteY =
+        Math.abs(deltaY);
 
       if (
-        absX < 2 &&
-        absY < 2
+        absoluteX < 1 &&
+        absoluteY < 1
       ) {
         return;
       }
 
       scheduleDesktopWheelReset();
 
+      if (desktopAnimating) {
+        return;
+      }
+
       if (!desktopWheelDirection) {
         if (
-          absX >
-          absY * 1.15
+          absoluteX >
+          absoluteY * 1.15
         ) {
           desktopWheelDirection =
             "horizontal";
         } else if (
-          absY >
-          absX * 1.15
+          absoluteY >
+          absoluteX * 1.15
         ) {
           desktopWheelDirection =
             "vertical";
@@ -838,101 +781,152 @@ document.addEventListener("DOMContentLoaded", () => {
         desktopWheelDirection ===
         "horizontal"
       ) {
+        const currentDirection =
+          deltaX > 0
+            ? "next"
+            : "previous";
+
+        if (
+          desktopWheelTriggeredDirection
+        ) {
+          const isOppositeDirection =
+            currentDirection !==
+            desktopWheelTriggeredDirection;
+
+          const isStrongNewSwipe =
+            absoluteX >= 18;
+
+          if (
+            !isOppositeDirection ||
+            !isStrongNewSwipe
+          ) {
+            return;
+          }
+
+          desktopWheelAccumX = 0;
+
+          desktopWheelTriggeredDirection =
+            currentDirection;
+
+          if (
+            currentDirection === "next"
+          ) {
+            goToDesktopImage(
+              zoomIndex + 1,
+              true
+            );
+          } else {
+            goToDesktopImage(
+              zoomIndex - 1,
+              true
+            );
+          }
+
+          return;
+        }
+
         desktopWheelAccumX +=
-          event.deltaX;
-      
+          deltaX;
+
         if (
           desktopWheelAccumX >=
           DESKTOP_WHEEL_THRESHOLD
         ) {
           desktopWheelAccumX = 0;
-          desktopWheelAccumY = 0;
-          desktopWheelDirection = null;
-      
-          keepDesktopWheelLocked();
-      
+
+          desktopWheelTriggeredDirection =
+            "next";
+
           goToDesktopImage(
             zoomIndex + 1,
             true
           );
-      
+
           return;
         }
-      
+
         if (
           desktopWheelAccumX <=
           -DESKTOP_WHEEL_THRESHOLD
         ) {
           desktopWheelAccumX = 0;
-          desktopWheelAccumY = 0;
-          desktopWheelDirection = null;
-      
-          keepDesktopWheelLocked();
-      
+
+          desktopWheelTriggeredDirection =
+            "previous";
+
           goToDesktopImage(
             zoomIndex - 1,
             true
           );
-      
+
           return;
         }
-      
+
         return;
       }
 
-      desktopWheelAccumY +=
-        event.deltaY;
+      if (
+        desktopWheelDirection ===
+        "vertical"
+      ) {
+        desktopWheelAccumY +=
+          deltaY;
 
-      if (desktopWheelAccumY < 0) {
+        if (
+          desktopWheelAccumY < 0
+        ) {
+          desktopWheelAccumY =
+            Math.max(
+              desktopWheelAccumY,
+              -35
+            );
+
+          overlay.style.transition =
+            "none";
+
+          overlay.style.transform =
+            `translateY(${desktopWheelAccumY * 0.12}px)`;
+
+          overlay.style.opacity = "1";
+
+          return;
+        }
+
         desktopWheelAccumY =
           Math.max(
-            desktopWheelAccumY,
-            -35
+            0,
+            desktopWheelAccumY
+          );
+
+        const visualDistance =
+          Math.min(
+            desktopWheelAccumY * 0.55,
+            window.innerHeight
+          );
+
+        const opacity =
+          Math.max(
+            0.45,
+            1 -
+              desktopWheelAccumY /
+                430
           );
 
         overlay.style.transition =
           "none";
 
         overlay.style.transform =
-          `translateY(${desktopWheelAccumY * 0.12}px)`;
+          `translateY(${visualDistance}px)`;
 
-        overlay.style.opacity = "1";
+        overlay.style.opacity =
+          String(opacity);
 
-        return;
-      }
-
-      desktopWheelAccumY =
-        Math.max(
-          0,
-          desktopWheelAccumY
-        );
-
-      const distance = Math.min(
-        desktopWheelAccumY * 0.55,
-        window.innerHeight
-      );
-
-      overlay.style.transition =
-        "none";
-
-      overlay.style.transform =
-        `translateY(${distance}px)`;
-
-      overlay.style.opacity =
-        String(
-          Math.max(
-            0.45,
-            1 -
-              desktopWheelAccumY /
-                430
-          )
-        );
-
-      if (
-        desktopWheelAccumY >= 115
-      ) {
-        resetDesktopWheelGesture();
-        closeZoomCarousel();
+        if (
+          desktopWheelAccumY >= 115
+        ) {
+          resetDesktopWheelGesture();
+          closeZoomCarousel();
+        }
       }
     };
 
