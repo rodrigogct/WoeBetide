@@ -4,7 +4,6 @@
 // overlay zoom: click to zoom at point, click again to unzoom
 // zoomed image supports trackpad scroll + click-drag pan
 // desktop overlay carousel supports Mac trackpad horizontal swipe
-// desktop overlay can also be dragged downward to close
 
 document.addEventListener("DOMContentLoaded", () => {
   const root = document.getElementById("item-layout-root-v2");
@@ -26,7 +25,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   const zoomTrack = overlay.querySelector("[data-zoom-track]");
-
   if (!zoomTrack) {
     console.warn("[item-zoom] missing [data-zoom-track]");
     return;
@@ -36,16 +34,10 @@ document.addEventListener("DOMContentLoaded", () => {
     overlay.querySelector(".close-v2") ||
     overlay.querySelector(".close");
 
-  const catalogue = Array.from(
-    document.querySelectorAll(".catalogue")
-  );
-
-  const navbar = Array.from(
-    document.querySelectorAll(".navbar")
-  );
+  const catalogue = Array.from(document.querySelectorAll(".catalogue"));
+  const navbar = Array.from(document.querySelectorAll(".navbar"));
 
   let backdrop = overlay.querySelector(".zoom-backdrop");
-
   if (!backdrop) {
     backdrop = document.createElement("div");
     backdrop.className = "zoom-backdrop";
@@ -79,80 +71,50 @@ document.addEventListener("DOMContentLoaded", () => {
     startY: 0,
     deltaX: 0,
     deltaY: 0,
-    lockedDirection: null,
+    lockedDirection: null, // "x" | "y" | null
   };
-
-  let desktopCloseState = {
-    active: false,
-    pointerId: null,
-    startX: 0,
-    startY: 0,
-    deltaX: 0,
-    deltaY: 0,
-    lockedDirection: null,
-    moved: false,
-  };
-
-  let suppressNextOverlayClick = false;
 
   const SWIPE_CLOSE_THRESHOLD = 140;
   const SWIPE_CLOSE_DIRECTION_LOCK = 12;
   const SWIPE_CLOSE_MAX_HORIZONTAL = 90;
 
-  const DESKTOP_CLOSE_THRESHOLD = 120;
-  const DESKTOP_CLOSE_DIRECTION_LOCK = 10;
-  const DESKTOP_CLOSE_MAX_HORIZONTAL = 110;
-
-  const clamp = (value, min, max) =>
-    Math.min(Math.max(value, min), max);
+  const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
 
   const ensureSrc = (img) => {
     if (!img) return;
     if (img.getAttribute("src")) return;
-
-    const dataSrc = img.getAttribute("data-src");
-
-    if (dataSrc) {
-      img.setAttribute("src", dataSrc);
-    }
+    const ds = img.getAttribute("data-src");
+    if (ds) img.setAttribute("src", ds);
   };
 
-  const normalizeZoomIndex = (index) => {
+  const normalizeZoomIndex = (idx) => {
     const total = zoomSourceImgs.length || 1;
-    return ((index % total) + total) % total;
+    return ((idx % total) + total) % total;
   };
 
   const getZoomSlides = () =>
-    Array.from(
-      zoomTrack.querySelectorAll("[data-zoom-slide]")
-    );
+    Array.from(zoomTrack.querySelectorAll("[data-zoom-slide]"));
 
   const getZoomedSlide = () =>
-    zoomTrack.querySelector(
-      '.zoom-slide[data-zoomed="true"]'
-    );
+    zoomTrack.querySelector('.zoom-slide[data-zoomed="true"]');
 
   const hideChrome = () => {
-    catalogue.forEach((element) => {
-      element.dataset.prevDisplay = element.style.display;
-      element.style.display = "none";
+    catalogue.forEach((el) => {
+      el.dataset.prevDisplay = el.style.display;
+      el.style.display = "none";
     });
-
-    navbar.forEach((element) => {
-      element.dataset.prevDisplay = element.style.display;
-      element.style.display = "none";
+    navbar.forEach((el) => {
+      el.dataset.prevDisplay = el.style.display;
+      el.style.display = "none";
     });
   };
 
   const showChrome = () => {
-    catalogue.forEach((element) => {
-      element.style.display =
-        element.dataset.prevDisplay || "";
+    catalogue.forEach((el) => {
+      el.style.display = el.dataset.prevDisplay || "";
     });
-
-    navbar.forEach((element) => {
-      element.style.display =
-        element.dataset.prevDisplay || "";
+    navbar.forEach((el) => {
+      el.style.display = el.dataset.prevDisplay || "";
     });
   };
 
@@ -160,7 +122,6 @@ document.addEventListener("DOMContentLoaded", () => {
     overlay.style.transition = animate
       ? "opacity 0.25s ease, transform 0.25s ease"
       : "";
-
     overlay.style.transform = "translateY(0)";
     overlay.style.opacity = "1";
   };
@@ -170,10 +131,8 @@ document.addEventListener("DOMContentLoaded", () => {
     overlay.style.opacity = "0";
     overlay.style.pointerEvents = "none";
     overlay.style.transform = "translateY(0)";
-
     overlay.classList.remove("active");
     document.body.classList.remove("lock-scroll");
-
     zoomTrack.innerHTML = "";
   };
 
@@ -182,7 +141,6 @@ document.addEventListener("DOMContentLoaded", () => {
     overlay.style.opacity = "1";
     overlay.style.pointerEvents = "auto";
     overlay.style.transform = "translateY(0)";
-
     overlay.classList.add("active");
     document.body.classList.add("lock-scroll");
   };
@@ -203,16 +161,8 @@ document.addEventListener("DOMContentLoaded", () => {
       inner.className = "zoom-slide-inner";
 
       const zoomImg = document.createElement("img");
-
-      zoomImg.src =
-        img.getAttribute("src") ||
-        img.getAttribute("data-src") ||
-        "";
-
-      zoomImg.alt =
-        img.getAttribute("alt") ||
-        `Image ${index + 1}`;
-
+      zoomImg.src = img.getAttribute("src") || img.getAttribute("data-src") || "";
+      zoomImg.alt = img.getAttribute("alt") || `Image ${index + 1}`;
       zoomImg.draggable = false;
 
       inner.appendChild(zoomImg);
@@ -221,23 +171,13 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   };
 
-  const clearSlideZoom = (
-    slide,
-    resetScroll = true
-  ) => {
+  const clearSlideZoom = (slide, resetScroll = true) => {
     if (!slide) return;
 
-    const inner = slide.querySelector(
-      ".zoom-slide-inner"
-    );
-
+    const inner = slide.querySelector(".zoom-slide-inner");
     const img = slide.querySelector("img");
 
-    slide.classList.remove(
-      "is-zoomed",
-      "is-dragging"
-    );
-
+    slide.classList.remove("is-zoomed", "is-dragging");
     slide.setAttribute("data-zoomed", "false");
 
     if (inner) {
@@ -261,31 +201,19 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   const resetZoomState = () => {
-    getZoomSlides().forEach((slide) => {
-      clearSlideZoom(slide, true);
-    });
-
+    getZoomSlides().forEach((slide) => clearSlideZoom(slide, true));
     zoomTrack.classList.remove("is-locked");
-
     dragState.active = false;
     dragState.pointerId = null;
     dragState.slide = null;
     dragState.moved = false;
   };
 
-  const zoomSlideAtPoint = (
-    slide,
-    clientX,
-    clientY
-  ) => {
+  const zoomSlideAtPoint = (slide, clientX, clientY) => {
     if (!slide) return;
 
-    const inner = slide.querySelector(
-      ".zoom-slide-inner"
-    );
-
+    const inner = slide.querySelector(".zoom-slide-inner");
     const img = slide.querySelector("img");
-
     if (!inner || !img) return;
 
     const imgRect = img.getBoundingClientRect();
@@ -293,29 +221,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (!imgRect.width || !imgRect.height) return;
 
-    const relativeX = clamp(
-      (clientX - imgRect.left) / imgRect.width,
-      0,
-      1
-    );
+    const relX = clamp((clientX - imgRect.left) / imgRect.width, 0, 1);
+    const relY = clamp((clientY - imgRect.top) / imgRect.height, 0, 1);
 
-    const relativeY = clamp(
-      (clientY - imgRect.top) / imgRect.height,
-      0,
-      1
-    );
+    const viewportOffsetX = clientX - slideRect.left;
+    const viewportOffsetY = clientY - slideRect.top;
 
-    const viewportOffsetX =
-      clientX - slideRect.left;
-
-    const viewportOffsetY =
-      clientY - slideRect.top;
-
-    const minScaleForHorizontalPan =
-      (slideRect.width + 120) / imgRect.width;
-
-    const minScaleForVerticalPan =
-      (slideRect.height + 120) / imgRect.height;
+    // Important fix:
+    // make the zoomed image bigger than the viewport in both axes
+    // so portrait images can also pan left/right on desktop
+    const minScaleForHorizontalPan = (slideRect.width + 120) / imgRect.width;
+    const minScaleForVerticalPan = (slideRect.height + 120) / imgRect.height;
 
     const scale = Math.max(
       DESKTOP_ZOOM_SCALE,
@@ -323,73 +239,42 @@ document.addEventListener("DOMContentLoaded", () => {
       minScaleForVerticalPan
     );
 
-    const zoomWidth = Math.round(
-      imgRect.width * scale
-    );
-
-    const zoomHeight = Math.round(
-      imgRect.height * scale
-    );
+    const zoomW = Math.round(imgRect.width * scale);
+    const zoomH = Math.round(imgRect.height * scale);
 
     resetZoomState();
 
     slide.classList.add("is-zoomed");
     slide.setAttribute("data-zoomed", "true");
 
-    inner.style.width = `${zoomWidth}px`;
-    inner.style.height = `${zoomHeight}px`;
-    inner.style.minWidth = `${zoomWidth}px`;
-    inner.style.minHeight = `${zoomHeight}px`;
+    inner.style.width = `${zoomW}px`;
+    inner.style.height = `${zoomH}px`;
+    inner.style.minWidth = `${zoomW}px`;
+    inner.style.minHeight = `${zoomH}px`;
 
-    img.style.width = `${zoomWidth}px`;
-    img.style.height = `${zoomHeight}px`;
+    img.style.width = `${zoomW}px`;
+    img.style.height = `${zoomH}px`;
     img.style.maxWidth = "none";
     img.style.maxHeight = "none";
 
     zoomTrack.classList.add("is-locked");
 
     requestAnimationFrame(() => {
-      const maxLeft = Math.max(
-        0,
-        slide.scrollWidth - slide.clientWidth
-      );
+      const maxLeft = Math.max(0, slide.scrollWidth - slide.clientWidth);
+      const maxTop = Math.max(0, slide.scrollHeight - slide.clientHeight);
 
-      const maxTop = Math.max(
-        0,
-        slide.scrollHeight - slide.clientHeight
-      );
+      const targetLeft = relX * zoomW - viewportOffsetX;
+      const targetTop = relY * zoomH - viewportOffsetY;
 
-      const targetLeft =
-        relativeX * zoomWidth -
-        viewportOffsetX;
-
-      const targetTop =
-        relativeY * zoomHeight -
-        viewportOffsetY;
-
-      slide.scrollLeft = clamp(
-        targetLeft,
-        0,
-        maxLeft
-      );
-
-      slide.scrollTop = clamp(
-        targetTop,
-        0,
-        maxTop
-      );
+      slide.scrollLeft = clamp(targetLeft, 0, maxLeft);
+      slide.scrollTop = clamp(targetTop, 0, maxTop);
     });
   };
 
-  const toggleSlideZoomAtPoint = (
-    slide,
-    clientX,
-    clientY
-  ) => {
+  const toggleSlideZoomAtPoint = (slide, clientX, clientY) => {
     if (!slide) return;
 
-    const isZoomed =
-      slide.getAttribute("data-zoomed") === "true";
+    const isZoomed = slide.getAttribute("data-zoomed") === "true";
 
     if (isZoomed) {
       clearSlideZoom(slide, true);
@@ -397,25 +282,14 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    zoomSlideAtPoint(
-      slide,
-      clientX,
-      clientY
-    );
+    zoomSlideAtPoint(slide, clientX, clientY);
   };
 
-  const scrollZoomTo = (
-    index,
-    smooth = true
-  ) => {
-    const slides = zoomTrack.querySelectorAll(
-      "[data-zoom-slide]"
-    );
-
+  const scrollZoomTo = (index, smooth = true) => {
+    const slides = zoomTrack.querySelectorAll("[data-zoom-slide]");
     if (!slides.length) return;
 
     resetZoomState();
-
     zoomIndex = normalizeZoomIndex(index);
 
     zoomTrack.scrollTo({
@@ -426,38 +300,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const syncZoomIndexFromScroll = () => {
     const width = zoomTrack.clientWidth || 1;
-
-    zoomIndex = Math.round(
-      zoomTrack.scrollLeft / width
-    );
-
-    zoomIndex = Math.max(
-      0,
-      Math.min(
-        zoomIndex,
-        zoomSourceImgs.length - 1
-      )
-    );
+    zoomIndex = Math.round(zoomTrack.scrollLeft / width);
+    zoomIndex = Math.max(0, Math.min(zoomIndex, zoomSourceImgs.length - 1));
   };
 
   const watchZoomScrollSettled = () => {
     cancelAnimationFrame(zoomScrollRaf);
 
     const check = () => {
-      const currentScrollLeft =
-        zoomTrack.scrollLeft;
+      const now = zoomTrack.scrollLeft;
 
-      if (
-        Math.abs(
-          currentScrollLeft -
-            zoomLastScrollLeft
-        ) < 0.5
-      ) {
+      if (Math.abs(now - zoomLastScrollLeft) < 0.5) {
         zoomStableFrames += 1;
       } else {
         zoomStableFrames = 0;
-        zoomLastScrollLeft =
-          currentScrollLeft;
+        zoomLastScrollLeft = now;
       }
 
       if (zoomStableFrames >= 3) {
@@ -466,35 +323,18 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      zoomScrollRaf =
-        requestAnimationFrame(check);
+      zoomScrollRaf = requestAnimationFrame(check);
     };
 
-    zoomLastScrollLeft =
-      zoomTrack.scrollLeft;
-
+    zoomLastScrollLeft = zoomTrack.scrollLeft;
     zoomStableFrames = 0;
-
-    zoomScrollRaf =
-      requestAnimationFrame(check);
+    zoomScrollRaf = requestAnimationFrame(check);
   };
 
   const attachOverlayListeners = () => {
     const onZoomTrackScroll = () => {
-      if (
-        !overlay.classList.contains("active")
-      ) {
-        return;
-      }
-
-      if (
-        zoomTrack.classList.contains(
-          "is-locked"
-        )
-      ) {
-        return;
-      }
-
+      if (!overlay.classList.contains("active")) return;
+      if (zoomTrack.classList.contains("is-locked")) return;
       watchZoomScrollSettled();
     };
 
@@ -512,69 +352,53 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     };
 
-    const onWheel = (event) => {
-      if (
-        !overlay.classList.contains("active")
-      ) {
-        return;
-      }
+    const onWheel = (e) => {
+      if (!overlay.classList.contains("active")) return;
 
-      const zoomedSlide =
-        getZoomedSlide();
+      const zoomedSlide = getZoomedSlide();
 
+      // If the image itself is zoomed-in, keep the existing behavior:
+      // trackpad / mouse wheel pans around the enlarged image.
       if (zoomedSlide) {
-        event.preventDefault();
+        e.preventDefault();
 
-        zoomedSlide.scrollLeft +=
-          event.deltaX;
+        zoomedSlide.scrollLeft += e.deltaX;
+        zoomedSlide.scrollTop += e.deltaY;
 
-        zoomedSlide.scrollTop +=
-          event.deltaY;
-
-        if (
-          event.shiftKey &&
-          event.deltaY !== 0 &&
-          event.deltaX === 0
-        ) {
-          zoomedSlide.scrollLeft +=
-            event.deltaY;
+        if (e.shiftKey && e.deltaY !== 0 && e.deltaX === 0) {
+          zoomedSlide.scrollLeft += e.deltaY;
         }
 
         return;
       }
 
-      if (window.innerWidth <= 700) {
-        return;
-      }
+      // Do not touch mobile behavior.
+      // Phone swipe remains controlled by the touch handlers below.
+      if (window.innerWidth <= 700) return;
 
-      const absoluteX = Math.abs(
-        event.deltaX
-      );
+      const absX = Math.abs(e.deltaX);
+      const absY = Math.abs(e.deltaY);
 
-      const absoluteY = Math.abs(
-        event.deltaY
-      );
+      // Only react to clearly horizontal trackpad gestures.
+      // This avoids accidental image changes from vertical scrolling.
+      if (absX < 8 || absX < absY * 1.2) return;
 
-      if (
-        absoluteX < 8 ||
-        absoluteX < absoluteY * 1.2
-      ) {
-        return;
-      }
+      e.preventDefault();
 
-      event.preventDefault();
-
-      if (wheelGestureTimer) {
-        clearTimeout(wheelGestureTimer);
-      }
+      // Important:
+      // Mac trackpads continue firing wheel events after your fingers stop moving.
+      // We treat the full momentum sequence as ONE gesture.
+      if (wheelGestureTimer) clearTimeout(wheelGestureTimer);
 
       wheelGestureTimer = setTimeout(() => {
         resetWheelGesture();
       }, 220);
 
+      // Once one image change has happened during this gesture,
+      // ignore the remaining inertia so it doesn't bounce back.
       if (wheelHasTriggered) return;
 
-      wheelAccumX += event.deltaX;
+      wheelAccumX += e.deltaX;
 
       const WHEEL_THRESHOLD = 55;
 
@@ -592,162 +416,85 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     };
 
-    const onClick = (event) => {
-      if (window.innerWidth <= 700) {
-        return;
-      }
-
-      if (suppressNextOverlayClick) {
-        event.preventDefault();
-        event.stopPropagation();
-        return;
-      }
-
+    const onClick = (e) => {
+      if (window.innerWidth <= 700) return;
       if (dragState.moved) return;
 
-      const slide = event.target.closest(
-        ".zoom-slide"
-      );
-
+      const slide = e.target.closest(".zoom-slide");
       if (!slide) return;
 
-      const isZoomed =
-        slide.getAttribute("data-zoomed") ===
-        "true";
+      const isZoomed = slide.getAttribute("data-zoomed") === "true";
 
-      event.preventDefault();
-      event.stopPropagation();
+      e.preventDefault();
+      e.stopPropagation();
 
       if (isZoomed) {
         clearSlideZoom(slide, true);
-        zoomTrack.classList.remove(
-          "is-locked"
-        );
+        zoomTrack.classList.remove("is-locked");
         return;
       }
 
-      const img = event.target.closest(
-        ".zoom-slide img"
-      );
-
+      const img = e.target.closest(".zoom-slide img");
       if (!img) return;
 
-      toggleSlideZoomAtPoint(
-        slide,
-        event.clientX,
-        event.clientY
-      );
+      toggleSlideZoomAtPoint(slide, e.clientX, e.clientY);
     };
 
-    const onPointerDown = (event) => {
-      if (window.innerWidth <= 700) {
-        return;
-      }
+    const onPointerDown = (e) => {
+      if (window.innerWidth <= 700) return;
 
-      const slide = event.target.closest(
-        ".zoom-slide"
-      );
-
+      const slide = e.target.closest(".zoom-slide");
       if (!slide) return;
-
-      if (
-        slide.getAttribute("data-zoomed") !==
-        "true"
-      ) {
-        return;
-      }
+      if (slide.getAttribute("data-zoomed") !== "true") return;
 
       dragState.active = true;
-      dragState.pointerId = event.pointerId;
+      dragState.pointerId = e.pointerId;
       dragState.slide = slide;
-      dragState.startX = event.clientX;
-      dragState.startY = event.clientY;
-
-      dragState.startScrollLeft =
-        slide.scrollLeft;
-
-      dragState.startScrollTop =
-        slide.scrollTop;
-
+      dragState.startX = e.clientX;
+      dragState.startY = e.clientY;
+      dragState.startScrollLeft = slide.scrollLeft;
+      dragState.startScrollTop = slide.scrollTop;
       dragState.moved = false;
 
       slide.classList.add("is-dragging");
 
       if (slide.setPointerCapture) {
         try {
-          slide.setPointerCapture(
-            event.pointerId
-          );
-        } catch (error) {
-          // Pointer capture is optional.
-        }
+          slide.setPointerCapture(e.pointerId);
+        } catch (_) {}
       }
 
-      event.preventDefault();
+      e.preventDefault();
     };
 
-    const onPointerMove = (event) => {
+    const onPointerMove = (e) => {
       if (!dragState.active) return;
-
-      if (
-        dragState.pointerId !==
-        event.pointerId
-      ) {
-        return;
-      }
-
+      if (dragState.pointerId !== e.pointerId) return;
       if (!dragState.slide) return;
 
-      const deltaX =
-        event.clientX - dragState.startX;
+      const dx = e.clientX - dragState.startX;
+      const dy = e.clientY - dragState.startY;
 
-      const deltaY =
-        event.clientY - dragState.startY;
-
-      if (
-        Math.abs(deltaX) > 3 ||
-        Math.abs(deltaY) > 3
-      ) {
+      if (Math.abs(dx) > 3 || Math.abs(dy) > 3) {
         dragState.moved = true;
       }
 
-      dragState.slide.scrollLeft =
-        dragState.startScrollLeft -
-        deltaX;
+      dragState.slide.scrollLeft = dragState.startScrollLeft - dx;
+      dragState.slide.scrollTop = dragState.startScrollTop - dy;
 
-      dragState.slide.scrollTop =
-        dragState.startScrollTop -
-        deltaY;
-
-      event.preventDefault();
+      e.preventDefault();
     };
 
-    const endPointerDrag = (event) => {
+    const endPointerDrag = (e) => {
       if (!dragState.active) return;
-
-      if (
-        dragState.pointerId !==
-        event.pointerId
-      ) {
-        return;
-      }
+      if (dragState.pointerId !== e.pointerId) return;
 
       if (dragState.slide) {
-        dragState.slide.classList.remove(
-          "is-dragging"
-        );
-
-        if (
-          dragState.slide
-            .releasePointerCapture
-        ) {
+        dragState.slide.classList.remove("is-dragging");
+        if (dragState.slide.releasePointerCapture) {
           try {
-            dragState.slide.releasePointerCapture(
-              event.pointerId
-            );
-          } catch (error) {
-            // Pointer capture is optional.
-          }
+            dragState.slide.releasePointerCapture(e.pointerId);
+          } catch (_) {}
         }
       }
 
@@ -760,360 +507,67 @@ document.addEventListener("DOMContentLoaded", () => {
       }, 0);
     };
 
-    const onDesktopClosePointerDown = (
-      event
-    ) => {
-      if (
-        !overlay.classList.contains("active")
-      ) {
-        return;
-      }
-
-      if (window.innerWidth <= 700) {
-        return;
-      }
-
-      if (!event.isPrimary) return;
-      if (getZoomedSlide()) return;
-
-      const targetSlide =
-        event.target.closest(".zoom-slide");
-
-      if (!targetSlide) return;
-
-      desktopCloseState.active = true;
-
-      desktopCloseState.pointerId =
-        event.pointerId;
-
-      desktopCloseState.startX =
-        event.clientX;
-
-      desktopCloseState.startY =
-        event.clientY;
-
-      desktopCloseState.deltaX = 0;
-      desktopCloseState.deltaY = 0;
-
-      desktopCloseState.lockedDirection =
-        null;
-
-      desktopCloseState.moved = false;
-
-      overlay.style.transition = "none";
-
-      if (overlay.setPointerCapture) {
-        try {
-          overlay.setPointerCapture(
-            event.pointerId
-          );
-        } catch (error) {
-          // Pointer capture is optional.
-        }
-      }
-    };
-
-    const onDesktopClosePointerMove = (
-      event
-    ) => {
-      if (!desktopCloseState.active) {
-        return;
-      }
-
-      if (
-        desktopCloseState.pointerId !==
-        event.pointerId
-      ) {
-        return;
-      }
-
-      if (getZoomedSlide()) return;
-
-      desktopCloseState.deltaX =
-        event.clientX -
-        desktopCloseState.startX;
-
-      desktopCloseState.deltaY =
-        event.clientY -
-        desktopCloseState.startY;
-
-      const absoluteX = Math.abs(
-        desktopCloseState.deltaX
-      );
-
-      const absoluteY = Math.abs(
-        desktopCloseState.deltaY
-      );
-
-      if (
-        !desktopCloseState.lockedDirection
-      ) {
-        if (
-          absoluteX <
-            DESKTOP_CLOSE_DIRECTION_LOCK &&
-          absoluteY <
-            DESKTOP_CLOSE_DIRECTION_LOCK
-        ) {
-          return;
-        }
-
-        desktopCloseState.lockedDirection =
-          absoluteY > absoluteX ? "y" : "x";
-      }
-
-      if (
-        desktopCloseState.lockedDirection !==
-        "y"
-      ) {
-        return;
-      }
-
-      desktopCloseState.moved = true;
-      suppressNextOverlayClick = true;
-
-      const rawY =
-        desktopCloseState.deltaY;
-
-      const dragY =
-        rawY > 0
-          ? rawY * 0.72
-          : rawY * 0.08;
-
-      const fade =
-        rawY > 0
-          ? Math.max(
-              0.45,
-              1 - rawY / 430
-            )
-          : 1;
-
-      overlay.style.transform =
-        `translateY(${dragY}px)`;
-
-      overlay.style.opacity =
-        String(fade);
-
-      event.preventDefault();
-    };
-
-    const finishDesktopClosePointer = (
-      event,
-      cancelled = false
-    ) => {
-      if (!desktopCloseState.active) {
-        return;
-      }
-
-      if (
-        desktopCloseState.pointerId !==
-        event.pointerId
-      ) {
-        return;
-      }
-
-      const shouldClose =
-        !cancelled &&
-        desktopCloseState.lockedDirection ===
-          "y" &&
-        desktopCloseState.deltaY >
-          DESKTOP_CLOSE_THRESHOLD &&
-        Math.abs(
-          desktopCloseState.deltaX
-        ) <
-          DESKTOP_CLOSE_MAX_HORIZONTAL &&
-        !getZoomedSlide();
-
-      if (overlay.releasePointerCapture) {
-        try {
-          overlay.releasePointerCapture(
-            event.pointerId
-          );
-        } catch (error) {
-          // Pointer capture is optional.
-        }
-      }
-
-      desktopCloseState.active = false;
-      desktopCloseState.pointerId = null;
-
-      if (desktopCloseState.moved) {
-        suppressNextOverlayClick = true;
-
-        setTimeout(() => {
-          suppressNextOverlayClick = false;
-        }, 0);
-      }
-
-      desktopCloseState.moved = false;
-      desktopCloseState.deltaX = 0;
-      desktopCloseState.deltaY = 0;
-
-      desktopCloseState.lockedDirection =
-        null;
-
-      if (shouldClose) {
-        closeZoomCarousel();
-        return;
-      }
-
-      resetOverlayDragVisual(true);
-    };
-
-    const onDesktopClosePointerUp = (
-      event
-    ) => {
-      finishDesktopClosePointer(
-        event,
-        false
-      );
-    };
-
-    const onDesktopClosePointerCancel = (
-      event
-    ) => {
-      finishDesktopClosePointer(
-        event,
-        true
-      );
-    };
-
-    const onTouchStart = (event) => {
-      if (
-        !overlay.classList.contains("active")
-      ) {
-        return;
-      }
-
+    const onTouchStart = (e) => {
+      if (!overlay.classList.contains("active")) return;
       if (window.innerWidth > 700) return;
-
-      if (
-        !event.touches ||
-        event.touches.length !== 1
-      ) {
-        return;
-      }
-
+      if (!e.touches || e.touches.length !== 1) return;
       if (getZoomedSlide()) return;
 
-      const targetSlide =
-        event.target.closest(".zoom-slide");
-
+      const targetSlide = e.target.closest(".zoom-slide");
       if (!targetSlide) return;
 
       swipeCloseState.active = true;
-
-      swipeCloseState.startX =
-        event.touches[0].clientX;
-
-      swipeCloseState.startY =
-        event.touches[0].clientY;
-
+      swipeCloseState.startX = e.touches[0].clientX;
+      swipeCloseState.startY = e.touches[0].clientY;
       swipeCloseState.deltaX = 0;
       swipeCloseState.deltaY = 0;
-
-      swipeCloseState.lockedDirection =
-        null;
+      swipeCloseState.lockedDirection = null;
 
       overlay.style.transition = "none";
     };
 
-    const onTouchMove = (event) => {
-      if (!swipeCloseState.active) {
-        return;
-      }
-
+    const onTouchMove = (e) => {
+      if (!swipeCloseState.active) return;
       if (window.innerWidth > 700) return;
-
-      if (
-        !event.touches ||
-        event.touches.length !== 1
-      ) {
-        return;
-      }
-
+      if (!e.touches || e.touches.length !== 1) return;
       if (getZoomedSlide()) return;
 
-      const touch = event.touches[0];
+      const touch = e.touches[0];
+      swipeCloseState.deltaX = touch.clientX - swipeCloseState.startX;
+      swipeCloseState.deltaY = touch.clientY - swipeCloseState.startY;
 
-      swipeCloseState.deltaX =
-        touch.clientX -
-        swipeCloseState.startX;
-
-      swipeCloseState.deltaY =
-        touch.clientY -
-        swipeCloseState.startY;
-
-      if (
-        !swipeCloseState.lockedDirection
-      ) {
-        const absoluteX = Math.abs(
-          swipeCloseState.deltaX
-        );
-
-        const absoluteY = Math.abs(
-          swipeCloseState.deltaY
-        );
+      if (!swipeCloseState.lockedDirection) {
+        const absX = Math.abs(swipeCloseState.deltaX);
+        const absY = Math.abs(swipeCloseState.deltaY);
 
         if (
-          absoluteX <
-            SWIPE_CLOSE_DIRECTION_LOCK &&
-          absoluteY <
-            SWIPE_CLOSE_DIRECTION_LOCK
+          absX < SWIPE_CLOSE_DIRECTION_LOCK &&
+          absY < SWIPE_CLOSE_DIRECTION_LOCK
         ) {
           return;
         }
 
-        swipeCloseState.lockedDirection =
-          absoluteY > absoluteX ? "y" : "x";
+        swipeCloseState.lockedDirection = absY > absX ? "y" : "x";
       }
 
-      if (
-        swipeCloseState.lockedDirection !==
-        "y"
-      ) {
-        return;
-      }
+      if (swipeCloseState.lockedDirection !== "y") return;
+      if (swipeCloseState.deltaY <= 0) return;
+      if (Math.abs(swipeCloseState.deltaX) > SWIPE_CLOSE_MAX_HORIZONTAL) return;
 
-      if (swipeCloseState.deltaY <= 0) {
-        return;
-      }
+      const dragY = swipeCloseState.deltaY * 0.55;
+      const fade = Math.max(0.55, 1 - swipeCloseState.deltaY / 420);
 
-      if (
-        Math.abs(
-          swipeCloseState.deltaX
-        ) > SWIPE_CLOSE_MAX_HORIZONTAL
-      ) {
-        return;
-      }
-
-      const dragY =
-        swipeCloseState.deltaY * 0.55;
-
-      const fade = Math.max(
-        0.55,
-        1 - swipeCloseState.deltaY / 420
-      );
-
-      overlay.style.transform =
-        `translateY(${dragY}px)`;
-
-      overlay.style.opacity =
-        String(fade);
+      overlay.style.transform = `translateY(${dragY}px)`;
+      overlay.style.opacity = String(fade);
     };
 
     const onTouchEnd = () => {
-      if (!swipeCloseState.active) {
-        return;
-      }
+      if (!swipeCloseState.active) return;
 
       const shouldClose =
-        swipeCloseState.lockedDirection ===
-          "y" &&
-        swipeCloseState.deltaY >
-          SWIPE_CLOSE_THRESHOLD &&
-        Math.abs(
-          swipeCloseState.deltaX
-        ) < SWIPE_CLOSE_MAX_HORIZONTAL &&
+        swipeCloseState.lockedDirection === "y" &&
+        swipeCloseState.deltaY > SWIPE_CLOSE_THRESHOLD &&
+        Math.abs(swipeCloseState.deltaX) < SWIPE_CLOSE_MAX_HORIZONTAL &&
         !getZoomedSlide();
 
       swipeCloseState.active = false;
@@ -1127,300 +581,75 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     const onTouchCancel = () => {
-      if (!swipeCloseState.active) {
-        return;
-      }
-
+      if (!swipeCloseState.active) return;
       swipeCloseState.active = false;
       resetOverlayDragVisual(true);
     };
 
-    const onBackdropClick = (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-
+    const onBackdropClick = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
       closeZoomCarousel();
     };
 
-    const onClose = (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-
+    const onClose = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
       closeZoomCarousel();
     };
 
-    const onKeyDown = (event) => {
-      if (
-        !overlay.classList.contains("active")
-      ) {
-        return;
-      }
+    const onKeyDown = (e) => {
+      if (!overlay.classList.contains("active")) return;
 
-      if (event.key === "Escape") {
-        closeZoomCarousel();
-      }
-
-      if (event.key === "ArrowLeft") {
-        window.prevImageV2();
-      }
-
-      if (event.key === "ArrowRight") {
-        window.nextImageV2();
-      }
+      if (e.key === "Escape") closeZoomCarousel();
+      if (e.key === "ArrowLeft") window.prevImageV2();
+      if (e.key === "ArrowRight") window.nextImageV2();
     };
 
     const onResize = () => {
-      if (
-        !overlay.classList.contains("active")
-      ) {
-        return;
-      }
-
+      if (!overlay.classList.contains("active")) return;
       scrollZoomTo(zoomIndex, false);
       resetOverlayDragVisual(false);
     };
 
-    zoomTrack.addEventListener(
-      "scroll",
-      onZoomTrackScroll
-    );
+    zoomTrack.addEventListener("scroll", onZoomTrackScroll);
+    zoomTrack.addEventListener("wheel", onWheel, { passive: false });
+    zoomTrack.addEventListener("click", onClick);
+    zoomTrack.addEventListener("pointerdown", onPointerDown);
+    zoomTrack.addEventListener("pointermove", onPointerMove);
+    zoomTrack.addEventListener("pointerup", endPointerDrag);
+    zoomTrack.addEventListener("pointercancel", endPointerDrag);
 
-    zoomTrack.addEventListener(
-      "wheel",
-      onWheel,
-      { passive: false }
-    );
+    overlay.addEventListener("touchstart", onTouchStart, { passive: true });
+    overlay.addEventListener("touchmove", onTouchMove, { passive: true });
+    overlay.addEventListener("touchend", onTouchEnd);
+    overlay.addEventListener("touchcancel", onTouchCancel);
 
-    zoomTrack.addEventListener(
-      "click",
-      onClick
-    );
+    backdrop.addEventListener("click", onBackdropClick);
+    if (closeButton) closeButton.addEventListener("click", onClose);
+    document.addEventListener("keydown", onKeyDown);
+    window.addEventListener("resize", onResize);
 
-    zoomTrack.addEventListener(
-      "pointerdown",
-      onPointerDown
-    );
+    cleanupFns.push(() => zoomTrack.removeEventListener("scroll", onZoomTrackScroll));
+    cleanupFns.push(() => zoomTrack.removeEventListener("wheel", onWheel));
+    cleanupFns.push(() => zoomTrack.removeEventListener("click", onClick));
+    cleanupFns.push(() => zoomTrack.removeEventListener("pointerdown", onPointerDown));
+    cleanupFns.push(() => zoomTrack.removeEventListener("pointermove", onPointerMove));
+    cleanupFns.push(() => zoomTrack.removeEventListener("pointerup", endPointerDrag));
+    cleanupFns.push(() => zoomTrack.removeEventListener("pointercancel", endPointerDrag));
 
-    zoomTrack.addEventListener(
-      "pointermove",
-      onPointerMove
-    );
+    cleanupFns.push(() => overlay.removeEventListener("touchstart", onTouchStart));
+    cleanupFns.push(() => overlay.removeEventListener("touchmove", onTouchMove));
+    cleanupFns.push(() => overlay.removeEventListener("touchend", onTouchEnd));
+    cleanupFns.push(() => overlay.removeEventListener("touchcancel", onTouchCancel));
 
-    zoomTrack.addEventListener(
-      "pointerup",
-      endPointerDrag
-    );
-
-    zoomTrack.addEventListener(
-      "pointercancel",
-      endPointerDrag
-    );
-
-    overlay.addEventListener(
-      "pointerdown",
-      onDesktopClosePointerDown
-    );
-
-    overlay.addEventListener(
-      "pointermove",
-      onDesktopClosePointerMove,
-      { passive: false }
-    );
-
-    overlay.addEventListener(
-      "pointerup",
-      onDesktopClosePointerUp
-    );
-
-    overlay.addEventListener(
-      "pointercancel",
-      onDesktopClosePointerCancel
-    );
-
-    overlay.addEventListener(
-      "touchstart",
-      onTouchStart,
-      { passive: true }
-    );
-
-    overlay.addEventListener(
-      "touchmove",
-      onTouchMove,
-      { passive: true }
-    );
-
-    overlay.addEventListener(
-      "touchend",
-      onTouchEnd
-    );
-
-    overlay.addEventListener(
-      "touchcancel",
-      onTouchCancel
-    );
-
-    backdrop.addEventListener(
-      "click",
-      onBackdropClick
-    );
-
-    if (closeButton) {
-      closeButton.addEventListener(
-        "click",
-        onClose
-      );
-    }
-
-    document.addEventListener(
-      "keydown",
-      onKeyDown
-    );
-
-    window.addEventListener(
-      "resize",
-      onResize
-    );
-
-    cleanupFns.push(() => {
-      zoomTrack.removeEventListener(
-        "scroll",
-        onZoomTrackScroll
-      );
-    });
-
-    cleanupFns.push(() => {
-      zoomTrack.removeEventListener(
-        "wheel",
-        onWheel
-      );
-    });
-
-    cleanupFns.push(() => {
-      zoomTrack.removeEventListener(
-        "click",
-        onClick
-      );
-    });
-
-    cleanupFns.push(() => {
-      zoomTrack.removeEventListener(
-        "pointerdown",
-        onPointerDown
-      );
-    });
-
-    cleanupFns.push(() => {
-      zoomTrack.removeEventListener(
-        "pointermove",
-        onPointerMove
-      );
-    });
-
-    cleanupFns.push(() => {
-      zoomTrack.removeEventListener(
-        "pointerup",
-        endPointerDrag
-      );
-    });
-
-    cleanupFns.push(() => {
-      zoomTrack.removeEventListener(
-        "pointercancel",
-        endPointerDrag
-      );
-    });
-
-    cleanupFns.push(() => {
-      overlay.removeEventListener(
-        "pointerdown",
-        onDesktopClosePointerDown
-      );
-    });
-
-    cleanupFns.push(() => {
-      overlay.removeEventListener(
-        "pointermove",
-        onDesktopClosePointerMove
-      );
-    });
-
-    cleanupFns.push(() => {
-      overlay.removeEventListener(
-        "pointerup",
-        onDesktopClosePointerUp
-      );
-    });
-
-    cleanupFns.push(() => {
-      overlay.removeEventListener(
-        "pointercancel",
-        onDesktopClosePointerCancel
-      );
-    });
-
-    cleanupFns.push(() => {
-      overlay.removeEventListener(
-        "touchstart",
-        onTouchStart
-      );
-    });
-
-    cleanupFns.push(() => {
-      overlay.removeEventListener(
-        "touchmove",
-        onTouchMove
-      );
-    });
-
-    cleanupFns.push(() => {
-      overlay.removeEventListener(
-        "touchend",
-        onTouchEnd
-      );
-    });
-
-    cleanupFns.push(() => {
-      overlay.removeEventListener(
-        "touchcancel",
-        onTouchCancel
-      );
-    });
-
-    cleanupFns.push(() => {
-      backdrop.removeEventListener(
-        "click",
-        onBackdropClick
-      );
-    });
-
-    if (closeButton) {
-      cleanupFns.push(() => {
-        closeButton.removeEventListener(
-          "click",
-          onClose
-        );
-      });
-    }
-
-    cleanupFns.push(() => {
-      document.removeEventListener(
-        "keydown",
-        onKeyDown
-      );
-    });
-
-    cleanupFns.push(() => {
-      window.removeEventListener(
-        "resize",
-        onResize
-      );
-    });
+    cleanupFns.push(() => backdrop.removeEventListener("click", onBackdropClick));
+    if (closeButton) cleanupFns.push(() => closeButton.removeEventListener("click", onClose));
+    cleanupFns.push(() => document.removeEventListener("keydown", onKeyDown));
+    cleanupFns.push(() => window.removeEventListener("resize", onResize));
   };
 
-  const openZoomCarousel = (
-    sourceImgs,
-    index
-  ) => {
+  const openZoomCarousel = (sourceImgs, index) => {
     buildZoomCarousel(sourceImgs);
     setOverlayOpen();
     hideChrome();
@@ -1430,27 +659,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const closeZoomCarousel = () => {
     cancelAnimationFrame(zoomScrollRaf);
-
     zoomScrollRaf = null;
     zoomStableFrames = 0;
 
     swipeCloseState.active = false;
     swipeCloseState.deltaX = 0;
     swipeCloseState.deltaY = 0;
-
-    swipeCloseState.lockedDirection =
-      null;
-
-    desktopCloseState.active = false;
-    desktopCloseState.pointerId = null;
-    desktopCloseState.deltaX = 0;
-    desktopCloseState.deltaY = 0;
-
-    desktopCloseState.lockedDirection =
-      null;
-
-    desktopCloseState.moved = false;
-    suppressNextOverlayClick = false;
+    swipeCloseState.lockedDirection = null;
 
     resetZoomState();
     resetOverlayDragVisual(false);
@@ -1459,297 +674,127 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   window.prevImageV2 = () => {
-    if (
-      !overlay.classList.contains("active")
-    ) {
-      return;
-    }
-
+    if (!overlay.classList.contains("active")) return;
     scrollZoomTo(zoomIndex - 1, true);
   };
 
   window.nextImageV2 = () => {
-    if (
-      !overlay.classList.contains("active")
-    ) {
-      return;
-    }
-
+    if (!overlay.classList.contains("active")) return;
     scrollZoomTo(zoomIndex + 1, true);
   };
 
   const mountDesktop = (activeRoot) => {
     const imgsWithDataSrc = Array.from(
-      activeRoot.querySelectorAll(
-        ".main-images img[data-src]"
-      )
+      activeRoot.querySelectorAll(".main-images img[data-src]")
     );
-
     imgsWithDataSrc.forEach(ensureSrc);
 
-    const clickableImgs = Array.from(
-      activeRoot.querySelectorAll(
-        ".main-images img"
-      )
-    );
+    const clickableImgs = Array.from(activeRoot.querySelectorAll(".main-images img"));
 
-    const onPointerUp = (event) => {
-      if (
-        overlay.classList.contains("active")
-      ) {
-        return;
-      }
+    const onPointerUp = (e) => {
+      if (overlay.classList.contains("active")) return;
 
-      const img = event.target.closest(
-        ".main-images img"
-      );
-
+      const img = e.target.closest(".main-images img");
       if (!img) return;
 
-      const index =
-        clickableImgs.indexOf(img);
-
+      const index = clickableImgs.indexOf(img);
       if (index === -1) return;
 
-      event.preventDefault();
-      event.stopPropagation();
+      e.preventDefault();
+      e.stopPropagation();
 
-      openZoomCarousel(
-        clickableImgs,
-        index
-      );
+      openZoomCarousel(clickableImgs, index);
     };
 
-    activeRoot.addEventListener(
-      "pointerup",
-      onPointerUp,
-      { capture: true }
+    activeRoot.addEventListener("pointerup", onPointerUp, { capture: true });
+    cleanupFns.push(() =>
+      activeRoot.removeEventListener("pointerup", onPointerUp, { capture: true })
     );
-
-    cleanupFns.push(() => {
-      activeRoot.removeEventListener(
-        "pointerup",
-        onPointerUp,
-        { capture: true }
-      );
-    });
   };
 
   const mountMobile = (activeRoot) => {
-    const host = activeRoot.querySelector(
-      "[data-wb-snap]"
-    );
-
-    const track = activeRoot.querySelector(
-      "[data-wb-track]"
-    );
-
+    const host = activeRoot.querySelector("[data-wb-snap]");
+    const track = activeRoot.querySelector("[data-wb-track]");
     if (!host || !track) {
-      console.warn(
-        "[item-zoom] mobile snap carousel elements not found"
-      );
-
+      console.warn("[item-zoom] mobile snap carousel elements not found");
       return;
     }
 
-    const originalSlides = Array.from(
-      track.querySelectorAll(
-        "[data-wb-slide]"
-      )
-    );
-
+    const originalSlides = Array.from(track.querySelectorAll("[data-wb-slide]"));
     if (!originalSlides.length) return;
 
-    ensureSrc(
-      track.querySelector(
-        "img[data-src]"
-      )
-    );
+    ensureSrc(track.querySelector("img[data-src]"));
 
-    const dotsWrap =
-      activeRoot.querySelector(
-        "[data-wb-dots]"
-      );
-
-    const prevButton =
-      activeRoot.querySelector(
-        "[data-wb-prev]"
-      );
-
-    const nextButton =
-      activeRoot.querySelector(
-        "[data-wb-next]"
-      );
+    const dotsWrap = activeRoot.querySelector("[data-wb-dots]");
+    const prevBtn = activeRoot.querySelector("[data-wb-prev]");
+    const nextBtn = activeRoot.querySelector("[data-wb-next]");
 
     const dots = [];
 
-    const setActiveDot = (index) => {
-      dots.forEach((dot, dotIndex) => {
-        dot.classList.toggle(
-          "is-active",
-          dotIndex === index
-        );
-      });
+    const setActiveDot = (idx) => {
+      dots.forEach((d, i) => d.classList.toggle("is-active", i === idx));
     };
 
-    const cloneFirst =
-      originalSlides[0].cloneNode(true);
+    const cloneFirst = originalSlides[0].cloneNode(true);
+    const cloneLast = originalSlides[originalSlides.length - 1].cloneNode(true);
 
-    const cloneLast =
-      originalSlides[
-        originalSlides.length - 1
-      ].cloneNode(true);
+    cloneFirst.setAttribute("data-wb-clone", "first");
+    cloneLast.setAttribute("data-wb-clone", "last");
 
-    cloneFirst.setAttribute(
-      "data-wb-clone",
-      "first"
-    );
-
-    cloneLast.setAttribute(
-      "data-wb-clone",
-      "last"
-    );
-
-    track.insertBefore(
-      cloneLast,
-      originalSlides[0]
-    );
-
+    track.insertBefore(cloneLast, originalSlides[0]);
     track.appendChild(cloneFirst);
 
-    const allSlides = Array.from(
-      track.querySelectorAll(
-        "[data-wb-slide]"
-      )
-    );
-
-    const realCount =
-      originalSlides.length;
-
-    const realImgs =
-      originalSlides.map((slide) =>
-        slide.querySelector("img")
-      );
+    const allSlides = Array.from(track.querySelectorAll("[data-wb-slide]"));
+    const realCount = originalSlides.length;
+    const realImgs = originalSlides.map((slide) => slide.querySelector("img"));
 
     if (dotsWrap) {
       dotsWrap.innerHTML = "";
-
-      for (
-        let index = 0;
-        index < realCount;
-        index += 1
-      ) {
-        const button =
-          document.createElement("button");
-
-        button.type = "button";
-
-        button.className =
-          "wb-dot" +
-          (index === 0
-            ? " is-active"
-            : "");
-
-        button.setAttribute(
-          "aria-label",
-          `Go to image ${index + 1}`
-        );
-
-        button.addEventListener(
-          "click",
-          (event) => {
-            event.preventDefault();
-            moveToRealIndex(
-              index,
-              true
-            );
-          }
-        );
-
-        dotsWrap.appendChild(button);
-        dots.push(button);
+      for (let i = 0; i < realCount; i++) {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "wb-dot" + (i === 0 ? " is-active" : "");
+        b.setAttribute("aria-label", `Go to image ${i + 1}`);
+        b.addEventListener("click", (e) => {
+          e.preventDefault();
+          moveToRealIndex(i, true);
+        });
+        dotsWrap.appendChild(b);
+        dots.push(b);
       }
     }
 
-    const slideWidth = () =>
-      track.clientWidth;
-
-    const realToDom = (realIndex) =>
-      realIndex + 1;
-
-    const normalizeIndex = (index) =>
-      ((index % realCount) +
-        realCount) %
-      realCount;
+    const slideW = () => track.clientWidth;
+    const realToDom = (realIdx) => realIdx + 1;
+    const normalizeIndex = (idx) => ((idx % realCount) + realCount) % realCount;
 
     let currentRealIndex = 0;
     let isAutoJumping = false;
-
-    let isAnimatingByButton =
-      false;
-
+    let isAnimatingByButton = false;
     let settleRaf = null;
-
-    let lastScrollLeft =
-      track.scrollLeft;
-
+    let lastScrollLeft = track.scrollLeft;
     let stableFrames = 0;
+    let activeScrollAnimation = null;
 
-    let activeScrollAnimation =
-      null;
-
-    const loadNeighbors = (
-      realIndex
-    ) => {
-      const domIndex =
-        realToDom(realIndex);
-
-      ensureSrc(
-        allSlides[
-          domIndex
-        ]?.querySelector(
-          "img[data-src]"
-        )
-      );
-
-      ensureSrc(
-        allSlides[
-          domIndex - 1
-        ]?.querySelector(
-          "img[data-src]"
-        )
-      );
-
-      ensureSrc(
-        allSlides[
-          domIndex + 1
-        ]?.querySelector(
-          "img[data-src]"
-        )
-      );
+    const loadNeighbors = (realIdx) => {
+      const domIdx = realToDom(realIdx);
+      ensureSrc(allSlides[domIdx]?.querySelector("img[data-src]"));
+      ensureSrc(allSlides[domIdx - 1]?.querySelector("img[data-src]"));
+      ensureSrc(allSlides[domIdx + 1]?.querySelector("img[data-src]"));
     };
 
-    const setScrollSnap = (
-      enabled
-    ) => {
-      track.style.scrollSnapType =
-        enabled ? "" : "none";
+    const setScrollSnap = (enabled) => {
+      track.style.scrollSnapType = enabled ? "" : "none";
     };
 
-    const instantScrollTo = (
-      left
-    ) => {
+    const instantScrollTo = (left) => {
       if (activeScrollAnimation) {
-        cancelAnimationFrame(
-          activeScrollAnimation
-        );
-
+        cancelAnimationFrame(activeScrollAnimation);
         activeScrollAnimation = null;
       }
 
       isAutoJumping = true;
       setScrollSnap(false);
-
       track.scrollLeft = left;
 
       requestAnimationFrame(() => {
@@ -1760,104 +805,56 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     };
 
-    const syncUI = (realIndex) => {
-      currentRealIndex =
-        normalizeIndex(realIndex);
-
-      setActiveDot(
-        currentRealIndex
-      );
-
-      loadNeighbors(
-        currentRealIndex
-      );
+    const syncUI = (realIdx) => {
+      currentRealIndex = normalizeIndex(realIdx);
+      setActiveDot(currentRealIndex);
+      loadNeighbors(currentRealIndex);
     };
 
-    const animateScrollTo = (
-      targetLeft,
-      duration = 160
-    ) => {
+    const animateScrollTo = (targetLeft, duration = 160) => {
       if (activeScrollAnimation) {
-        cancelAnimationFrame(
-          activeScrollAnimation
-        );
-
+        cancelAnimationFrame(activeScrollAnimation);
         activeScrollAnimation = null;
       }
 
-      const startLeft =
-        track.scrollLeft;
+      const startLeft = track.scrollLeft;
+      const distance = targetLeft - startLeft;
 
-      const distance =
-        targetLeft - startLeft;
-
-      if (
-        !duration ||
-        duration <= 0 ||
-        Math.abs(distance) < 1
-      ) {
+      if (!duration || duration <= 0 || Math.abs(distance) < 1) {
         track.scrollLeft = targetLeft;
         return;
       }
 
       let startTime = null;
-
-      const easeOutCubic = (progress) =>
-        1 -
-        Math.pow(
-          1 - progress,
-          3
-        );
+      const easeOutCubic = (t) => 1 - Math.pow(1 - t, 3);
 
       const step = (timestamp) => {
-        if (startTime === null) {
-          startTime = timestamp;
-        }
+        if (startTime === null) startTime = timestamp;
 
-        const elapsed =
-          timestamp - startTime;
+        const elapsed = timestamp - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        const eased = easeOutCubic(progress);
 
-        const progress = Math.min(
-          elapsed / duration,
-          1
-        );
-
-        const eased =
-          easeOutCubic(progress);
-
-        track.scrollLeft =
-          startLeft +
-          distance * eased;
+        track.scrollLeft = startLeft + distance * eased;
 
         if (progress < 1) {
-          activeScrollAnimation =
-            requestAnimationFrame(step);
+          activeScrollAnimation = requestAnimationFrame(step);
         } else {
-          activeScrollAnimation =
-            null;
+          activeScrollAnimation = null;
         }
       };
 
-      activeScrollAnimation =
-        requestAnimationFrame(step);
+      activeScrollAnimation = requestAnimationFrame(step);
     };
 
-    const moveToDomIndex = (
-      domIndex,
-      smooth = true
-    ) => {
-      const left =
-        domIndex * slideWidth();
+    const moveToDomIndex = (domIdx, smooth = true) => {
+      const left = domIdx * slideW();
 
       if (!smooth) {
         if (activeScrollAnimation) {
-          cancelAnimationFrame(
-            activeScrollAnimation
-          );
-
+          cancelAnimationFrame(activeScrollAnimation);
           activeScrollAnimation = null;
         }
-
         track.scrollLeft = left;
         return;
       }
@@ -1865,59 +862,35 @@ document.addEventListener("DOMContentLoaded", () => {
       animateScrollTo(left, 160);
     };
 
-    const moveToRealIndex = (
-      realIndex,
-      smooth = true
-    ) => {
-      const normalized =
-        normalizeIndex(realIndex);
-
+    const moveToRealIndex = (realIdx, smooth = true) => {
+      const normalized = normalizeIndex(realIdx);
       syncUI(normalized);
-
-      moveToDomIndex(
-        realToDom(normalized),
-        smooth
-      );
+      moveToDomIndex(realToDom(normalized), smooth);
     };
 
     const getNearestDomIndex = () => {
-      const width = slideWidth();
-
-      if (!width) return 1;
-
-      return Math.round(
-        track.scrollLeft / width
-      );
+      const w = slideW();
+      if (!w) return 1;
+      return Math.round(track.scrollLeft / w);
     };
 
-    const handleLoopRepositionIfNeeded =
-      () => {
-        const domIndex =
-          getNearestDomIndex();
+    const handleLoopRepositionIfNeeded = () => {
+      const domIdx = getNearestDomIndex();
 
-        if (domIndex === 0) {
-          instantScrollTo(
-            realCount * slideWidth()
-          );
+      if (domIdx === 0) {
+        instantScrollTo(realCount * slideW());
+        syncUI(realCount - 1);
+        return;
+      }
 
-          syncUI(realCount - 1);
-          return;
-        }
+      if (domIdx === realCount + 1) {
+        instantScrollTo(slideW());
+        syncUI(0);
+        return;
+      }
 
-        if (
-          domIndex ===
-          realCount + 1
-        ) {
-          instantScrollTo(
-            slideWidth()
-          );
-
-          syncUI(0);
-          return;
-        }
-
-        syncUI(domIndex - 1);
-      };
+      syncUI(domIdx - 1);
+    };
 
     const onScrollSettled = () => {
       handleLoopRepositionIfNeeded();
@@ -1925,25 +898,16 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 
     const watchScrollSettled = () => {
-      cancelAnimationFrame(
-        settleRaf
-      );
+      cancelAnimationFrame(settleRaf);
 
       const check = () => {
-        const currentScrollLeft =
-          track.scrollLeft;
+        const now = track.scrollLeft;
 
-        if (
-          Math.abs(
-            currentScrollLeft -
-              lastScrollLeft
-          ) < 0.5
-        ) {
+        if (Math.abs(now - lastScrollLeft) < 0.5) {
           stableFrames += 1;
         } else {
           stableFrames = 0;
-          lastScrollLeft =
-            currentScrollLeft;
+          lastScrollLeft = now;
         }
 
         if (stableFrames >= 3) {
@@ -1952,20 +916,15 @@ document.addEventListener("DOMContentLoaded", () => {
           return;
         }
 
-        settleRaf =
-          requestAnimationFrame(check);
+        settleRaf = requestAnimationFrame(check);
       };
 
-      lastScrollLeft =
-        track.scrollLeft;
-
+      lastScrollLeft = track.scrollLeft;
       stableFrames = 0;
-
-      settleRaf =
-        requestAnimationFrame(check);
+      settleRaf = requestAnimationFrame(check);
     };
 
-    instantScrollTo(slideWidth());
+    instantScrollTo(slideW());
     syncUI(0);
 
     if ("onscrollend" in track) {
@@ -1973,231 +932,107 @@ document.addEventListener("DOMContentLoaded", () => {
         if (isAutoJumping) return;
         onScrollSettled();
       };
-
-      track.addEventListener(
-        "scrollend",
-        onScrollEnd
-      );
-
-      cleanupFns.push(() => {
-        track.removeEventListener(
-          "scrollend",
-          onScrollEnd
-        );
-      });
+      track.addEventListener("scrollend", onScrollEnd);
+      cleanupFns.push(() => track.removeEventListener("scrollend", onScrollEnd));
     } else {
       const onScroll = () => {
         if (isAutoJumping) return;
         watchScrollSettled();
       };
-
-      track.addEventListener(
-        "scroll",
-        onScroll
-      );
-
-      cleanupFns.push(() => {
-        track.removeEventListener(
-          "scroll",
-          onScroll
-        );
-      });
+      track.addEventListener("scroll", onScroll);
+      cleanupFns.push(() => track.removeEventListener("scroll", onScroll));
     }
 
-    if (nextButton) {
-      const onNext = (event) => {
-        event.preventDefault();
-
-        if (isAnimatingByButton) {
-          return;
-        }
-
+    if (nextBtn) {
+      const onNext = (e) => {
+        e.preventDefault();
+        if (isAnimatingByButton) return;
         isAnimatingByButton = true;
 
-        if (
-          currentRealIndex ===
-          realCount - 1
-        ) {
+        if (currentRealIndex === realCount - 1) {
           setActiveDot(0);
           loadNeighbors(0);
-
-          moveToDomIndex(
-            realCount + 1,
-            true
-          );
+          moveToDomIndex(realCount + 1, true);
         } else {
-          moveToRealIndex(
-            currentRealIndex + 1,
-            true
-          );
+          moveToRealIndex(currentRealIndex + 1, true);
         }
       };
 
-      nextButton.addEventListener(
-        "click",
-        onNext
-      );
-
-      cleanupFns.push(() => {
-        nextButton.removeEventListener(
-          "click",
-          onNext
-        );
-      });
+      nextBtn.addEventListener("click", onNext);
+      cleanupFns.push(() => nextBtn.removeEventListener("click", onNext));
     }
 
-    if (prevButton) {
-      const onPrev = (event) => {
-        event.preventDefault();
-
-        if (isAnimatingByButton) {
-          return;
-        }
-
+    if (prevBtn) {
+      const onPrev = (e) => {
+        e.preventDefault();
+        if (isAnimatingByButton) return;
         isAnimatingByButton = true;
 
         if (currentRealIndex === 0) {
-          setActiveDot(
-            realCount - 1
-          );
-
-          loadNeighbors(
-            realCount - 1
-          );
-
+          setActiveDot(realCount - 1);
+          loadNeighbors(realCount - 1);
           moveToDomIndex(0, true);
         } else {
-          moveToRealIndex(
-            currentRealIndex - 1,
-            true
-          );
+          moveToRealIndex(currentRealIndex - 1, true);
         }
       };
 
-      prevButton.addEventListener(
-        "click",
-        onPrev
-      );
-
-      cleanupFns.push(() => {
-        prevButton.removeEventListener(
-          "click",
-          onPrev
-        );
-      });
+      prevBtn.addEventListener("click", onPrev);
+      cleanupFns.push(() => prevBtn.removeEventListener("click", onPrev));
     }
 
-    const onPointerUp = (event) => {
-      if (
-        overlay.classList.contains("active")
-      ) {
-        return;
-      }
+    const onPointerUp = (e) => {
+      if (overlay.classList.contains("active")) return;
 
-      const img = event.target.closest(
-        ".wb-snap__slide img"
-      );
-
+      const img = e.target.closest(".wb-snap__slide img");
       if (!img) return;
 
-      event.preventDefault();
-      event.stopPropagation();
+      e.preventDefault();
+      e.stopPropagation();
 
-      const slideElement =
-        img.closest("[data-wb-slide]");
+      const slideEl = img.closest("[data-wb-slide]");
+      const idxInAll = allSlides.indexOf(slideEl);
 
-      const indexInAll =
-        allSlides.indexOf(
-          slideElement
-        );
-
-      let realIndex;
-
-      if (indexInAll === 0) {
-        realIndex = realCount - 1;
-      } else if (
-        indexInAll ===
-        realCount + 1
-      ) {
-        realIndex = 0;
+      let realIdx;
+      if (idxInAll === 0) {
+        realIdx = realCount - 1;
+      } else if (idxInAll === realCount + 1) {
+        realIdx = 0;
       } else {
-        realIndex = indexInAll - 1;
+        realIdx = idxInAll - 1;
       }
 
-      openZoomCarousel(
-        realImgs,
-        realIndex
-      );
+      openZoomCarousel(realImgs, realIdx);
     };
 
-    track.addEventListener(
-      "pointerup",
-      onPointerUp,
-      { capture: true }
+    track.addEventListener("pointerup", onPointerUp, { capture: true });
+    cleanupFns.push(() =>
+      track.removeEventListener("pointerup", onPointerUp, { capture: true })
     );
-
-    cleanupFns.push(() => {
-      track.removeEventListener(
-        "pointerup",
-        onPointerUp,
-        { capture: true }
-      );
-    });
 
     const onResize = () => {
-      instantScrollTo(
-        realToDom(
-          currentRealIndex
-        ) * slideWidth()
-      );
-
+      instantScrollTo(realToDom(currentRealIndex) * slideW());
       syncUI(currentRealIndex);
     };
-
-    window.addEventListener(
-      "resize",
-      onResize
-    );
-
-    cleanupFns.push(() => {
-      window.removeEventListener(
-        "resize",
-        onResize
-      );
-    });
+    window.addEventListener("resize", onResize);
+    cleanupFns.push(() => window.removeEventListener("resize", onResize));
   };
 
   const mount = (isMobile) => {
-    cleanupFns.forEach((cleanup) => {
-      cleanup();
-    });
-
+    cleanupFns.forEach((fn) => fn());
     cleanupFns = [];
 
     closeZoomCarousel();
 
     root.innerHTML = "";
-
-    const template = isMobile
-      ? tplMobile
-      : tplDesktop;
-
-    root.appendChild(
-      template.content.cloneNode(true)
-    );
+    root.appendChild((isMobile ? tplMobile : tplDesktop).content.cloneNode(true));
 
     const activeRoot = isMobile
-      ? root.querySelector(
-          ".item-carousel-v2"
-        )
+      ? root.querySelector(".item-carousel-v2")
       : root.querySelector(".item");
 
     if (!activeRoot) {
-      console.warn(
-        "[item-zoom] active root not found",
-        { isMobile }
-      );
-
+      console.warn("[item-zoom] active root not found", { isMobile });
       return;
     }
 
@@ -2213,15 +1048,9 @@ document.addEventListener("DOMContentLoaded", () => {
   setOverlayClosed();
   mount(mq.matches);
 
-  const onMqChange = (event) => {
-    mount(event.matches);
-  };
-
+  const onMqChange = (e) => mount(e.matches);
   if (mq.addEventListener) {
-    mq.addEventListener(
-      "change",
-      onMqChange
-    );
+    mq.addEventListener("change", onMqChange);
   } else {
     mq.addListener(onMqChange);
   }
