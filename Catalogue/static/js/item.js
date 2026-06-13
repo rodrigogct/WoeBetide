@@ -54,7 +54,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const DESKTOP_ZOOM_SCALE = 2.25;
   const DESKTOP_SLIDE_DURATION = 170;
   const DESKTOP_WHEEL_THRESHOLD = 44;
- const DESKTOP_WHEEL_RELEASE_DELAY = 70;
+ const DESKTOP_WHEEL_RELEASE_DELAY = 100;
 
   let cleanupFns = [];
   let zoomSourceImgs = [];
