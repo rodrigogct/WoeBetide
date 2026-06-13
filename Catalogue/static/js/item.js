@@ -54,7 +54,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const DESKTOP_ZOOM_SCALE = 2.25;
   const DESKTOP_SLIDE_DURATION = 170;
   const DESKTOP_WHEEL_THRESHOLD = 44;
- const DESKTOP_WHEEL_RELEASE_DELAY = 180;
+ const DESKTOP_WHEEL_RELEASE_DELAY = 70;
 
   let cleanupFns = [];
   let zoomSourceImgs = [];
@@ -776,12 +776,29 @@ document.addEventListener("DOMContentLoaded", () => {
 
       event.preventDefault();
 
-      if (
-        desktopWheelLocked ||
-        desktopAnimating
-      ) {
-        keepDesktopWheelLocked();
+      if (desktopAnimating) {
         return;
+      }
+      
+      if (desktopWheelLocked) {
+        const momentumIsSmall =
+          Math.abs(event.deltaX) < 12 &&
+          Math.abs(event.deltaY) < 12;
+      
+        if (momentumIsSmall) {
+          return;
+        }
+      
+        desktopWheelLocked = false;
+      
+        if (desktopWheelReleaseTimer) {
+          clearTimeout(desktopWheelReleaseTimer);
+          desktopWheelReleaseTimer = null;
+        }
+      
+        desktopWheelAccumX = 0;
+        desktopWheelAccumY = 0;
+        desktopWheelDirection = null;
       }
 
       const absX =
