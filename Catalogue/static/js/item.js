@@ -54,7 +54,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const DESKTOP_ZOOM_SCALE = 2.25;
   const DESKTOP_SLIDE_DURATION = 170;
   const DESKTOP_WHEEL_THRESHOLD = 44;
-  const DESKTOP_WHEEL_RELEASE_DELAY = 260;
+ const DESKTOP_WHEEL_RELEASE_DELAY = 180;
 
   let cleanupFns = [];
   let zoomSourceImgs = [];
@@ -181,6 +181,23 @@ document.addEventListener("DOMContentLoaded", () => {
     desktopWheelAccumX = 0;
     desktopWheelAccumY = 0;
     desktopWheelDirection = null;
+  };
+
+  const keepDesktopWheelLocked = () => {
+    desktopWheelLocked = true;
+  
+    if (desktopWheelReleaseTimer) {
+      clearTimeout(desktopWheelReleaseTimer);
+    }
+  
+    desktopWheelReleaseTimer = setTimeout(() => {
+      desktopWheelLocked = false;
+      desktopWheelReleaseTimer = null;
+  
+      desktopWheelAccumX = 0;
+      desktopWheelAccumY = 0;
+      desktopWheelDirection = null;
+    }, DESKTOP_WHEEL_RELEASE_DELAY);
   };
 
   const configureDesktopTrack = () => {
@@ -485,54 +502,52 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!zoomSourceImgs.length) {
       return;
     }
-
+  
     if (desktopAnimating) {
       return;
     }
-
+  
     resetZoomState();
-
+  
     zoomIndex =
       normalizeZoomIndex(index);
-
+  
+    const destination =
+      `translate3d(${-zoomIndex * 100}%, 0, 0)`;
+  
     if (!animate) {
-      zoomTrack.style.transition =
-        "none";
-
-      zoomTrack.style.transform =
-        `translate3d(${-zoomIndex * 100}%, 0, 0)`;
-
+      zoomTrack.style.transition = "none";
+      zoomTrack.style.transform = destination;
       return;
     }
-
+  
     desktopAnimating = true;
-    desktopWheelLocked = true;
-
+    keepDesktopWheelLocked();
+  
     zoomTrack.style.transition =
       `transform ${DESKTOP_SLIDE_DURATION}ms cubic-bezier(0.22, 1, 0.36, 1)`;
-
+  
     requestAnimationFrame(() => {
       zoomTrack.style.transform =
-        `translate3d(${-zoomIndex * 100}%, 0, 0)`;
+        destination;
     });
-
+  
     desktopAnimationTimer =
       setTimeout(() => {
-        zoomTrack.style.transition =
-          "none";
-
+        zoomTrack.style.transition = "none";
         zoomTrack.style.transform =
-          `translate3d(${-zoomIndex * 100}%, 0, 0)`;
-
+          destination;
+  
         desktopAnimating = false;
         desktopAnimationTimer = null;
-
-        desktopWheelReleaseTimer =
-          setTimeout(() => {
-            desktopWheelLocked = false;
-            desktopWheelReleaseTimer = null;
-          }, DESKTOP_WHEEL_RELEASE_DELAY);
-      }, DESKTOP_SLIDE_DURATION + 25);
+  
+        /*
+         * Do not unlock here.
+         * The wheel handler will keep extending the
+         * lock until the trackpad has completely stopped.
+         */
+        keepDesktopWheelLocked();
+      }, DESKTOP_SLIDE_DURATION + 30);
   };
 
   const syncMobileOverlayIndex = () => {
@@ -765,6 +780,7 @@ document.addEventListener("DOMContentLoaded", () => {
         desktopWheelLocked ||
         desktopAnimating
       ) {
+        keepDesktopWheelLocked();
         return;
       }
 
@@ -807,29 +823,43 @@ document.addEventListener("DOMContentLoaded", () => {
       ) {
         desktopWheelAccumX +=
           event.deltaX;
-
+      
         if (
           desktopWheelAccumX >=
           DESKTOP_WHEEL_THRESHOLD
         ) {
-          resetDesktopWheelGesture();
-
+          desktopWheelAccumX = 0;
+          desktopWheelAccumY = 0;
+          desktopWheelDirection = null;
+      
+          keepDesktopWheelLocked();
+      
           goToDesktopImage(
             zoomIndex + 1,
             true
           );
-        } else if (
+      
+          return;
+        }
+      
+        if (
           desktopWheelAccumX <=
           -DESKTOP_WHEEL_THRESHOLD
         ) {
-          resetDesktopWheelGesture();
-
+          desktopWheelAccumX = 0;
+          desktopWheelAccumY = 0;
+          desktopWheelDirection = null;
+      
+          keepDesktopWheelLocked();
+      
           goToDesktopImage(
             zoomIndex - 1,
             true
           );
+      
+          return;
         }
-
+      
         return;
       }
 
