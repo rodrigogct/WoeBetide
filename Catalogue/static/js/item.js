@@ -69,6 +69,8 @@ document.addEventListener("DOMContentLoaded", () => {
   let zoomStableFrames = 0;
 
   let zoomAnimationRaf = null;
+  let isDesktopSlideAnimating = false;
+  let desktopSlideAnimationEndTimer = null;
 
   let dragState = {
     active: false,
@@ -475,14 +477,48 @@ document.addEventListener("DOMContentLoaded", () => {
     );
   };
 
-  const cancelZoomAnimation = () => {
-    if (!zoomAnimationRaf) return;
+  const clearDesktopSlideAnimationTimer = () => {
+    if (!desktopSlideAnimationEndTimer) {
+      return;
+    }
 
-    cancelAnimationFrame(
-      zoomAnimationRaf
+    clearTimeout(
+      desktopSlideAnimationEndTimer
     );
 
-    zoomAnimationRaf = null;
+    desktopSlideAnimationEndTimer = null;
+  };
+
+  const finishDesktopSlideAnimation = (
+    targetLeft,
+    previousSnapType,
+    previousScrollBehavior
+  ) => {
+    zoomTrack.scrollLeft = targetLeft;
+
+    requestAnimationFrame(() => {
+      zoomTrack.style.scrollSnapType =
+        previousSnapType;
+
+      zoomTrack.style.scrollBehavior =
+        previousScrollBehavior;
+
+      isDesktopSlideAnimating = false;
+      syncZoomIndexFromScroll();
+    });
+  };
+
+  const cancelZoomAnimation = () => {
+    if (zoomAnimationRaf) {
+      cancelAnimationFrame(
+        zoomAnimationRaf
+      );
+
+      zoomAnimationRaf = null;
+    }
+
+    clearDesktopSlideAnimationTimer();
+    isDesktopSlideAnimating = false;
   };
 
   const scrollZoomTo = (
@@ -513,6 +549,7 @@ document.addEventListener("DOMContentLoaded", () => {
       zoomTrack.scrollLeft =
         targetLeft;
 
+      syncZoomIndexFromScroll();
       return;
     }
 
@@ -526,17 +563,32 @@ document.addEventListener("DOMContentLoaded", () => {
       zoomTrack.scrollLeft =
         targetLeft;
 
+      syncZoomIndexFromScroll();
       return;
     }
 
-    const duration = 120;
+    const previousSnapType =
+      zoomTrack.style.scrollSnapType;
+
+    const previousScrollBehavior =
+      zoomTrack.style.scrollBehavior;
+
+    zoomTrack.style.scrollSnapType =
+      "none";
+
+    zoomTrack.style.scrollBehavior =
+      "auto";
+
+    isDesktopSlideAnimating = true;
+
+    const duration = 175;
     let startTime = null;
 
-    const easeOutCubic = (progress) =>
+    const easeOutQuart = (progress) =>
       1 -
       Math.pow(
         1 - progress,
-        3
+        4
       );
 
     const animate = (timestamp) => {
@@ -553,7 +605,7 @@ document.addEventListener("DOMContentLoaded", () => {
       );
 
       const eased =
-        easeOutCubic(progress);
+        easeOutQuart(progress);
 
       zoomTrack.scrollLeft =
         startLeft +
@@ -567,10 +619,11 @@ document.addEventListener("DOMContentLoaded", () => {
       } else {
         zoomAnimationRaf = null;
 
-        zoomTrack.scrollLeft =
-          targetLeft;
-
-        syncZoomIndexFromScroll();
+        finishDesktopSlideAnimation(
+          targetLeft,
+          previousSnapType,
+          previousScrollBehavior
+        );
       }
     };
 
@@ -578,14 +631,43 @@ document.addEventListener("DOMContentLoaded", () => {
       requestAnimationFrame(
         animate
       );
+
+    desktopSlideAnimationEndTimer =
+      setTimeout(() => {
+        if (!isDesktopSlideAnimating) {
+          return;
+        }
+
+        if (zoomAnimationRaf) {
+          cancelAnimationFrame(
+            zoomAnimationRaf
+          );
+
+          zoomAnimationRaf = null;
+        }
+
+        finishDesktopSlideAnimation(
+          targetLeft,
+          previousSnapType,
+          previousScrollBehavior
+        );
+      }, duration + 80);
   };
 
   const watchZoomScrollSettled = () => {
+    if (isDesktopSlideAnimating) {
+      return;
+    }
+
     cancelAnimationFrame(
       zoomScrollRaf
     );
 
     const check = () => {
+      if (isDesktopSlideAnimating) {
+        return;
+      }
+
       const currentScrollLeft =
         zoomTrack.scrollLeft;
 
@@ -649,12 +731,6 @@ document.addEventListener("DOMContentLoaded", () => {
     showChrome();
   };
 
-  /*
-   * Important fix:
-   * The overlay is displayed invisibly first.
-   * Its position is set to the selected image.
-   * Only then is the overlay revealed.
-   */
   const openZoomCarousel = (
     sourceImgs,
     index
@@ -681,9 +757,6 @@ document.addEventListener("DOMContentLoaded", () => {
     zoomIndex =
       normalizeZoomIndex(index);
 
-    /*
-     * Force layout calculation while hidden.
-     */
     void overlay.offsetWidth;
     void zoomTrack.offsetWidth;
 
@@ -691,10 +764,6 @@ document.addEventListener("DOMContentLoaded", () => {
       zoomIndex *
       zoomTrack.clientWidth;
 
-    /*
-     * Disable snap and smooth behavior while
-     * setting the initial image.
-     */
     const previousSnap =
       zoomTrack.style.scrollSnapType;
 
@@ -710,22 +779,20 @@ document.addEventListener("DOMContentLoaded", () => {
     zoomTrack.scrollLeft =
       selectedPosition;
 
-    /*
-     * Force the selected position to be applied
-     * before revealing the selector.
-     */
     void zoomTrack.offsetWidth;
 
-    zoomTrack.style.scrollSnapType =
-      previousSnap;
+    requestAnimationFrame(() => {
+      zoomTrack.style.scrollSnapType =
+        previousSnap;
 
-    zoomTrack.style.scrollBehavior =
-      previousBehavior;
+      zoomTrack.style.scrollBehavior =
+        previousBehavior;
 
-    overlay.style.visibility = "visible";
-    overlay.style.opacity = "1";
-    overlay.style.pointerEvents = "auto";
-    overlay.style.transform = "translateY(0)";
+      overlay.style.visibility = "visible";
+      overlay.style.opacity = "1";
+      overlay.style.pointerEvents = "auto";
+      overlay.style.transform = "translateY(0)";
+    });
   };
 
   window.prevImageV2 = () => {
@@ -734,6 +801,10 @@ document.addEventListener("DOMContentLoaded", () => {
         "active"
       )
     ) {
+      return;
+    }
+
+    if (isDesktopSlideAnimating) {
       return;
     }
 
@@ -749,6 +820,10 @@ document.addEventListener("DOMContentLoaded", () => {
         "active"
       )
     ) {
+      return;
+    }
+
+    if (isDesktopSlideAnimating) {
       return;
     }
 
@@ -773,6 +848,10 @@ document.addEventListener("DOMContentLoaded", () => {
           "is-locked"
         )
       ) {
+        return;
+      }
+
+      if (isDesktopSlideAnimating) {
         return;
       }
 
@@ -821,7 +900,7 @@ document.addEventListener("DOMContentLoaded", () => {
         () => {
           resetWheelGesture(true);
         },
-        95
+        120
       );
     };
 
@@ -858,9 +937,6 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      /*
-       * Desktop-only trackpad behavior.
-       */
       if (window.innerWidth <= 700) {
         return;
       }
@@ -881,6 +957,11 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       event.preventDefault();
+
+      if (isDesktopSlideAnimating) {
+        return;
+      }
+
       scheduleWheelReset();
 
       if (!wheelDirection) {
@@ -917,8 +998,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
         wheelAccumX += event.deltaX;
 
-        const HORIZONTAL_THRESHOLD = 38;
-        const HORIZONTAL_COOLDOWN = 145;
+        const HORIZONTAL_THRESHOLD = 42;
+        const HORIZONTAL_COOLDOWN = 220;
 
         if (
           wheelAccumX >
