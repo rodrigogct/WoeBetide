@@ -309,7 +309,6 @@ def cart_view(request):
         "grand_total": grand_total, 
     })
 
-
 def jewelry(request):
     sort = request.GET.get("sort", "date_new")
 
@@ -338,9 +337,6 @@ def jewelry(request):
         "is_jewelry": True,
         "is_archive": False,
     })
-
-
-
 
 def jewelry_item(request, jewelry_item_id):
     item = get_object_or_404(Jewelry, pk=jewelry_item_id)
