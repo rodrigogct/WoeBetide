@@ -5,6 +5,7 @@ from django.conf import settings
 from django.contrib.auth.hashers import check_password
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import ensure_csrf_cookie
+from django.views.decorators.csrf import csrf_exempt
 
 # Create your views here.
 
@@ -76,7 +77,26 @@ def about(request, page):
         'new_items': new_items
     })
 
-@ensure_csrf_cookie
+# @ensure_csrf_cookie
+# @require_http_methods(["GET", "POST"])
+# def site_password(request):
+#     error = None
+
+#     if request.method == "POST":
+#         password = request.POST.get("password", "")
+
+#         if (
+#             settings.SITE_PASSWORD_HASH
+#             and check_password(password, settings.SITE_PASSWORD_HASH)
+#         ):
+#             request.session["site_unlocked"] = True
+#             return redirect("/")
+
+#         error = "Incorrect password."
+
+#     return render(request, "password.html", {"error": error})
+
+@csrf_exempt
 @require_http_methods(["GET", "POST"])
 def site_password(request):
     error = None
@@ -94,4 +114,3 @@ def site_password(request):
         error = "Incorrect password."
 
     return render(request, "password.html", {"error": error})
-
