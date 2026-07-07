@@ -82,7 +82,7 @@
                           </div>
                           <!-- catalogue items width -->
                           {% if item.width_in_cm %}
-                            <p class="info" style="border-bottom: none;">{{ item.width_in_cm }} cm / {{ item.width }} in</p>
+                            <p class="info" style="border-bottom: none;">{{ item.width }} cm / {{ item.width_in_inches }} in</p>
                           {% endif %}
                           <div class="length" style="border-bottom: none; border-right: none;">
                             <p style="border-right: none; border-bottom: none;">Length</p>
@@ -93,7 +93,7 @@
                           </div>
                           <!-- catalogue items lenght -->
                           {% if item.length_in_cm %}
-                            <p class="info" style="border-bottom: none;">{{ item.length_in_cm }} cm / {{ item.length }} in</p>
+                            <p class="info" style="border-bottom: none;">{{ item.length }} cm / {{ item.length_in_inches }} in</p>
                           {% endif %}
                           <div class="sleeve" style="border-right: none;">
                             <p style="border-right: none;">Sleeve</p>
@@ -104,7 +104,7 @@
                           </div>
                           <!-- catalogue items sleeve lenght -->
                           {% if item.sleeve_in_cm %}
-                            <p class="info">{{ item.sleeve_in_cm }} cm / {{ item.sleeve }} in</p>
+                            <p class="info">{{ item.sleeve }} cm / {{ item.sleeve_in_inches }} in</p>
                           {% endif %}
                         </div>
                       {% endif %}
