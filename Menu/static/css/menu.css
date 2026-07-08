@@ -16,9 +16,7 @@ html, body {
     font-size: 90px;
     font-weight: 500;
     color: black;
-    display: grid;               /* <— easiest centering */
-    /* place-items: center;
-    text-align: center; */
+    display: grid;
 }
 
 .menu p {
@@ -28,28 +26,32 @@ html, body {
     margin-left: 50px;
     position: absolute;
     margin: 30px 0 16px 50px;
-
 }
 
 /* adjust to your fixed navbar height */
-:root { --navH: 55px; }
-/* how tall the sticky text block is */
-:root { --heroH: 120px; }  /* tweak 100–160px to taste */
-
-/* 2) Pull the images up behind that sticky block (removes blank band) */
-.menu .woe,
-.menu .image-container{
-  margin-top: calc(-1 * var(--heroH));
+:root { 
+    --navH: 55px; 
 }
 
-:root{
-    --navH: 55px;     /* navbar height */
-    --heroH: 110px;   /* one line height */
-    --heroRows: 3;    /* total H1s */
-  }
-  
-  /* each H1 acts like a sticky row */
-  .menu .hero{
+/* how tall the sticky text block is */
+:root { 
+    --heroH: 120px; 
+}
+
+/* 2) Pull the images up behind that sticky block */
+.menu .woe,
+.menu .image-container {
+    margin-top: calc(-1 * var(--heroH));
+}
+
+:root {
+    --navH: 55px;
+    --heroH: 110px;
+    --heroRows: 3;
+}
+
+/* each H1 acts like a sticky row */
+.menu .hero {
     position: sticky;
     top: var(--navH);
     height: var(--heroH);
@@ -60,31 +62,17 @@ html, body {
     line-height: 1;
     color: white;
     z-index: 10;
-  }
-  
-  /* content pulled up by the total hero stack height */
-  .menu .woe,
-  .menu .image-container{
+}
+
+/* content pulled up by the total hero stack height */
+.menu .woe,
+.menu .image-container {
     margin-top: calc(-1 * var(--heroH) * var(--heroRows));
-  }
-  
+}
+
 .hero:nth-child(1) { opacity: 0.2; }
 .hero:nth-child(2) { opacity: 0.4; }
 .hero:nth-child(3) { opacity: 0.6; }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 .elements p {
     margin: 0;
@@ -118,12 +106,10 @@ html, body {
     display: flex;
     justify-content: center;
     border-bottom: 3px solid #D2D1CD;
-    /* box-shadow: 0 2px 6px; */
     position: relative;
-    text-decoration:none;
-    color:inherit;
-    /* let sticky overlap outside its normal box */
-    overflow:visible;
+    text-decoration: none;
+    color: inherit;
+    overflow: visible;
 }
 
 .cat-hero {
@@ -150,7 +136,6 @@ html, body {
     font-size: 50px;
     text-decoration: none;
     font-weight: 500;
-    /* font-weight: 300; */
 }
 
 .catalogue h1,
@@ -243,25 +228,34 @@ html, body {
     grid-template-columns: 1fr 1fr;
 }
 
-
-
-
 /* ===== Mobile-only hanging next button ===== */
+
 :root {
-    --wbBtn: 100px;   
-    --wbBtnBg: #2f2f2f;       
-  }
-  
-  .wb-scroller-wrap { position: relative; overflow: visible; }
-  
-  /* show only on phones */
-  .wb-mobile-only { display: none; }
-  @media (max-width: 600px) { .wb-mobile-only { display: block; } }
-  
-  /* hang half outside the right edge, centered to the scroller height */
-  .wb-next-btn{
+    --wbBtn: 100px;
+    --wbBtnBg: #2f2f2f;
+}
+
+.wb-scroller-wrap {
+    position: relative;
+    overflow: visible;
+}
+
+/* show only on phones */
+.wb-mobile-only {
+    display: none;
+}
+
+@media (max-width: 600px) {
+    .wb-mobile-only {
+        display: block;
+    }
+}
+
+/* hang half outside the right edge, centered to the scroller height */
+.wb-next-btn {
     position: absolute;
-    right: calc(-0.5 * var(--wbBtn));   /* → exactly half outside */
+    right: calc(-0.5 * var(--wbBtn));
+    left: auto;
     top: 45%;
     transform: translateY(-50%);
     background: transparent;
@@ -270,35 +264,50 @@ html, body {
     z-index: 10;
     line-height: 0;
     cursor: pointer;
-  }
-  
-  /* the circle */
-  .wb-round-icon{
+}
+
+/* the circle */
+.wb-round-icon {
     width: var(--wbBtn);
     height: var(--wbBtn);
     display: inline-flex;
     align-items: center;
     border-radius: 50%;
     color: #fff;
-    opacity: 0.8; 
-  }
-  
-  /* bigger, crisp arrow */
-  .wb-round-icon svg{
+    opacity: 0.8;
+    transition: transform 0.2s ease;
+}
+
+/* bigger, crisp arrow */
+.wb-round-icon svg {
     width: 60%;
     display: block;
-  }
+}
 
-  
-  
-  /* smaller phones: shrink button but keep “half outside” math working */
-  @media (max-width: 420px){
-    :root { --wbBtn: 90px; }
-  }
-  @media (max-width: 360px){
-    :root { --wbBtn: 90px; }
-  }
-  
+/* when carousel reaches the end, move the same arrow to the left */
+.wb-scroller-wrap.wb-arrow-left .wb-next-btn {
+    right: auto;
+    left: calc(-0.5 * var(--wbBtn));
+}
+
+/* flip the same arrow visually */
+.wb-scroller-wrap.wb-arrow-left .wb-round-icon {
+    transform: scaleX(-1);
+}
+
+/* smaller phones: shrink button but keep “half outside” math working */
+@media (max-width: 420px) {
+    :root {
+        --wbBtn: 90px;
+    }
+}
+
+@media (max-width: 360px) {
+    :root {
+        --wbBtn: 90px;
+    }
+}
+
 @media (max-width: 1050px) {
 
     .image-container {
@@ -320,7 +329,6 @@ html, body {
     .vintage {
         grid-template-columns: 1fr 1fr;
     }
-   
 }
 
 @media (max-width: 800px) {
@@ -331,16 +339,14 @@ html, body {
     }
 
     .vintage .shop-all a, 
-    .staff-picks a, .tees a, 
+    .staff-picks a, 
+    .tees a, 
     .sweatshirts a, 
     .outerwear a, 
     .archive a {
         z-index: 1000;
         font-size: 35px;
-        /* margin-left: 50px;
-        margin-top: 60px; */
     }
-
 }
 
 @media (max-width: 700px) {
@@ -350,12 +356,12 @@ html, body {
         flex-direction: column-reverse;
     }
 
-    :root{
-        --navH: 55px; 
-        --heroH: 80px;  
+    :root {
+        --navH: 55px;
+        --heroH: 80px;
         --Gap: 12px;
-        --heroRows: 3; 
-        --Row: 16px;    
+        --heroRows: 3;
+        --Row: 16px;
     }
 
     .image-container .right-column {
@@ -368,13 +374,11 @@ html, body {
       
     .menu .hero {
         position: sticky;
-        height: var(--heroH);   /* ensure each row has the same fixed height */
-        line-height: 1;         /* no extra font spacing */
-        margin: 0;              /* remove default h1 margins */
+        height: var(--heroH);
+        line-height: 1;
+        margin: 0;
         font-size: 70px;
-        /* text-align: center; */
     }
-
 }
 
 @media (max-width: 600px) {
@@ -388,113 +392,113 @@ html, body {
         margin-left: 25px;
     }
 
-    :root{
-        --navH: 55px; 
-        --heroH: 60px;  
+    :root {
+        --navH: 55px;
+        --heroH: 60px;
         --Gap: 12px;
-        --heroRows: 3; 
+        --heroRows: 3;
     }
 
     .menu .hero {
         position: sticky;
-        height: var(--heroH);   /* ensure each row has the same fixed height */
-        line-height: 1;         /* no extra font spacing */
-        margin: 0;              /* remove default h1 margins */
+        height: var(--heroH);
+        line-height: 1;
+        margin: 0;
         font-size: 50px;
-        /* text-align: center; */
     }
 
- /* ===== mobile catalogue carousel only ===== */
+    /* ===== mobile catalogue carousel only ===== */
 
-/* keep wrapper visible so hanging arrow is not clipped */
-.catalogue,
-.catalogue .elements,
-.catalogue .wb-scroller-wrap {
-    width: 100%;
-    overflow: visible;
-    position: relative;
-}
+    /* keep wrapper visible so hanging arrow is not clipped */
+    .catalogue,
+    .catalogue .elements,
+    .catalogue .wb-scroller-wrap {
+        width: 100%;
+        overflow: visible;
+        position: relative;
+    }
 
-/* actual horizontal scroller */
-.catalogue .wb-scroller-wrap > .block.container-xxxl {
-    display: flex !important;
-    flex-wrap: nowrap !important;
-    overflow-x: auto !important;
-    overflow-y: hidden !important;
-    width: 100%;
-    scroll-snap-type: x mandatory;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-    scroll-behavior: smooth;
-    gap: 0;
-}
+    /* actual horizontal scroller */
+    .catalogue .wb-scroller-wrap > .block.container-xxxl {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        width: 100%;
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        scroll-behavior: smooth;
+        gap: 0;
+    }
 
-.catalogue .wb-scroller-wrap > .block.container-xxxl::-webkit-scrollbar {
-    display: none;
-}
+    .catalogue .wb-scroller-wrap > .block.container-xxxl::-webkit-scrollbar {
+        display: none;
+    }
 
-/* IMPORTANT: target only direct children so bootstrap .col does not win */
-.catalogue .wb-scroller-wrap > .block.container-xxxl > .col {
-    flex: 0 0 50% !important;
-    width: 50% !important;
-    min-width: 50% !important;
-    max-width: 50% !important;
-    display: flex !important;
-    flex-direction: column !important;
-    box-sizing: border-box;
-    scroll-snap-align: start;
-    padding: 0;
-    margin: 0;
-    border-left: none;
-    border-top: none;
-}
+    /* IMPORTANT: target only direct children so bootstrap .col does not win */
+    .catalogue .wb-scroller-wrap > .block.container-xxxl > .col {
+        flex: 0 0 50% !important;
+        width: 50% !important;
+        min-width: 50% !important;
+        max-width: 50% !important;
+        display: flex !important;
+        flex-direction: column !important;
+        box-sizing: border-box;
+        scroll-snap-align: start;
+        padding: 0;
+        margin: 0;
+        border-left: none;
+        border-top: none;
+    }
 
-/* wrappers inside each card */
-.catalogue .wb-scroller-wrap > .block.container-xxxl > .col .element,
-.catalogue .wb-scroller-wrap > .block.container-xxxl > .col .element-text,
-.catalogue .wb-scroller-wrap > .block.container-xxxl > .col .element-text a,
-.catalogue .wb-scroller-wrap > .block.container-xxxl > .col .element-text picture {
-    display: block;
-    width: 100%;
-}
+    /* wrappers inside each card */
+    .catalogue .wb-scroller-wrap > .block.container-xxxl > .col .element,
+    .catalogue .wb-scroller-wrap > .block.container-xxxl > .col .element-text,
+    .catalogue .wb-scroller-wrap > .block.container-xxxl > .col .element-text a,
+    .catalogue .wb-scroller-wrap > .block.container-xxxl > .col .element-text picture {
+        display: block;
+        width: 100%;
+    }
 
-/* image sizing */
-.catalogue .wb-scroller-wrap > .block.container-xxxl > .col img {
-    display: block;
-    width: 100% !important;
-    height: auto !important;
-    max-height: none !important;
-    object-fit: cover;
-}
+    /* image sizing */
+    .catalogue .wb-scroller-wrap > .block.container-xxxl > .col img {
+        display: block;
+        width: 100% !important;
+        height: auto !important;
+        max-height: none !important;
+        object-fit: cover;
+    }
 
-/* info rows */
-.catalogue .wb-scroller-wrap > .block.container-xxxl > .col .element-info {
-    width: 100%;
-}
+    /* info rows */
+    .catalogue .wb-scroller-wrap > .block.container-xxxl > .col .element-info {
+        width: 100%;
+    }
 
-.catalogue .wb-scroller-wrap > .block.container-xxxl > .col .element-info .column {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
+    .catalogue .wb-scroller-wrap > .block.container-xxxl > .col .element-info .column {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
 }
 
 @media (max-width: 599px) {
 
     .vintage .shop-all a, 
-    .staff-picks a, .tees a, 
+    .staff-picks a, 
+    .tees a, 
     .sweatshirts a, 
     .outerwear a, 
     .archive a {
         font-size: 35px;
     }
-
 }
 
 @media (max-width: 530px) {
 
     .vintage .shop-all a, 
-    .staff-picks a, .tees a, 
+    .staff-picks a, 
+    .tees a, 
     .sweatshirts a, 
     .outerwear a, 
     .archive a {
@@ -505,5 +509,4 @@ html, body {
     .extra-info .img1 img {
         height: 350px;
     }
-
 }

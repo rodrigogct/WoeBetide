@@ -3,7 +3,8 @@ document.addEventListener('DOMContentLoaded', () => {
   if (!wrap) return;
 
   const scroller = wrap.querySelector('.block.container-xxxl');
-  const nextBtn  = wrap.querySelector('.wb-next-btn');
+  const nextBtn = wrap.querySelector('.wb-next-btn');
+
   if (!scroller || !nextBtn) return;
 
   const getStep = () => {
@@ -12,9 +13,36 @@ document.addEventListener('DOMContentLoaded', () => {
     return Math.max(scroller.clientWidth * 0.5, colW);
   };
 
+  const isAtEnd = () => {
+    return scroller.scrollLeft + scroller.clientWidth >= scroller.scrollWidth - 5;
+  };
+
+  const updateArrow = () => {
+    if (isAtEnd()) {
+      wrap.classList.add('wb-arrow-left');
+    } else {
+      wrap.classList.remove('wb-arrow-left');
+    }
+  };
+
   nextBtn.addEventListener('click', () => {
-    scroller.scrollBy({ left: +getStep(), behavior: 'smooth' });
+    if (isAtEnd()) {
+      scroller.scrollBy({
+        left: -getStep(),
+        behavior: 'smooth'
+      });
+    } else {
+      scroller.scrollBy({
+        left: getStep(),
+        behavior: 'smooth'
+      });
+    }
   });
+
+  scroller.addEventListener('scroll', updateArrow);
+  window.addEventListener('resize', updateArrow);
+
+  updateArrow();
 });
 
 // document.addEventListener('DOMContentLoaded', () => {
