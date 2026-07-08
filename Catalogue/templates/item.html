@@ -254,12 +254,12 @@
                       </div>
                     </div>
                     <!-- catalogue items width -->
-                    {% if item.width_in_cm %}
-                      <p class="info" style="border-bottom: none;">{{ item.width_in_cm }} cm / {{ item.width }} in</p>
+                    {% if item.width %}
+                      <p class="info" style="border-bottom: none;">{{ item.width }} cm / {{ item.width_in_inches }} in</p>
                     {% endif %}
                     <!-- staff-pickups items width -->
-                    {% if staff_item.width_in_cm %}
-                      <p class="info" style="border-bottom: none;">{{ staff_item.width_in_cm }} cm / {{ staff_item.width }} in</p>
+                    {% if staff_item.width %}
+                      <p class="info" style="border-bottom: none;">{{ staff_item.width }} cm / {{ staff_item.width_in_inches }} in</p>
                     {% endif %}
 
                     <div class="length" style="border-bottom: none; border-right: none;">
@@ -276,12 +276,12 @@
                       </div>
                     </div>
                     <!-- catalogue items lenght -->
-                    {% if item.length_in_cm %}
-                      <p class="info" style="border-bottom: none;">{{ item.length_in_cm }} cm / {{ item.length }} in</p>
+                    {% if item.length %}
+                      <p class="info" style="border-bottom: none;">{{ item.length }} cm / {{ item.length_in_inches }} in</p>
                     {% endif %}
                     <!-- staff-pickups items length -->
-                    {% if staff_item.length_in_cm %}
-                      <p class="info" style="border-bottom: none;">{{ staff_item.length_in_cm }} cm / {{ staff_item.length }} in</p>
+                    {% if staff_item.length %}
+                      <p class="info" style="border-bottom: none;">{{ staff_item.length }} cm / {{ staff_item.length_in_inches }} in</p>
                     {% endif %}
 
                     <div class="sleeve" style="border-right: none;">
@@ -298,12 +298,12 @@
                       </div>
                     </div>
                     <!-- catalogue items sleeve lenght -->
-                    {% if item.sleeve_in_cm %}
-                      <p class="info">{{ item.sleeve_in_cm }} cm / {{ item.sleeve }} in</p>
+                    {% if item.sleeve %}
+                      <p class="info">{{ item.sleeve }} cm / {{ item.sleeve_in_inches }} in</p>
                     {% endif %}
                     <!-- staff-pickups items sleeve lenght -->
-                    {% if staff_item.sleeve_in_cm %}
-                      <p class="info">{{ staff_item.sleeve_in_cm }} cm / {{ staff_item.sleeve }} in</p>
+                    {% if staff_item.sleeve %}
+                      <p class="info">{{ staff_item.sleeve }} cm / {{ staff_item.sleeve_in_inches }} in</p>
                     {% endif %}
 
                   </div>
