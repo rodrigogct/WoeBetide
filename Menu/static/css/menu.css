@@ -270,6 +270,11 @@ html, body {
     z-index: 10;
     line-height: 0;
     cursor: pointer;
+    
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 10;
   }
   
   /* the circle */
@@ -287,6 +292,11 @@ html, body {
   .wb-round-icon svg{
     width: 60%;
     display: block;
+  }
+
+  .wb-scroller-wrap.wb-arrow-left .wb-next-btn {
+    right: auto;
+    left: 12px;
   }
   
   /* smaller phones: shrink button but keep “half outside” math working */
