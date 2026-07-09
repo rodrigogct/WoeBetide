@@ -1,0 +1,59 @@
+<h1>Sell Garment</h1>
+
+<p><strong>ID:</strong> {{ garment.garment_id }}</p>
+<p><strong>Name:</strong> {{ garment.name }}</p>
+<p><strong>Listed Price:</strong> ${{ garment.listed_price }}</p>
+<p><strong>Status:</strong> {{ garment.status }}</p>
+
+<form method="POST">
+  {% csrf_token %}
+
+  <label>Sold price</label>
+  <input
+    type="number"
+    name="sold_price"
+    step="0.01"
+    value="{{ garment.listed_price }}"
+    required
+  >
+
+  <br><br>
+
+  <label>Sale channel</label>
+  <select name="channel" required>
+    <option value="physical">Physical</option>
+    <option value="popup">Pop-up</option>
+    <option value="instagram">Instagram</option>
+    <option value="website">Website</option>
+    <option value="other">Other</option>
+  </select>
+
+  <br><br>
+
+  <label>Cash</label>
+  <input type="number" name="cash" step="0.01" value="0">
+
+  <br><br>
+
+  <label>Clip</label>
+  <input type="number" name="clip" step="0.01" value="0">
+
+  <br><br>
+
+  <label>Card</label>
+  <input type="number" name="card" step="0.01" value="0">
+
+  <br><br>
+
+  <label>Transfer</label>
+  <input type="number" name="transfer" step="0.01" value="0">
+
+  <br><br>
+
+  <label>Fees</label>
+  <input type="number" name="fees" step="0.01" value="0">
+
+  <br><br>
+
+  <button type="submit">Confirm Sale</button>
+</form>
