@@ -25,4 +25,5 @@ urlpatterns = [
 
     path('', include('Menu.urls')),
     path('', include('Catalogue.urls')),
+    path('', include("Inventory.urls")),
 ]

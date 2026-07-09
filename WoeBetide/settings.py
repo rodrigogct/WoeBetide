@@ -79,6 +79,8 @@ INSTALLED_APPS = [
     'cloudinary_storage',
     'Catalogue',
     'Menu',
+    'Inventory',
+    'import_export'
 ]
 
 MIDDLEWARE = [
