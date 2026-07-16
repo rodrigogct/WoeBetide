@@ -1,0 +1,14 @@
+<h1>WOE BETIDE Dashboard</h1>
+
+<ul>
+  <li>Total inventory: {{ total_inventory }}</li>
+  <li>Available: {{ available }}</li>
+  <li>Published: {{ published }}</li>
+  <li>Sold: {{ sold }}</li>
+  <li>Revenue: ${{ revenue }}</li>
+  <li>Gross profit: ${{ gross_profit }}</li>
+</ul>
+
+<a href="{% url 'sell_dashboard' %}">Sell item</a>
+<br>
+<a href="{% url 'inventory_list' %}">View inventory</a>

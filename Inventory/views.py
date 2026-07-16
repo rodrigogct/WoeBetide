@@ -112,6 +112,28 @@ def dashboard_home(request):
         "gross_profit": gross_profit,
     })
 
+@login_required
+def sell_dashboard(request):
+    query = request.GET.get("q", "")
+
+    garments = Garment.objects.exclude(
+        status=Garment.Status.SOLD
+    ).order_by("-created_at")
+
+    if query:
+        garments = garments.filter(
+            models.Q(garment_id__icontains=query) |
+            models.Q(name__icontains=query) |
+            models.Q(brand__icontains=query) |
+            models.Q(size__icontains=query) |
+            models.Q(collection__collection_id__icontains=query)
+        )
+
+    return render(request, "inventory/sell_dashboard.html", {
+        "garments": garments,
+        "query": query,
+    })
+
 def shop_all(request):
     garments = Garment.objects.filter(
         status=Garment.Status.PUBLISHED,

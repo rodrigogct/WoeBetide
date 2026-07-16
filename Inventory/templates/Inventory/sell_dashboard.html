@@ -1,0 +1,58 @@
+<h1>Sell Item</h1>
+
+<form method="GET">
+  <input
+    type="text"
+    name="q"
+    placeholder="Search by ID, name, brand, size, collection..."
+    value="{{ query }}"
+    autofocus
+  >
+  <button type="submit">Search</button>
+</form>
+
+<br>
+
+<table border="1" cellpadding="8">
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Item</th>
+      <th>Brand</th>
+      <th>Size</th>
+      <th>Collection</th>
+      <th>Price</th>
+      <th>Status</th>
+      <th>Sell</th>
+    </tr>
+  </thead>
+
+  <tbody>
+    {% for garment in garments %}
+      <tr>
+        <td>{{ garment.garment_id }}</td>
+        <td>{{ garment.name }}</td>
+        <td>{{ garment.brand }}</td>
+        <td>{{ garment.size }}</td>
+        <td>
+          {% if garment.collection %}
+            {{ garment.collection.collection_id }}
+          {% else %}
+            —
+          {% endif %}
+        </td>
+        <td>${{ garment.listed_price }}</td>
+        <td>{{ garment.status }}</td>
+        <td>
+          <a href="{% url 'sell_garment' garment.garment_id %}">
+            Sell
+          </a>
+        </td>
+      </tr>
+    {% empty %}
+      <tr>
+        <td colspan="8">No items found.</td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
