@@ -7,9 +7,10 @@ from django.db import transaction, models
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from django.db.models import Sum, Count
+from django.contrib import messages
 
 from .models import Garment, Sale, SaleItem, Payment
-
+from .importers import import_inventory_excel
 
 @login_required
 def inventory_list(request):
@@ -133,6 +134,45 @@ def sell_dashboard(request):
         "garments": garments,
         "query": query,
     })
+
+@login_required
+def import_inventory_view(request):
+    if not request.user.is_superuser:
+        messages.error(request, "You do not have permission to import inventory.")
+        return redirect("dashboard_home")
+
+    if request.method == "POST":
+        excel_file = request.FILES.get("excel_file")
+
+        if not excel_file:
+            messages.error(request, "Please upload an Excel file.")
+            return redirect("import_inventory")
+
+        if not excel_file.name.endswith((".xlsx", ".xls")):
+            messages.error(request, "Please upload a valid Excel file.")
+            return redirect("import_inventory")
+
+        try:
+            result = import_inventory_excel(excel_file)
+
+            messages.success(
+                request,
+                (
+                    "Import complete. "
+                    f"Created garments: {result['created_garments']}. "
+                    f"Updated garments: {result['updated_garments']}. "
+                    f"Created sales: {result['created_sales']}. "
+                    f"Created/updated payments: {result['created_or_updated_payments']}."
+                )
+            )
+
+            return redirect("dashboard_home")
+
+        except Exception as error:
+            messages.error(request, f"Import failed: {error}")
+            return redirect("import_inventory")
+
+    return render(request, "inventory/import_inventory.html")
 
 def shop_all(request):
     garments = Garment.objects.filter(

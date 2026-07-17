@@ -1,0 +1,25 @@
+<h1>Import Inventory Excel</h1>
+
+<p>Upload your WOE BETIDE Excel file. Django will import the INVENTORY sheet.</p>
+
+{% if messages %}
+  {% for message in messages %}
+    <p><strong>{{ message }}</strong></p>
+  {% endfor %}
+{% endif %}
+
+<form method="POST" enctype="multipart/form-data">
+  {% csrf_token %}
+
+  <label>Excel file</label>
+  <br>
+  <input type="file" name="excel_file" accept=".xlsx,.xls" required>
+
+  <br><br>
+
+  <button type="submit">Import Excel</button>
+</form>
+
+<br>
+
+<a href="{% url 'dashboard_home' %}">Back to dashboard</a>

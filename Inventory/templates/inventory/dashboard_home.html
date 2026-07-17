@@ -12,3 +12,8 @@
 <a href="{% url 'sell_dashboard' %}">Sell item</a>
 <br>
 <a href="{% url 'inventory_list' %}">View inventory</a>
+
+{% if request.user.is_superuser %}
+  <br>
+  <a href="{% url 'import_inventory' %}">Import Excel</a>
+{% endif %}
