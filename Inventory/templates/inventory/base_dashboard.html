@@ -11,19 +11,18 @@
 </head>
 
 <body>
-  <header class="dashboard-header">
-    <a href="{% url 'dashboard_home' %}" class="brand-link">WOE BETIDE</a>
-
     <nav class="dashboard-nav">
-      <a href="{% url 'dashboard_home' %}">Dashboard</a>
-      <a href="{% url 'sell_dashboard' %}">Sell</a>
-      <a href="{% url 'inventory_list' %}">Inventory</a>
-
-      {% if request.user.is_superuser %}
-        <a href="{% url 'import_inventory' %}">Import</a>
-      {% endif %}
-    </nav>
-  </header>
+        <a href="{% url 'dashboard_home' %}">Dashboard</a>
+        <a href="{% url 'sell_dashboard' %}">Sell</a>
+        <a href="{% url 'inventory_list' %}">Inventory</a>
+        <a href="{% url 'collections_dashboard' %}">Collections</a>
+        <a href="{% url 'sales_dashboard' %}">Sales</a>
+        <a href="{% url 'payments_dashboard' %}">Payments</a>
+      
+        {% if request.user.is_superuser %}
+          <a href="{% url 'import_inventory' %}">Import</a>
+        {% endif %}
+      </nav>
 
   {% if messages %}
     <section class="messages">

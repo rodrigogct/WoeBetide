@@ -1,15 +1,14 @@
 from django.shortcuts import render
 
 # Create your views here.
-from .models import Garment
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.db import transaction, models
+from django.db import models, transaction
+from django.db.models import Sum, Count
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
-from django.db.models import Sum, Count
-from django.contrib import messages
 
-from .models import Garment, Sale, SaleItem, Payment
+from .models import Collection, Garment, Sale, SaleItem, Payment
 from .importers import import_inventory_excel
 
 @login_required
@@ -196,4 +195,134 @@ def shop_all(request):
 
     return render(request, "shop.html", {
         "garments": garments
+    })
+
+@login_required
+def collections_dashboard(request):
+    collections = Collection.objects.all().order_by("-date_bought")
+
+    rows = []
+
+    for collection in collections:
+        garments = collection.garments.all()
+        sold_garments = garments.filter(status=Garment.Status.SOLD)
+        available_garments = garments.filter(status=Garment.Status.AVAILABLE)
+
+        total_items = garments.count()
+        sold_count = sold_garments.count()
+        available_count = available_garments.count()
+
+        total_cost = garments.aggregate(total=Sum("cost"))["total"] or 0
+        revenue = sold_garments.aggregate(total=Sum("sold_price"))["total"] or 0
+        gross_profit = revenue - total_cost
+
+        sell_through = 0
+        if total_items > 0:
+            sell_through = round((sold_count / total_items) * 100, 1)
+
+        rows.append({
+            "collection": collection,
+            "total_items": total_items,
+            "sold_count": sold_count,
+            "available_count": available_count,
+            "total_cost": total_cost,
+            "revenue": revenue,
+            "gross_profit": gross_profit,
+            "sell_through": sell_through,
+        })
+
+    return render(request, "inventory/collections_dashboard.html", {
+        "rows": rows,
+    })
+
+@login_required
+def sales_dashboard(request):
+    query = request.GET.get("q", "")
+
+    sales = Sale.objects.all().order_by("-sale_date", "-created_at")
+
+    if query:
+        sales = sales.filter(
+            models.Q(sale_id__icontains=query) |
+            models.Q(channel__icontains=query) |
+            models.Q(customer_name__icontains=query)
+        )
+
+    return render(request, "inventory/sales_dashboard.html", {
+        "sales": sales,
+        "query": query,
+    })
+
+@login_required
+def sale_detail(request, sale_id):
+    sale = get_object_or_404(Sale, sale_id=sale_id)
+
+    return render(request, "inventory/sale_detail.html", {
+        "sale": sale,
+    })
+
+@login_required
+def payments_dashboard(request):
+    payments = Payment.objects.select_related("sale").all().order_by("-sale__sale_date")
+
+    totals = payments.aggregate(
+        total_cash=Sum("cash"),
+        total_clip=Sum("clip"),
+        total_card=Sum("card"),
+        total_transfer=Sum("transfer"),
+        total_fees=Sum("fees"),
+    )
+
+    total_cash = totals["total_cash"] or 0
+    total_clip = totals["total_clip"] or 0
+    total_card = totals["total_card"] or 0
+    total_transfer = totals["total_transfer"] or 0
+    total_fees = totals["total_fees"] or 0
+
+    gross_total = total_cash + total_clip + total_card + total_transfer
+    net_total = gross_total - total_fees
+
+    return render(request, "inventory/payments_dashboard.html", {
+        "payments": payments,
+        "total_cash": total_cash,
+        "total_clip": total_clip,
+        "total_card": total_card,
+        "total_transfer": total_transfer,
+        "total_fees": total_fees,
+        "gross_total": gross_total,
+        "net_total": net_total,
+    })
+    collections = Collection.objects.all().order_by("-date_bought")
+
+    rows = []
+
+    for collection in collections:
+        garments = collection.garments.all()
+        sold_garments = garments.filter(status=Garment.Status.SOLD)
+
+        total_items = garments.count()
+        sold_count = sold_garments.count()
+        available_count = garments.filter(status=Garment.Status.AVAILABLE).count()
+
+        total_cost = garments.aggregate(total=Sum("cost"))["total"] or 0
+        revenue = sold_garments.aggregate(total=Sum("sold_price"))["total"] or 0
+        gross_profit = revenue - total_cost
+
+        sell_through = 0
+        if total_items > 0:
+            sell_through = sold_count / total_items * 100
+
+        rows.append({
+            "collection": collection,
+            "total_items": total_items,
+            "sold_count": sold_count,
+            "available_count": available_count,
+            "total_cost": total_cost,
+            "revenue": revenue,
+            "gross_profit": gross_profit,
+            "sell_through": sell_through,
+        })
+
+    return render(request, "inventory/collections_dashboard.html", {
+        "rows": rows,
     })

@@ -1,0 +1,115 @@
+{% extends "inventory/base_dashboard.html" %}
+
+{% block content %}
+
+<h1 class="page-title">Sale {{ sale.sale_id }}</h1>
+
+<section class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-label">Date</div>
+    <div class="stat-value">{{ sale.sale_date }}</div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-label">Channel</div>
+    <div class="stat-value">{{ sale.channel }}</div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-label">Items</div>
+    <div class="stat-value">{{ sale.items.count }}</div>
+  </div>
+
+  {% if sale.payment %}
+    <div class="stat-card">
+      <div class="stat-label">Total</div>
+      <div class="stat-value">${{ sale.payment.gross_total }}</div>
+    </div>
+  {% endif %}
+</section>
+
+<h2 class="section-title">Items</h2>
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Image</th>
+        <th>Garment ID</th>
+        <th>Item</th>
+        <th>Size</th>
+        <th>Collection</th>
+        <th>Sold Price</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      {% for item in sale.items.all %}
+        <tr>
+          <td>
+            {% if item.garment.img1 %}
+              <img class="item-image" src="{{ item.garment.img1.url }}" alt="{{ item.garment.name }}">
+            {% else %}
+              <div class="item-image"></div>
+            {% endif %}
+          </td>
+          <td>{{ item.garment.garment_id }}</td>
+          <td>{{ item.garment.name }}</td>
+          <td>{{ item.garment.size }}</td>
+          <td>
+            {% if item.garment.collection %}
+              {{ item.garment.collection.collection_id }}
+            {% else %}
+              —
+            {% endif %}
+          </td>
+          <td>${{ item.sold_price }}</td>
+        </tr>
+      {% empty %}
+        <tr>
+          <td colspan="6">No items in this sale.</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% if sale.payment %}
+  <h2 class="section-title" style="margin-top: 32px;">Payment</h2>
+
+  <section class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-label">Cash</div>
+      <div class="stat-value">${{ sale.payment.cash }}</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-label">Clip</div>
+      <div class="stat-value">${{ sale.payment.clip }}</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-label">Card</div>
+      <div class="stat-value">${{ sale.payment.card }}</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-label">Transfer</div>
+      <div class="stat-value">${{ sale.payment.transfer }}</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-label">Fees</div>
+      <div class="stat-value">${{ sale.payment.fees }}</div>
+    </div>
+
+    <div class="stat-card">
+      <div class="stat-label">Net Total</div>
+      <div class="stat-value">${{ sale.payment.net_total }}</div>
+    </div>
+  </section>
+{% endif %}
+
+<a class="button" href="{% url 'sales_dashboard' %}">Back to Sales</a>
+
+{% endblock %}

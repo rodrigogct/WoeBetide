@@ -1,0 +1,81 @@
+{% extends "inventory/base_dashboard.html" %}
+
+{% block content %}
+
+<h1 class="page-title">Payments</h1>
+
+<section class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-label">Cash</div>
+    <div class="stat-value">${{ total_cash }}</div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-label">Clip</div>
+    <div class="stat-value">${{ total_clip }}</div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-label">Card</div>
+    <div class="stat-value">${{ total_card }}</div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-label">Transfer</div>
+    <div class="stat-value">${{ total_transfer }}</div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-label">Fees</div>
+    <div class="stat-value">${{ total_fees }}</div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-label">Net Total</div>
+    <div class="stat-value">${{ net_total }}</div>
+  </div>
+</section>
+
+<div class="table-wrap">
+  <table>
+    <thead>
+      <tr>
+        <th>Sale ID</th>
+        <th>Date</th>
+        <th>Cash</th>
+        <th>Clip</th>
+        <th>Card</th>
+        <th>Transfer</th>
+        <th>Fees</th>
+        <th>Gross</th>
+        <th>Net</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      {% for payment in payments %}
+        <tr>
+          <td>
+            <a href="{% url 'sale_detail' payment.sale.sale_id %}">
+              {{ payment.sale.sale_id }}
+            </a>
+          </td>
+          <td>{{ payment.sale.sale_date }}</td>
+          <td>${{ payment.cash }}</td>
+          <td>${{ payment.clip }}</td>
+          <td>${{ payment.card }}</td>
+          <td>${{ payment.transfer }}</td>
+          <td>${{ payment.fees }}</td>
+          <td>${{ payment.gross_total }}</td>
+          <td>${{ payment.net_total }}</td>
+        </tr>
+      {% empty %}
+        <tr>
+          <td colspan="9">No payments found.</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}
