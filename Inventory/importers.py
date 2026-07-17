@@ -13,7 +13,6 @@ def clean_text(value):
         return ""
     return str(value).strip()
 
-
 def clean_decimal(value):
     if pd.isna(value) or value == "":
         return Decimal("0")
@@ -22,7 +21,6 @@ def clean_decimal(value):
         return Decimal(str(value).replace(",", "").strip())
     except (InvalidOperation, ValueError):
         return Decimal("0")
-
 
 def clean_date(value):
     if pd.isna(value) or value == "":
@@ -34,7 +32,6 @@ def clean_date(value):
         return None
 
     return parsed.date()
-
 
 def map_status(value):
     value = clean_text(value).lower()
@@ -49,7 +46,6 @@ def map_status(value):
         return Garment.Status.ARCHIVE
 
     return Garment.Status.DRAFT
-
 
 def map_category(value):
     value = clean_text(value).lower()
@@ -68,7 +64,6 @@ def map_category(value):
 
     return mapping.get(value, Garment.Category.OTHER)
 
-
 def map_channel(value):
     value = clean_text(value).lower()
 
@@ -84,7 +79,6 @@ def map_channel(value):
     }
 
     return mapping.get(value, Sale.Channel.OTHER)
-
 
 REQUIRED_COLUMNS = [
     "ID",
@@ -109,7 +103,6 @@ REQUIRED_COLUMNS = [
     "Sale ID",
 ]
 
-
 def read_inventory_excel(excel_file):
     try:
         df = pd.read_excel(excel_file, sheet_name="INVENTORY")
@@ -130,16 +123,17 @@ def read_inventory_excel(excel_file):
 
     return df
 
-
 @transaction.atomic
 def import_inventory_excel(excel_file):
     df = read_inventory_excel(excel_file)
+
+    # This removes summary rows like "Sold Garments", "Available Garments", etc.
+    df = df[pd.to_numeric(df["ID"], errors="coerce").notna()]
 
     created_garments = 0
     updated_garments = 0
     created_sales = 0
     created_or_updated_payments = 0
-
     processed_payments = set()
 
     for index, row in df.iterrows():

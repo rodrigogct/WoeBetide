@@ -1,7 +1,5 @@
 from django.core.management.base import BaseCommand
-
 from Inventory.importers import import_inventory_excel
-
 
 class Command(BaseCommand):
     help = "Import WOE BETIDE Excel inventory into Django models."
