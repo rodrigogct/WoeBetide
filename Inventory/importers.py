@@ -144,6 +144,11 @@ def import_inventory_excel(excel_file):
         if not excel_id or not garment_name:
             continue
 
+        try:
+            clean_excel_id = int(float(excel_id))
+        except ValueError:
+            continue
+
         if not collection_id:
             collection_id = "NO-COLLECTION"
 
@@ -160,11 +165,6 @@ def import_inventory_excel(excel_file):
                 "notes": "",
             },
         )
-
-        try:
-            clean_excel_id = int(float(excel_id))
-        except ValueError:
-            clean_excel_id = excel_id
 
         garment_id = f"WB-{collection_id}-{clean_excel_id}"
 
