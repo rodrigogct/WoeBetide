@@ -8,7 +8,7 @@
   <input
     type="text"
     name="q"
-    placeholder="Search by ID, name, brand, size, collection..."
+    placeholder="Search by ID, name, size, collection..."
     value="{{ query }}"
     autofocus
   >
@@ -22,7 +22,6 @@
         <th>Image</th>
         <th>ID</th>
         <th>Item</th>
-        <th>Brand</th>
         <th>Size</th>
         <th>Collection</th>
         <th>Price</th>
@@ -43,7 +42,6 @@
           </td>
           <td>{{ garment.garment_id }}</td>
           <td>{{ garment.name }}</td>
-          <td>{{ garment.brand }}</td>
           <td>{{ garment.size }}</td>
           <td>
             {% if garment.collection %}
