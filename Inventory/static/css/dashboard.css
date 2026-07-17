@@ -1,0 +1,263 @@
+* {
+    box-sizing: border-box;
+  }
+  
+  html,
+  body {
+    margin: 0;
+    background: #ffffff;
+    color: #111111;
+    font-family: Arial, Helvetica, sans-serif;
+    text-transform: uppercase;
+  }
+  
+  a {
+    color: #111111;
+    text-decoration: none;
+  }
+  
+  .dashboard-header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: #ffffff;
+    border-bottom: 1px solid #111111;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 24px;
+  }
+  
+  .brand-link {
+    font-size: 22px;
+    letter-spacing: -0.03em;
+    font-weight: 500;
+  }
+  
+  .dashboard-nav {
+    display: flex;
+    gap: 18px;
+    font-size: 12px;
+  }
+  
+  .dashboard-nav a {
+    border-bottom: 1px solid transparent;
+  }
+  
+  .dashboard-nav a:hover {
+    border-bottom: 1px solid #111111;
+  }
+  
+  .dashboard-main {
+    padding: 28px 24px;
+  }
+  
+  .page-title {
+    font-size: clamp(42px, 8vw, 110px);
+    font-weight: 500;
+    letter-spacing: -0.06em;
+    line-height: 0.9;
+    margin: 0 0 32px;
+  }
+  
+  .section-title {
+    font-size: 18px;
+    font-weight: 500;
+    margin: 0 0 14px;
+  }
+  
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    border-top: 1px solid #111111;
+    border-left: 1px solid #111111;
+    margin-bottom: 36px;
+  }
+  
+  .stat-card {
+    border-right: 1px solid #111111;
+    border-bottom: 1px solid #111111;
+    padding: 20px;
+    min-height: 130px;
+  }
+  
+  .stat-label {
+    font-size: 12px;
+    margin-bottom: 40px;
+  }
+  
+  .stat-value {
+    font-size: 34px;
+    letter-spacing: -0.04em;
+  }
+  
+  .action-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+  
+  .button,
+  button {
+    display: inline-block;
+    border: 1px solid #111111;
+    background: #ffffff;
+    color: #111111;
+    padding: 12px 18px;
+    font-size: 12px;
+    text-transform: uppercase;
+    cursor: pointer;
+  }
+  
+  .button:hover,
+  button:hover {
+    background: #111111;
+    color: #ffffff;
+  }
+  
+  .search-form {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  
+  .search-form input,
+  input,
+  select {
+    border: 1px solid #111111;
+    background: #ffffff;
+    color: #111111;
+    padding: 12px;
+    font-size: 14px;
+    text-transform: uppercase;
+    width: 100%;
+  }
+  
+  .search-form button {
+    width: auto;
+    white-space: nowrap;
+  }
+  
+  .table-wrap {
+    width: 100%;
+    overflow-x: auto;
+    border: 1px solid #111111;
+  }
+  
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  
+  th,
+  td {
+    border-bottom: 1px solid #111111;
+    border-right: 1px solid #111111;
+    padding: 12px;
+    text-align: left;
+    vertical-align: middle;
+  }
+  
+  th {
+    font-weight: 500;
+    background: #ffffff;
+  }
+  
+  tr:last-child td {
+    border-bottom: none;
+  }
+  
+  .item-image {
+    width: 58px;
+    height: 72px;
+    object-fit: cover;
+    display: block;
+    background: #eeeeee;
+  }
+  
+  .status-pill {
+    display: inline-block;
+    border: 1px solid #111111;
+    padding: 5px 8px;
+    font-size: 10px;
+  }
+  
+  .sell-link {
+    display: inline-block;
+    border: 1px solid #111111;
+    padding: 8px 12px;
+  }
+  
+  .sell-link:hover {
+    background: #111111;
+    color: #ffffff;
+  }
+  
+  .form-card {
+    border: 1px solid #111111;
+    padding: 22px;
+    max-width: 620px;
+  }
+  
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+  }
+  
+  .form-field {
+    margin-bottom: 14px;
+  }
+  
+  .form-field label {
+    display: block;
+    font-size: 12px;
+    margin-bottom: 6px;
+  }
+  
+  .messages {
+    padding: 16px 24px 0;
+  }
+  
+  .message {
+    border: 1px solid #111111;
+    padding: 12px;
+    font-size: 12px;
+    margin-bottom: 8px;
+  }
+  
+  @media (max-width: 800px) {
+    .dashboard-header {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 12px;
+    }
+  
+    .dashboard-nav {
+      flex-wrap: wrap;
+    }
+  
+    .stats-grid {
+      grid-template-columns: 1fr 1fr;
+    }
+  
+    .form-grid {
+      grid-template-columns: 1fr;
+    }
+  
+    .dashboard-main {
+      padding: 22px 14px;
+    }
+  }
+  
+  @media (max-width: 520px) {
+    .stats-grid {
+      grid-template-columns: 1fr;
+    }
+  
+    .search-form {
+      flex-direction: column;
+    }
+  }

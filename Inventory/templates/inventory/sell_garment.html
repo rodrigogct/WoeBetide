@@ -1,59 +1,86 @@
-<h1>Sell Garment</h1>
+{% extends "inventory/base_dashboard.html" %}
 
-<p><strong>ID:</strong> {{ garment.garment_id }}</p>
-<p><strong>Name:</strong> {{ garment.name }}</p>
-<p><strong>Listed Price:</strong> ${{ garment.listed_price }}</p>
-<p><strong>Status:</strong> {{ garment.status }}</p>
+{% block content %}
 
-<form method="POST">
-  {% csrf_token %}
+<h1 class="page-title">Confirm Sale</h1>
 
-  <label>Sold price</label>
-  <input
-    type="number"
-    name="sold_price"
-    step="0.01"
-    value="{{ garment.listed_price }}"
-    required
-  >
+<div class="form-card">
+  {% if garment.img1 %}
+    <img
+      src="{{ garment.img1.url }}"
+      alt="{{ garment.name }}"
+      style="width: 100%; max-height: 420px; object-fit: cover; margin-bottom: 20px;"
+    >
+  {% endif %}
 
-  <br><br>
+  <h2 class="section-title">{{ garment.name }}</h2>
 
-  <label>Sale channel</label>
-  <select name="channel" required>
-    <option value="physical">Physical</option>
-    <option value="popup">Pop-up</option>
-    <option value="instagram">Instagram</option>
-    <option value="website">Website</option>
-    <option value="other">Other</option>
-  </select>
+  <p><strong>ID:</strong> {{ garment.garment_id }}</p>
+  <p><strong>Brand:</strong> {{ garment.brand }}</p>
+  <p><strong>Size:</strong> {{ garment.size }}</p>
+  <p><strong>Listed Price:</strong> ${{ garment.listed_price }}</p>
+  <p><strong>Status:</strong> {{ garment.status }}</p>
 
-  <br><br>
+  <form method="POST">
+    {% csrf_token %}
 
-  <label>Cash</label>
-  <input type="number" name="cash" step="0.01" value="0">
+    <div class="form-field">
+      <label>Sold price</label>
+      <input
+        type="number"
+        name="sold_price"
+        step="0.01"
+        value="{{ garment.listed_price }}"
+        required
+      >
+    </div>
 
-  <br><br>
+    <div class="form-field">
+      <label>Sale channel</label>
+      <select name="channel" required>
+        <option value="physical">Physical</option>
+        <option value="popup">Pop-up</option>
+        <option value="instagram">Instagram</option>
+        <option value="website">Website</option>
+        <option value="other">Other</option>
+      </select>
+    </div>
 
-  <label>Clip</label>
-  <input type="number" name="clip" step="0.01" value="0">
+    <h3 class="section-title">Payment</h3>
 
-  <br><br>
+    <div class="form-grid">
+      <div class="form-field">
+        <label>Cash</label>
+        <input type="number" name="cash" step="0.01" value="0">
+      </div>
 
-  <label>Card</label>
-  <input type="number" name="card" step="0.01" value="0">
+      <div class="form-field">
+        <label>Clip</label>
+        <input type="number" name="clip" step="0.01" value="0">
+      </div>
 
-  <br><br>
+      <div class="form-field">
+        <label>Card</label>
+        <input type="number" name="card" step="0.01" value="0">
+      </div>
 
-  <label>Transfer</label>
-  <input type="number" name="transfer" step="0.01" value="0">
+      <div class="form-field">
+        <label>Transfer</label>
+        <input type="number" name="transfer" step="0.01" value="0">
+      </div>
+    </div>
 
-  <br><br>
+    <div class="form-field">
+      <label>Fees</label>
+      <input type="number" name="fees" step="0.01" value="0">
+    </div>
 
-  <label>Fees</label>
-  <input type="number" name="fees" step="0.01" value="0">
+    <button type="submit">Confirm Sale</button>
+  </form>
+</div>
 
-  <br><br>
+<br>
 
-  <button type="submit">Confirm Sale</button>
-</form>
+<a class="button" href="{% url 'sell_dashboard' %}">Back to Sell Dashboard</a>
+
+{% endblock %}

@@ -1,19 +1,48 @@
-<h1>WOE BETIDE Dashboard</h1>
+{% extends "inventory/base_dashboard.html" %}
 
-<ul>
-  <li>Total inventory: {{ total_inventory }}</li>
-  <li>Available: {{ available }}</li>
-  <li>Published: {{ published }}</li>
-  <li>Sold: {{ sold }}</li>
-  <li>Revenue: ${{ revenue }}</li>
-  <li>Gross profit: ${{ gross_profit }}</li>
-</ul>
+{% block content %}
 
-<a href="{% url 'sell_dashboard' %}">Sell item</a>
-<br>
-<a href="{% url 'inventory_list' %}">View inventory</a>
+<h1 class="page-title">Dashboard</h1>
 
-{% if request.user.is_superuser %}
-  <br>
-  <a href="{% url 'import_inventory' %}">Import Excel</a>
-{% endif %}
+<section class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-label">Total Inventory</div>
+    <div class="stat-value">{{ total_inventory }}</div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-label">Available</div>
+    <div class="stat-value">{{ available }}</div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-label">Published</div>
+    <div class="stat-value">{{ published }}</div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-label">Sold</div>
+    <div class="stat-value">{{ sold }}</div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-label">Revenue</div>
+    <div class="stat-value">${{ revenue }}</div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-label">Gross Profit</div>
+    <div class="stat-value">${{ gross_profit }}</div>
+  </div>
+</section>
+
+<div class="action-row">
+  <a class="button" href="{% url 'sell_dashboard' %}">Sell Item</a>
+  <a class="button" href="{% url 'inventory_list' %}">View Inventory</a>
+
+  {% if request.user.is_superuser %}
+    <a class="button" href="{% url 'import_inventory' %}">Import Excel</a>
+  {% endif %}
+</div>
+
+{% endblock %}

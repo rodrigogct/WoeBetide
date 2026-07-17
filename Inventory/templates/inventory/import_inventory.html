@@ -1,25 +1,26 @@
-<h1>Import Inventory Excel</h1>
+{% extends "inventory/base_dashboard.html" %}
 
-<p>Upload your WOE BETIDE Excel file. Django will import the INVENTORY sheet.</p>
+{% block content %}
 
-{% if messages %}
-  {% for message in messages %}
-    <p><strong>{{ message }}</strong></p>
-  {% endfor %}
-{% endif %}
+<h1 class="page-title">Import Excel</h1>
 
-<form method="POST" enctype="multipart/form-data">
-  {% csrf_token %}
+<div class="form-card">
+  <p>Upload your WOE BETIDE Excel file. Django will import the INVENTORY sheet.</p>
 
-  <label>Excel file</label>
-  <br>
-  <input type="file" name="excel_file" accept=".xlsx,.xls" required>
+  <form method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
 
-  <br><br>
+    <div class="form-field">
+      <label>Excel file</label>
+      <input type="file" name="excel_file" accept=".xlsx,.xls" required>
+    </div>
 
-  <button type="submit">Import Excel</button>
-</form>
+    <button type="submit">Import Excel</button>
+  </form>
+</div>
 
 <br>
 
-<a href="{% url 'dashboard_home' %}">Back to dashboard</a>
+<a class="button" href="{% url 'dashboard_home' %}">Back to Dashboard</a>
+
+{% endblock %}

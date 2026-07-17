@@ -1,6 +1,10 @@
-<h1>Sell Item</h1>
+{% extends "inventory/base_dashboard.html" %}
 
-<form method="GET">
+{% block content %}
+
+<h1 class="page-title">Sell Item</h1>
+
+<form method="GET" class="search-form">
   <input
     type="text"
     name="q"
@@ -11,48 +15,58 @@
   <button type="submit">Search</button>
 </form>
 
-<br>
-
-<table border="1" cellpadding="8">
-  <thead>
-    <tr>
-      <th>ID</th>
-      <th>Item</th>
-      <th>Brand</th>
-      <th>Size</th>
-      <th>Collection</th>
-      <th>Price</th>
-      <th>Status</th>
-      <th>Sell</th>
-    </tr>
-  </thead>
-
-  <tbody>
-    {% for garment in garments %}
+<div class="table-wrap">
+  <table>
+    <thead>
       <tr>
-        <td>{{ garment.garment_id }}</td>
-        <td>{{ garment.name }}</td>
-        <td>{{ garment.brand }}</td>
-        <td>{{ garment.size }}</td>
-        <td>
-          {% if garment.collection %}
-            {{ garment.collection.collection_id }}
-          {% else %}
-            —
-          {% endif %}
-        </td>
-        <td>${{ garment.listed_price }}</td>
-        <td>{{ garment.status }}</td>
-        <td>
-          <a href="{% url 'sell_garment' garment.garment_id %}">
-            Sell
-          </a>
-        </td>
+        <th>Image</th>
+        <th>ID</th>
+        <th>Item</th>
+        <th>Brand</th>
+        <th>Size</th>
+        <th>Collection</th>
+        <th>Price</th>
+        <th>Status</th>
+        <th>Sell</th>
       </tr>
-    {% empty %}
-      <tr>
-        <td colspan="8">No items found.</td>
-      </tr>
-    {% endfor %}
-  </tbody>
-</table>
+    </thead>
+
+    <tbody>
+      {% for garment in garments %}
+        <tr>
+          <td>
+            {% if garment.img1 %}
+              <img class="item-image" src="{{ garment.img1.url }}" alt="{{ garment.name }}">
+            {% else %}
+              <div class="item-image"></div>
+            {% endif %}
+          </td>
+          <td>{{ garment.garment_id }}</td>
+          <td>{{ garment.name }}</td>
+          <td>{{ garment.brand }}</td>
+          <td>{{ garment.size }}</td>
+          <td>
+            {% if garment.collection %}
+              {{ garment.collection.collection_id }}
+            {% else %}
+              —
+            {% endif %}
+          </td>
+          <td>${{ garment.listed_price }}</td>
+          <td><span class="status-pill">{{ garment.status }}</span></td>
+          <td>
+            <a class="sell-link" href="{% url 'sell_garment' garment.garment_id %}">
+              Sell
+            </a>
+          </td>
+        </tr>
+      {% empty %}
+        <tr>
+          <td colspan="9">No items found.</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+{% endblock %}
