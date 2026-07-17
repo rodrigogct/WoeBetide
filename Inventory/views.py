@@ -16,9 +16,19 @@ from .importers import import_inventory_excel
 def inventory_list(request):
     garments = Garment.objects.all().order_by("-created_at")
 
+    query = request.GET.get("q", "")
     status = request.GET.get("status")
     category = request.GET.get("category")
     collection = request.GET.get("collection")
+
+    if query:
+        garments = garments.filter(
+            models.Q(garment_id__icontains=query) |
+            models.Q(name__icontains=query) |
+            models.Q(size__icontains=query) |
+            models.Q(category__icontains=query) |
+            models.Q(collection__collection_id__icontains=query)
+        )
 
     if status:
         garments = garments.filter(status=status)
@@ -30,7 +40,8 @@ def inventory_list(request):
         garments = garments.filter(collection__collection_id=collection)
 
     return render(request, "inventory/inventory_list.html", {
-        "garments": garments
+        "garments": garments,
+        "query": query,
     })
 
 @login_required
