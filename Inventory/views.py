@@ -128,8 +128,11 @@ def dashboard_home(request):
 def sell_dashboard(request):
     query = request.GET.get("q", "")
 
-    garments = Garment.objects.exclude(
-        status=Garment.Status.SOLD
+    garments = Garment.objects.filter(
+        status__in=[
+            Garment.Status.AVAILABLE,
+            Garment.Status.PUBLISHED,
+        ]
     ).order_by("-created_at")
 
     if query:

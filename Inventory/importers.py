@@ -127,8 +127,11 @@ def read_inventory_excel(excel_file):
 def import_inventory_excel(excel_file):
     df = read_inventory_excel(excel_file)
 
-    # This removes summary rows like "Sold Garments", "Available Garments", etc.
-    df = df[pd.to_numeric(df["ID"], errors="coerce").notna()]
+    # A real garment must have a numeric ID and a Collection ID like C001, C027, etc.
+    df = df[
+        pd.to_numeric(df["ID"], errors="coerce").notna()
+        & df["Collection ID"].astype(str).str.strip().str.match(r"^C\d+$", na=False)
+]
 
     created_garments = 0
     updated_garments = 0
