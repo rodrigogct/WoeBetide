@@ -140,7 +140,7 @@ def item(request, item_id):
 
     # images loop unchanged...
     images = []
-    for i in range(2, 8):
+    for i in range(1, 8):
         img = getattr(item, f"img{i}", None)
         if img:
             images.append(img)
