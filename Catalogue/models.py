@@ -95,7 +95,7 @@ class Item(models.Model):
         except ValueError:
             return 'NA'
 
-        def save(self, *args, **kwargs):
+    def save(self, *args, **kwargs):
                 import os
                 from django.core.files.base import ContentFile
                 from django.core.files.storage import default_storage
