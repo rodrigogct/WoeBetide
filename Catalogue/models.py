@@ -95,37 +95,37 @@ class Item(models.Model):
         except ValueError:
             return 'NA'
 
-    def save(self, *args, **kwargs):
-            import os
-            from django.core.files.base import ContentFile
-            from django.core.files.storage import default_storage
-            from django.utils import timezone
+        def save(self, *args, **kwargs):
+                import os
+                from django.core.files.base import ContentFile
+                from django.core.files.storage import default_storage
+                from django.utils import timezone
 
-            # Auto-mark sold if archived
-            if self.is_archive and not self.is_sold:
-                self.is_sold = True
-                if not self.sold_at:
-                    self.sold_at = timezone.now()
+                # Auto-mark sold if archived
+                if self.is_archive and not self.is_sold:
+                    self.is_sold = True
+                    if not self.sold_at:
+                        self.sold_at = timezone.now()
 
-            # Save first (uploads img1 to Cloudinary)
-            super().save(*args, **kwargs)
+                # Save first (uploads img1 to Cloudinary)
+                super().save(*args, **kwargs)
 
-            # Auto-create/refresh img2 from img1 (Cloudinary-safe)
-            if self.img1 and getattr(self.img1, "name", ""):
-                base, ext = os.path.splitext(os.path.basename(self.img1.name))
-                ext = (ext or ".jpg").lower()
-                img2_name = f"catalogue/original/{base}__quality{ext}"
+                # Auto-create/refresh img2 from img1 (Cloudinary-safe)
+                if self.img1 and getattr(self.img1, "name", ""):
+                    base, ext = os.path.splitext(os.path.basename(self.img1.name))
+                    ext = (ext or ".jpg").lower()
+                    img2_name = f"catalogue/original/{base}__quality{ext}"
 
-                if (not self.img2) or (self.img2.name != img2_name):
-                    self.img1.open("rb")
-                    data = self.img1.read()
+                    if (not self.img2) or (self.img2.name != img2_name):
+                        self.img1.open("rb")
+                        data = self.img1.read()
 
-                    if default_storage.exists(img2_name):
-                        default_storage.delete(img2_name)
+                        if default_storage.exists(img2_name):
+                            default_storage.delete(img2_name)
 
-                    self.img2.save(img2_name, ContentFile(data), save=False)
+                        self.img2.save(img2_name, ContentFile(data), save=False)
 
-                    super().save(update_fields=["img2", "updated"])
+                        super().save(update_fields=["img2", "updated"])
 
 
 class Jewelry(models.Model):
