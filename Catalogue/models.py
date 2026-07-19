@@ -87,65 +87,46 @@ class Item(models.Model):
             return 'NA'
 
     def sleeve_in_inches(self):
+        # Convert sleeve length from centimeters to inches
         try:
             centimeters = float(self.sleeve)
-            return round(centimeters / 2.54, 1)
-        except (ValueError, TypeError):
-            return "NA"
+            inches = round(centimeters / 2.54, 1)
+            return inches
+        except ValueError:
+            return 'NA'
 
     def save(self, *args, **kwargs):
-        import os
+            import os
+            from django.core.files.base import ContentFile
+            from django.core.files.storage import default_storage
+            from django.utils import timezone
 
-        from django.core.files.base import ContentFile
-        from django.utils import timezone
+            # Auto-mark sold if archived
+            if self.is_archive and not self.is_sold:
+                self.is_sold = True
+                if not self.sold_at:
+                    self.sold_at = timezone.now()
 
-        # Auto-mark archived items as sold
-        if self.is_archive and not self.is_sold:
-            self.is_sold = True
+            # Save first (uploads img1 to Cloudinary)
+            super().save(*args, **kwargs)
 
-            if not self.sold_at:
-                self.sold_at = timezone.now()
+            # Auto-create/refresh img2 from img1 (Cloudinary-safe)
+            if self.img1 and getattr(self.img1, "name", ""):
+                base, ext = os.path.splitext(os.path.basename(self.img1.name))
+                ext = (ext or ".jpg").lower()
+                img2_name = f"catalogue/original/{base}__quality{ext}"
 
-        # First save img1 and the item
-        super().save(*args, **kwargs)
+                if (not self.img2) or (self.img2.name != img2_name):
+                    self.img1.open("rb")
+                    data = self.img1.read()
 
-        if not self.img1 or not getattr(self.img1, "name", ""):
-            return
+                    if default_storage.exists(img2_name):
+                        default_storage.delete(img2_name)
 
-        base, ext = os.path.splitext(os.path.basename(self.img1.name))
-        ext = (ext or ".jpg").lower()
+                    self.img2.save(img2_name, ContentFile(data), save=False)
 
-        # Do not include catalogue/original here.
-        # ImageField automatically applies upload_to.
-        img2_filename = f"{base}__quality{ext}"
+                    super().save(update_fields=["img2", "updated"])
 
-        img2_field = self._meta.get_field("img2")
-        expected_img2_name = img2_field.generate_filename(
-            self,
-            img2_filename,
-        )
-
-        if self.img2 and self.img2.name == expected_img2_name:
-            return
-
-        # Remove the old derived copy
-        if self.img2:
-            self.img2.delete(save=False)
-
-        self.img1.open("rb")
-
-        try:
-            image_data = self.img1.read()
-        finally:
-            self.img1.close()
-
-        self.img2.save(
-            img2_filename,
-            ContentFile(image_data),
-            save=False,
-        )
-
-        super().save(update_fields=["img2", "updated"])
 
 class Jewelry(models.Model):
 
