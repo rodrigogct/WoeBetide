@@ -55,7 +55,7 @@
                         {% endif %}
                       </div>
                       <div class="item_price">
-                        {% if not item.is_sold%}
+                        {% if not item.is_sold %}
                           {% if item.price %}
                             <p>Price: <strong>${{ item.price }}</strong> MXN</p>
                           {% endif %}
@@ -211,16 +211,23 @@
                       <h6 style="text-transform: uppercase; font-size: 1.5rem;">{{item.name}}</h6>
                       {% endif %}
                     </div>
+
                     <div class="item_size">
-                      {% if item.size %} 
-                      <p>Size: <strong>{{item.size}}</strong></p>
+                      {% if not item.is_sold %}
+                        {% if item.size %} 
+                          <p>Size: <strong>{{item.size}}</strong></p>
+                        {% endif %}
                       {% endif %}
                     </div>
+
                     <div class="item_price">
-                      {% if item.price %}
-                      <p style="margin-bottom: 0;">Price: <strong>${{item.price}}</strong> MXN</p>
+                      {% if not item.is_sold %}
+                        {% if item.price %}
+                          <p style="margin-bottom: 0;">Price: <strong>${{item.price}}</strong> MXN</p>
+                        {% endif %}
                       {% endif %}
                     </div>
+
                     <div class="item_description">
                         <!-- catalogue description -->
                         {% if item.description %}
@@ -236,79 +243,91 @@
                         {% endif %}                          
                     </div>
                 </div>
+
                 <!-- measurements information -->
                 <div class="measurements_information">
-                  <div class="measurements row">
+                  {% if not item.is_sold %}
+                    {% if item.size %}
+                      <div class="measurements row">
 
-                    <div class="width" style="border-bottom: none; border-right: none;">
-                      <p>Width</p>
-                      <img
-                        class="measure-info"
-                        data-target="width"
-                        src="{% static 'images/misc/information-logotype-in-a-circle.png' %}"
-                        loading="lazy"
-                        alt=""
-                      >
-                      <div class="measurements-img" data-img="width">
-                        <img src="{% static 'images/misc/width.png' %}" loading="eager" alt="">
+                        <div class="width" style="border-bottom: none; border-right: none;">
+                          <p>Width</p>
+                          <img
+                            class="measure-info"
+                            data-target="width"
+                            src="{% static 'images/misc/information-logotype-in-a-circle.png' %}"
+                            loading="lazy"
+                            alt=""
+                          >
+                          <div class="measurements-img" data-img="width">
+                            <img src="{% static 'images/misc/width.png' %}" loading="eager" alt="">
+                          </div>
+                        </div>
+
+                        <!-- catalogue items width -->
+                        {% if item.width %}
+                          <p class="info" style="border-bottom: none;">{{ item.width }} cm / {{ item.width_in_inches }} in</p>
+                        {% endif %}
+
+                        <!-- staff-pickups items width -->
+                        {% if staff_item.width %}
+                          <p class="info" style="border-bottom: none;">{{ staff_item.width }} cm / {{ staff_item.width_in_inches }} in</p>
+                        {% endif %}
+
+                        <div class="length" style="border-bottom: none; border-right: none;">
+                          <p style="border-right: none; border-bottom: none;">Length</p>
+                          <img
+                            class="measure-info"
+                            data-target="length"
+                            src="{% static 'images/misc/information-logotype-in-a-circle.png' %}"
+                            loading="lazy"
+                            alt=""
+                          >
+                          <div class="measurements-img" data-img="length">
+                            <img src="{% static 'images/misc/length.png' %}" loading="eager" alt="">
+                          </div>
+                        </div>
+
+                        <!-- catalogue items lenght -->
+                        {% if item.length %}
+                          <p class="info" style="border-bottom: none;">{{ item.length }} cm / {{ item.length_in_inches }} in</p>
+                        {% endif %}
+
+                        <!-- staff-pickups items length -->
+                        {% if staff_item.length %}
+                          <p class="info" style="border-bottom: none;">{{ staff_item.length }} cm / {{ staff_item.length_in_inches }} in</p>
+                        {% endif %}
+
+                        <div class="sleeve" style="border-right: none;">
+                          <p style="border-right: none;">Sleeve</p>
+                          <img
+                            class="measure-info"
+                            data-target="sleeve"
+                            src="{% static 'images/misc/information-logotype-in-a-circle.png' %}"
+                            loading="lazy"
+                            alt=""
+                          >
+                          <div class="measurements-img" data-img="sleeve">
+                            <img src="{% static 'images/misc/sleeve.png' %}" loading="eager" alt="">
+                          </div>
+                        </div>
+
+                        <!-- catalogue items sleeve lenght -->
+                        {% if item.sleeve %}
+                          <p class="info">{{ item.sleeve }} cm / {{ item.sleeve_in_inches }} in</p>
+                        {% endif %}
+
+                        <!-- staff-pickups items sleeve lenght -->
+                        {% if staff_item.sleeve %}
+                          <p class="info">{{ staff_item.sleeve }} cm / {{ staff_item.sleeve_in_inches }} in</p>
+                        {% endif %}
+
                       </div>
-                    </div>
-                    <!-- catalogue items width -->
-                    {% if item.width %}
-                      <p class="info" style="border-bottom: none;">{{ item.width }} cm / {{ item.width_in_inches }} in</p>
                     {% endif %}
-                    <!-- staff-pickups items width -->
-                    {% if staff_item.width %}
-                      <p class="info" style="border-bottom: none;">{{ staff_item.width }} cm / {{ staff_item.width_in_inches }} in</p>
-                    {% endif %}
-
-                    <div class="length" style="border-bottom: none; border-right: none;">
-                      <p style="border-right: none; border-bottom: none;">Length</p>
-                      <img
-                        class="measure-info"
-                        data-target="length"
-                        src="{% static 'images/misc/information-logotype-in-a-circle.png' %}"
-                        loading="lazy"
-                        alt=""
-                      >
-                      <div class="measurements-img" data-img="length">
-                        <img src="{% static 'images/misc/length.png' %}" loading="eager" alt="">
-                      </div>
-                    </div>
-                    <!-- catalogue items lenght -->
-                    {% if item.length %}
-                      <p class="info" style="border-bottom: none;">{{ item.length }} cm / {{ item.length_in_inches }} in</p>
-                    {% endif %}
-                    <!-- staff-pickups items length -->
-                    {% if staff_item.length %}
-                      <p class="info" style="border-bottom: none;">{{ staff_item.length }} cm / {{ staff_item.length_in_inches }} in</p>
-                    {% endif %}
-
-                    <div class="sleeve" style="border-right: none;">
-                      <p style="border-right: none;">Sleeve</p>
-                      <img
-                        class="measure-info"
-                        data-target="sleeve"
-                        src="{% static 'images/misc/information-logotype-in-a-circle.png' %}"
-                        loading="lazy"
-                        alt=""
-                      >
-                      <div class="measurements-img" data-img="sleeve">
-                        <img src="{% static 'images/misc/sleeve.png' %}" loading="eager" alt="">
-                      </div>
-                    </div>
-                    <!-- catalogue items sleeve lenght -->
-                    {% if item.sleeve %}
-                      <p class="info">{{ item.sleeve }} cm / {{ item.sleeve_in_inches }} in</p>
-                    {% endif %}
-                    <!-- staff-pickups items sleeve lenght -->
-                    {% if staff_item.sleeve %}
-                      <p class="info">{{ staff_item.sleeve }} cm / {{ staff_item.sleeve_in_inches }} in</p>
-                    {% endif %}
-
-                  </div>
+                  {% endif %}
                 </div>
             </div>
+
             <div style="display: flex; flex-direction: column; justify-content: center;">
                 <!-- disclaimer -->
                 <div class="disclaimer row">
@@ -318,11 +337,13 @@
                 <p>4. All sales are final. Due to the nature of vintage clothing, the tagged size might not display the correct size. We recommend checking the measurements shown above.</p>
                 <p>5. Images may not display the exact color of the garment in its entirety.</p>
                 </div>
+
                 <!-- add to cart -->
                 <div class="add-cart row">
                 <p><strong>Contact us via Instagram at @woe.betide for more information.</strong></p>
                 </div>
             </div>
+
             <div class="buy-buttons">
               {% if item.is_archive or item.is_sold %}
               <p class="mt-2" style="text-align: center;">SOLD OUT</p>
@@ -381,13 +402,14 @@
         <div class="item-a" style="grid-area: header; border-bottom: 1px solid;">
             <h4 style="text-align: start; margin-left: 10px; margin-top: 8px;">FOLLOWING GARMENTS</h4>
         </div>
+
         <!-- related items for catalogue -->
         <div class="elements">
             {% if related_items %}
                 <div class="block container-xxxl">
                       {% for related_item in related_items %}
                         <div class="col" style="display: flex; flex-direction: column; padding: 0;">
-                            <div class="element" >
+                            <div class="element">
                                     <div class="element-text">
                                         <!-- Item related-item image-->
                                         {% if related_item %}
@@ -397,6 +419,7 @@
                                         {% endif %}                                     
                                     </div>
                             </div>
+
                             <div class="element-info">
                                     <div class="column" style="border-top: 1px solid; padding: 0;">
                                         <!-- Item related-item image-->
@@ -404,11 +427,13 @@
                                         <a href="{% url 'Item' related_item.id %}" class="lead"><strong>{{related_item.name}}</strong></a>
                                         {% endif %}
                                     </div> 
+
                                     <div class="column" style="border-top: 0; flex-direction: row; justify-content: space-between; padding: 0 10% 0 10%;">
                                         <!-- Item related-item size -->
                                         {% if related_item %}
                                         <a href="{% url 'Item' related_item.id %}" class="lead"><strong>Size: {{related_item.size}}</strong></a>
                                         {% endif %}
+
                                         <!-- Item related-item price -->                                      
                                         {% if related_item %}
                                         <a href="{% url 'Item' related_item.id %}" class="lead"><strong>${{related_item.price}} MXN</strong></a>
@@ -419,6 +444,7 @@
                       {% endfor %}
                 </div>
             {% endif %}
+
         <!-- related items for staff-picks -->
             {% if related_staff_items %}
                 <div class="block container-xxxl">
@@ -435,6 +461,7 @@
                                         {% endif %}                                        
                                     </div>
                                 </div>
+
                                 <div class="element-info">
                                     <div class="column" style="border-top: 1px solid; padding: 0;">
                                         <!-- ItemStaff related-item name -->
@@ -442,11 +469,13 @@
                                         <a href="{% url 'StaffItem' related_staff_item.id %}" class="lead"><strong>{{related_staff_item.name}}</strong></a>
                                         {% endif %}
                                     </div> 
+
                                     <div class="column" style="border-top: 0; flex-direction: row; justify-content: space-between; padding: 0 10% 0 10%;">
                                         <!-- ItemStaff related-item size -->
                                         {% if related_staff_item %}
                                         <a href="{% url 'StaffItem' related_staff_item.id %}" class="lead"><strong>Size: {{related_staff_item.size}}</strong></a>
                                         {% endif %}
+
                                         <!-- ItemStaff related-item price -->  
                                         {% if related_staff_item %}
                                         <a href="{% url 'StaffItem' related_staff_item.id %}" class="lead"><strong>${{related_staff_item.price}} MXN</strong></a>
