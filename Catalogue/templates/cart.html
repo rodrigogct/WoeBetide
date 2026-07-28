@@ -4,6 +4,7 @@
 {% load catalog_cloudinary %}
 
 {% block content %}
+
 <div class="container-xxxl mt-5" style="margin-top: 25px !important;">
   <p style="padding-left: 8px; text-align: center;">YOUR CART</p>
 
@@ -23,50 +24,85 @@
 
         <tbody>
           {% for line in lines %}
-          <tr class="cart-line" data-variant-id="{{ line.variant_id }}" style="border-bottom: 1px solid black">
+          <tr
+            class="cart-line"
+            data-variant-id="{{ line.variant_id }}"
+            style="border-bottom: 1px solid black;"
+          >
             <td class="image-section align-middle">
               <div class="d-flex align-items-center gap-3">
+
                 {% if line.image_url %}
                 <a href="{{ line.url }}">
-                  <img src="{{ line.image_url|cld_cart_thumb }}" alt="{{line.title}}" loading="eager" fetchpriority="high" style="width:48px;height:65px;object-fit:cover;border-radius:8px;">
+                  <img
+                    src="{{ line.image_url|cld_cart_thumb }}"
+                    alt="{{ line.title }}"
+                    loading="eager"
+                    fetchpriority="high"
+                    style="
+                      width: 48px;
+                      height: 65px;
+                      object-fit: cover;
+                      border-radius: 8px;
+                    "
+                  >
                 </a>
                 {% endif %}
+
                 <div>
-                  <a href="{{ line.url }}" style="text-decoration: none; color: black;">{{ line.title }}</a>
+                  <a
+                    href="{{ line.url }}"
+                    style="text-decoration: none; color: black;"
+                  >
+                    {{ line.title }}
+                  </a>
+
                   <div class="quantity-control d-flex align-items-center cellphone">
                     <button type="button" class="btn-qty minus">−</button>
+
                     <input
                       type="number"
                       name="qty[{{ line.variant_id }}]"
                       data-variant-id="{{ line.variant_id }}"
                       value="{{ line.qty }}"
                       min="0"
-                      class="form-control qty-input">
+                      class="form-control qty-input"
+                    >
                   </div>
                 </div>
+
               </div>
             </td>
 
             <td class="quantity-section align-middle">
               <div class="quantity-control d-flex align-items-center tablets-laptop">
                 <button type="button" class="btn-qty minus">−</button>
+
                 <input
                   type="number"
                   name="qty[{{ line.variant_id }}]"
                   data-variant-id="{{ line.variant_id }}"
                   value="{{ line.qty }}"
                   min="0"
-                  class="form-control qty-input">
+                  class="form-control qty-input"
+                >
               </div>
             </td>
 
             <td class="price-section align-middle">
-              {% if line.price %}<p class="m-0">$ {{ line.price|floatformat:2|intcomma }} MXN</p>{% endif %}
+              {% if line.price %}
+              <p class="m-0">
+                $ {{ line.price|floatformat:2|intcomma }} MXN
+              </p>
+              {% endif %}
             </td>
 
             <td class="remove-section align-middle">
-              <button type="button" class="btn btn-link text-danger p-0 cart-remove"
-                      data-variant-id="{{ line.variant_id }}">
+              <button
+                type="button"
+                class="btn btn-link text-danger p-0 cart-remove"
+                data-variant-id="{{ line.variant_id }}"
+              >
                 Remove
               </button>
             </td>
@@ -75,18 +111,45 @@
         </tbody>
 
         <tfoot>
-          <td colspan="4" class="text-end">
-            <p>
-              SUBTOTAL: $
-              <span id="cart-subtotal">{{ grand_total|floatformat:2|intcomma }}</span>
-              MXN
-            </p>
-          </td>
+          <tr>
+            <td colspan="4" class="text-end">
+              <p>
+                SUBTOTAL: $
+                <span id="cart-subtotal">
+                  {{ grand_total|floatformat:2|intcomma }}
+                </span>
+                MXN
+              </p>
+            </td>
+          </tr>
         </tfoot>
       </table>
 
+      <div class="cart-sizing-notice">
+        <p class="cart-sizing-title">
+          PLEASE CHECK THE ITEM MEASUREMENTS
+        </p>
+
+        <p class="cart-sizing-text">
+          Vintage sizing is not standardized. Tagged or estimated sizes are
+          only a reference, and garments with similar measurements may fit
+          differently depending on their cut, fabric and era.
+        </p>
+
+        <p class="cart-sizing-text">
+          We recommend comparing each item's measurements with a garment you
+          already own.
+        </p>
+      </div>
+
       <div class="check-out">
-        <a class="btn btn-light" id="cart-checkout-btn" href="{{ checkout_url }}">CHECK OUT</a>
+        <a
+          class="btn btn-light"
+          id="cart-checkout-btn"
+          href="{{ checkout_url }}"
+        >
+          CHECK OUT
+        </a>
       </div>
     </form>
 
@@ -100,10 +163,47 @@
     </script>
   </div>
 
-  <p id="cart-empty-msg" class="{% if lines %}d-none{% endif %}" style="text-align:center;">
+  <p
+    id="cart-empty-msg"
+    class="{% if lines %}d-none{% endif %}"
+    style="text-align: center;"
+  >
     Your cart is empty.
-  </p>  
+  </p>
 </div>
 
+<style>
+  .cart-sizing-notice {
+    max-width: 650px;
+    margin: 28px auto 22px;
+    padding: 18px 20px;
+    border: 1px solid black;
+    text-align: center;
+  }
+
+  .cart-sizing-title {
+    margin: 0 0 8px;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+  }
+
+  .cart-sizing-text {
+    margin: 5px 0;
+    font-size: 12px;
+    line-height: 1.5;
+  }
+
+  @media (max-width: 768px) {
+    .cart-sizing-notice {
+      margin: 22px 8px 18px;
+      padding: 16px 14px;
+    }
+
+    .cart-sizing-text {
+      font-size: 11px;
+    }
+  }
+</style>
 
 {% endblock %}
