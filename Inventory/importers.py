@@ -93,6 +93,7 @@ REQUIRED_COLUMNS = [
     "Unit cost",
     "Date bought (dd/MM/YY)",
     "Collection ID",
+    "Price",
     "Cash",
     "Clip",
     "Card",
@@ -127,11 +128,11 @@ def read_inventory_excel(excel_file):
 def import_inventory_excel(excel_file):
     df = read_inventory_excel(excel_file)
 
-    # A real garment must have a numeric ID and a Collection ID like C001, C027, etc.
+    # Real WOE item rows must have an ID like WB-000001 and a Collection ID like C001.
     df = df[
-        pd.to_numeric(df["ID"], errors="coerce").notna()
+        df["ID"].astype(str).str.strip().str.match(r"^WB-\d+$", na=False)
         & df["Collection ID"].astype(str).str.strip().str.match(r"^C\d+$", na=False)
-]
+    ]
 
     created_garments = 0
     updated_garments = 0
@@ -144,16 +145,10 @@ def import_inventory_excel(excel_file):
         garment_name = clean_text(row.get("Garment"))
         collection_id = clean_text(row.get("Collection ID"))
 
-        if not excel_id or not garment_name:
+        if not excel_id or not garment_name or not collection_id:
             continue
 
-        try:
-            clean_excel_id = int(float(excel_id))
-        except ValueError:
-            continue
-
-        if not collection_id:
-            collection_id = "NO-COLLECTION"
+        garment_id = excel_id
 
         date_bought = clean_date(row.get("Date bought (dd/MM/YY)"))
 
@@ -168,8 +163,6 @@ def import_inventory_excel(excel_file):
                 "notes": "",
             },
         )
-
-        garment_id = f"WB-{collection_id}-{clean_excel_id}"
 
         width = clean_text(row.get("Width (cm)"))
         length = clean_text(row.get("Length (cm)"))
@@ -187,6 +180,144 @@ def import_inventory_excel(excel_file):
         status = map_status(row.get("Status"))
         category = map_category(row.get("Type"))
         revenue = clean_decimal(row.get("Revenue"))
+        listed_price = clean_decimal(row.get("Price"))
+
+        sold_price = None
+        if status == Garment.Status.SOLD and revenue > 0:
+            sold_price = revenue
+
+        existing_garment = Garment.objects.filter(garment_id=garment_id).first()
+
+        if existing_garment and existing_garment.status == Garment.Status.SOLD and status != Garment.Status.SOLD:
+            status = Garment.Status.SOLD
+            sold_price = existing_garment.sold_price
+
+        garment, created = Garment.objects.update_or_create(
+            garment_id=garment_id,
+            defaults={
+                "collection": collection,
+                "name": garment_name,
+                "category": category,
+                "brand": "",
+                "size": clean_text(row.get("Size")),
+                "era": clean_text(row.get("Year")),
+                "cost": clean_decimal(row.get("Unit cost")),
+                "listed_price": listed_price,
+                "sold_price": sold_price,
+                "condition": "",
+                "description": "",
+                "measurements": measurements,
+                "notes": " | ".join(notes_parts),
+                "status": status,
+                "is_visible_on_site": False,
+            },
+        )
+
+        if created:
+            created_garments += 1
+        else:
+            updated_garments += 1
+
+        if status != Garment.Status.SOLD:
+            continue
+
+        sale_id = clean_text(row.get("Sale ID"))
+
+        if not sale_id:
+            sale_id = f"SALE-{garment_id}"
+
+        sale_date = clean_date(row.get("Sale date (dd/MM/YY)"))
+
+        if sale_date is None:
+            sale_date = timezone.now().date()
+
+        sale, sale_created = Sale.objects.update_or_create(
+            sale_id=sale_id,
+            defaults={
+                "sale_date": sale_date,
+                "channel": map_channel(row.get("Sale method")),
+                "customer_name": "",
+                "notes": "",
+                "created_by": None,
+            },
+        )
+
+        if sale_created:
+            created_sales += 1
+
+        SaleItem.objects.update_or_create(
+            garment=garment,
+            defaults={
+                "sale": sale,
+                "sold_price": revenue,
+            },
+        )
+
+        if sale_id not in processed_payments:
+            Payment.objects.update_or_create(
+                sale=sale,
+                defaults={
+                    "cash": clean_decimal(row.get("Cash")),
+                    "clip": clean_decimal(row.get("Clip")),
+                    "card": clean_decimal(row.get("Card")),
+                    "transfer": clean_decimal(row.get("Transfer")),
+                    "fees": Decimal("0"),
+                },
+            )
+
+            processed_payments.add(sale_id)
+            created_or_updated_payments += 1
+
+    return {
+        "created_garments": created_garments,
+        "updated_garments": updated_garments,
+        "created_sales": created_sales,
+        "created_or_updated_payments": created_or_updated_payments,
+    }
+    df = read_inventory_excel(excel_file)
+
+    # A real garment must have a numeric ID and a Collection ID like C001, C027, etc.
+    df = df[
+        df["ID"].astype(str).str.strip().str.match(r"^WB-\d+$", na=False)
+        & df["Collection ID"].astype(str).str.strip().str.match(r"^C\d+$", na=False)
+    ]
+
+    created_garments = 0
+    updated_garments = 0
+    created_sales = 0
+    created_or_updated_payments = 0
+    processed_payments = set()
+
+    for index, row in df.iterrows():
+        excel_id = clean_text(row.get("ID"))
+        garment_name = clean_text(row.get("Garment"))
+        collection_id = clean_text(row.get("Collection ID"))
+
+        if not excel_id or not garment_name:
+            continue
+
+        if not collection_id:
+            collection_id = "NO-COLLECTION"
+
+        garment_id = excel_id
+
+        width = clean_text(row.get("Width (cm)"))
+        length = clean_text(row.get("Length (cm)"))
+        color = clean_text(row.get("Color"))
+
+        measurements = ""
+        if width or length:
+            measurements = f"Width: {width} cm | Length: {length} cm"
+
+        notes_parts = []
+
+        if color:
+            notes_parts.append(f"Color: {color}")
+
+        status = map_status(row.get("Status"))
+        category = map_category(row.get("Type"))
+        revenue = clean_decimal(row.get("Revenue"))
+        listed_price = clean_decimal(row.get("Price"))
 
         sold_price = None
         if status == Garment.Status.SOLD and revenue > 0:
@@ -209,7 +340,7 @@ def import_inventory_excel(excel_file):
                 "size": clean_text(row.get("Size")),
                 "era": clean_text(row.get("Year")),
                 "cost": clean_decimal(row.get("Unit cost")),
-                "listed_price": revenue if revenue > 0 else Decimal("0"),
+                "listed_price": listed_price,
                 "sold_price": sold_price,
                 "condition": "",
                 "description": "",
