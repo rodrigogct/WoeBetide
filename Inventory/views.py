@@ -1,6 +1,7 @@
 from django.shortcuts import render
 
 # Create your views here.
+from decimal import Decimal
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db import models, transaction
@@ -245,11 +246,73 @@ def sales_dashboard(request):
         sales = sales.filter(
             models.Q(sale_id__icontains=query) |
             models.Q(channel__icontains=query) |
-            models.Q(customer_name__icontains=query)
+            models.Q(customer_name__icontains=query) |
+            models.Q(notes__icontains=query)
         )
 
+    rows = []
+
+    clip_rate = Decimal("0.034")
+    iva_rate = Decimal("0.16")
+    shopify_card_rate = Decimal("0.036")  # adjust if your real Shopify/card fee is different
+
+    for index, sale in enumerate(sales, start=1):
+        items = sale.items.select_related("garment").all()
+
+        sold_items = items.count()
+        total_retail = sum(item.garment.listed_price for item in items)
+        gross_revenue = sum(item.sold_price for item in items)
+        total_cost = sum(item.garment.cost for item in items)
+        gross_profit = gross_revenue - total_cost
+
+        payment = getattr(sale, "payment", None)
+
+        cash = Decimal("0")
+        transfer = Decimal("0")
+        clip = Decimal("0")
+        card = Decimal("0")
+
+        if payment:
+            cash = payment.cash
+            transfer = payment.transfer
+            clip = payment.clip
+            card = payment.card
+
+        commission_type = "None"
+        commission = Decimal("0")
+        iva = Decimal("0")
+
+        if clip > 0:
+            commission_type = "Clip"
+            commission = clip * clip_rate
+            iva = commission * iva_rate
+
+        elif card > 0:
+            commission_type = "Shopify/Card"
+            commission = card * shopify_card_rate
+            iva = Decimal("0")
+
+        net_revenue = gross_revenue - commission - iva
+
+        rows.append({
+            "id": index,
+            "sale": sale,
+            "total_retail": total_retail,
+            "gross_revenue": gross_revenue,
+            "cash": cash,
+            "transfer": transfer,
+            "clip": clip,
+            "card": card,
+            "commission_type": commission_type,
+            "commission": commission,
+            "iva": iva,
+            "net_revenue": net_revenue,
+            "gross_profit": gross_profit,
+            "sold_items": sold_items,
+        })
+
     return render(request, "inventory/sales_dashboard.html", {
-        "sales": sales,
+        "rows": rows,
         "query": query,
     })
 

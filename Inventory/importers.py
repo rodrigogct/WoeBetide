@@ -7,7 +7,6 @@ from django.utils import timezone
 
 from .models import Collection, Garment, Sale, SaleItem, Payment
 
-
 def clean_text(value):
     if pd.isna(value):
         return ""
@@ -18,7 +17,13 @@ def clean_decimal(value):
         return Decimal("0")
 
     try:
-        return Decimal(str(value).replace(",", "").strip())
+        cleaned_value = (
+            str(value)
+            .replace("$", "")
+            .replace(",", "")
+            .strip()
+        )
+        return Decimal(cleaned_value)
     except (InvalidOperation, ValueError):
         return Decimal("0")
 
@@ -36,7 +41,7 @@ def clean_date(value):
 def map_status(value):
     value = clean_text(value).lower()
 
-    if value == "available":
+    if value in ["", "available"]:
         return Garment.Status.AVAILABLE
 
     if value == "sold":
@@ -128,7 +133,8 @@ def read_inventory_excel(excel_file):
 def import_inventory_excel(excel_file):
     df = read_inventory_excel(excel_file)
 
-    # Real WOE item rows must have an ID like WB-000001 and a Collection ID like C001.
+    # Keep only real WOE item rows.
+    # This removes summary rows, blank rows, and Excel calculation rows.
     df = df[
         df["ID"].astype(str).str.strip().str.match(r"^WB-\d+$", na=False)
         & df["Collection ID"].astype(str).str.strip().str.match(r"^C\d+$", na=False)
@@ -138,7 +144,6 @@ def import_inventory_excel(excel_file):
     updated_garments = 0
     created_sales = 0
     created_or_updated_payments = 0
-    processed_payments = set()
 
     for index, row in df.iterrows():
         excel_id = clean_text(row.get("ID"))
@@ -179,177 +184,52 @@ def import_inventory_excel(excel_file):
 
         status = map_status(row.get("Status"))
         category = map_category(row.get("Type"))
-        revenue = clean_decimal(row.get("Revenue"))
+
+        cost = clean_decimal(row.get("Unit cost"))
         listed_price = clean_decimal(row.get("Price"))
+        revenue = clean_decimal(row.get("Revenue"))
 
         sold_price = None
         if status == Garment.Status.SOLD and revenue > 0:
             sold_price = revenue
 
-        existing_garment = Garment.objects.filter(garment_id=garment_id).first()
-
-        if existing_garment and existing_garment.status == Garment.Status.SOLD and status != Garment.Status.SOLD:
-            status = Garment.Status.SOLD
-            sold_price = existing_garment.sold_price
-
-        garment, created = Garment.objects.update_or_create(
-            garment_id=garment_id,
-            defaults={
-                "collection": collection,
-                "name": garment_name,
-                "category": category,
-                "brand": "",
-                "size": clean_text(row.get("Size")),
-                "era": clean_text(row.get("Year")),
-                "cost": clean_decimal(row.get("Unit cost")),
-                "listed_price": listed_price,
-                "sold_price": sold_price,
-                "condition": "",
-                "description": "",
-                "measurements": measurements,
-                "notes": " | ".join(notes_parts),
-                "status": status,
-                "is_visible_on_site": False,
-            },
-        )
-
-        if created:
-            created_garments += 1
-        else:
-            updated_garments += 1
-
-        if status != Garment.Status.SOLD:
-            continue
-
-        sale_id = clean_text(row.get("Sale ID"))
-
-        if not sale_id:
-            sale_id = f"SALE-{garment_id}"
-
-        sale_date = clean_date(row.get("Sale date (dd/MM/YY)"))
-
-        if sale_date is None:
-            sale_date = timezone.now().date()
-
-        sale, sale_created = Sale.objects.update_or_create(
-            sale_id=sale_id,
-            defaults={
-                "sale_date": sale_date,
-                "channel": map_channel(row.get("Sale method")),
-                "customer_name": "",
-                "notes": "",
-                "created_by": None,
-            },
-        )
-
-        if sale_created:
-            created_sales += 1
-
-        SaleItem.objects.update_or_create(
-            garment=garment,
-            defaults={
-                "sale": sale,
-                "sold_price": revenue,
-            },
-        )
-
-        if sale_id not in processed_payments:
-            Payment.objects.update_or_create(
-                sale=sale,
-                defaults={
-                    "cash": clean_decimal(row.get("Cash")),
-                    "clip": clean_decimal(row.get("Clip")),
-                    "card": clean_decimal(row.get("Card")),
-                    "transfer": clean_decimal(row.get("Transfer")),
-                    "fees": Decimal("0"),
-                },
-            )
-
-            processed_payments.add(sale_id)
-            created_or_updated_payments += 1
-
-    return {
-        "created_garments": created_garments,
-        "updated_garments": updated_garments,
-        "created_sales": created_sales,
-        "created_or_updated_payments": created_or_updated_payments,
-    }
-    df = read_inventory_excel(excel_file)
-
-    # A real garment must have a numeric ID and a Collection ID like C001, C027, etc.
-    df = df[
-        df["ID"].astype(str).str.strip().str.match(r"^WB-\d+$", na=False)
-        & df["Collection ID"].astype(str).str.strip().str.match(r"^C\d+$", na=False)
-    ]
-
-    created_garments = 0
-    updated_garments = 0
-    created_sales = 0
-    created_or_updated_payments = 0
-    processed_payments = set()
-
-    for index, row in df.iterrows():
-        excel_id = clean_text(row.get("ID"))
-        garment_name = clean_text(row.get("Garment"))
-        collection_id = clean_text(row.get("Collection ID"))
-
-        if not excel_id or not garment_name:
-            continue
-
-        if not collection_id:
-            collection_id = "NO-COLLECTION"
-
-        garment_id = excel_id
-
-        width = clean_text(row.get("Width (cm)"))
-        length = clean_text(row.get("Length (cm)"))
-        color = clean_text(row.get("Color"))
-
-        measurements = ""
-        if width or length:
-            measurements = f"Width: {width} cm | Length: {length} cm"
-
-        notes_parts = []
-
-        if color:
-            notes_parts.append(f"Color: {color}")
-
-        status = map_status(row.get("Status"))
-        category = map_category(row.get("Type"))
-        revenue = clean_decimal(row.get("Revenue"))
-        listed_price = clean_decimal(row.get("Price"))
-
-        sold_price = None
-        if status == Garment.Status.SOLD and revenue > 0:
-            sold_price = revenue
+        existing_garment = Garment.objects.filter(
+            garment_id=garment_id
+        ).first()
 
         # Safety: do not let an old Excel turn a sold item back into available.
-        existing_garment = Garment.objects.filter(garment_id=garment_id).first()
-
-        if existing_garment and existing_garment.status == Garment.Status.SOLD and status != Garment.Status.SOLD:
+        if (
+            existing_garment
+            and existing_garment.status == Garment.Status.SOLD
+            and status != Garment.Status.SOLD
+        ):
             status = Garment.Status.SOLD
             sold_price = existing_garment.sold_price
 
+        garment_defaults = {
+            "collection": collection,
+            "name": garment_name,
+            "category": category,
+            "size": clean_text(row.get("Size")),
+            "era": clean_text(row.get("Year")),
+            "cost": cost,
+            "listed_price": listed_price,
+            "sold_price": sold_price,
+            "measurements": measurements,
+            "notes": " | ".join(notes_parts),
+            "status": status,
+        }
+
         garment, created = Garment.objects.update_or_create(
             garment_id=garment_id,
-            defaults={
-                "collection": collection,
-                "name": garment_name,
-                "category": category,
-                "brand": "",
-                "size": clean_text(row.get("Size")),
-                "era": clean_text(row.get("Year")),
-                "cost": clean_decimal(row.get("Unit cost")),
-                "listed_price": listed_price,
-                "sold_price": sold_price,
-                "condition": "",
-                "description": "",
-                "measurements": measurements,
-                "notes": " | ".join(notes_parts),
-                "status": status,
-                "is_visible_on_site": False,
-            },
+            defaults=garment_defaults,
         )
+
+        # New imported items are hidden from the website by default.
+        # Existing items keep their current website visibility.
+        if created:
+            garment.is_visible_on_site = False
+            garment.save(update_fields=["is_visible_on_site"])
 
         if created:
             created_garments += 1
@@ -391,19 +271,61 @@ def import_inventory_excel(excel_file):
             },
         )
 
-        if sale_id not in processed_payments:
+    # Rebuild payments by Sale ID from the INVENTORY sheet.
+    # This gives one payment record per sale, not one payment per item.
+    sold_rows = df[
+        df["Status"].astype(str).str.strip().str.lower() == "sold"
+    ].copy()
+
+    if not sold_rows.empty:
+        sold_rows["Sale ID Clean"] = sold_rows.apply(
+            lambda row: clean_text(row.get("Sale ID"))
+            or f"SALE-{clean_text(row.get('ID'))}",
+            axis=1,
+        )
+
+        for sale_id, group in sold_rows.groupby("Sale ID Clean"):
+            sale_id = clean_text(sale_id)
+
+            if not sale_id:
+                continue
+
+            sale = Sale.objects.filter(sale_id=sale_id).first()
+
+            if not sale:
+                continue
+
+            total_cash = sum(
+                clean_decimal(value)
+                for value in group["Cash"]
+            )
+
+            total_clip = sum(
+                clean_decimal(value)
+                for value in group["Clip"]
+            )
+
+            total_card = sum(
+                clean_decimal(value)
+                for value in group["Card"]
+            )
+
+            total_transfer = sum(
+                clean_decimal(value)
+                for value in group["Transfer"]
+            )
+
             Payment.objects.update_or_create(
                 sale=sale,
                 defaults={
-                    "cash": clean_decimal(row.get("Cash")),
-                    "clip": clean_decimal(row.get("Clip")),
-                    "card": clean_decimal(row.get("Card")),
-                    "transfer": clean_decimal(row.get("Transfer")),
+                    "cash": total_cash,
+                    "clip": total_clip,
+                    "card": total_card,
+                    "transfer": total_transfer,
                     "fees": Decimal("0"),
                 },
             )
 
-            processed_payments.add(sale_id)
             created_or_updated_payments += 1
 
     return {

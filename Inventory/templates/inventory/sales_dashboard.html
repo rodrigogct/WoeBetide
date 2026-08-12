@@ -8,7 +8,7 @@
   <input
     type="text"
     name="q"
-    placeholder="Search by sale ID, channel, customer..."
+    placeholder="Search by sale ID, notes, channel..."
     value="{{ query }}"
     autofocus
   >
@@ -19,50 +19,52 @@
   <table>
     <thead>
       <tr>
-        <th>Sale ID</th>
+        <th>ID</th>
+        <th>Sales ID</th>
         <th>Date</th>
-        <th>Channel</th>
-        <th>Items</th>
+        <th>Total Retail</th>
+        <th>Gross Revenue</th>
         <th>Cash</th>
-        <th>Clip</th>
-        <th>Card</th>
         <th>Transfer</th>
-        <th>Total</th>
+        <th>Clip</th>
+        <th>Card/Shopify</th>
+        <th>Commission Type</th>
+        <th>Commission</th>
+        <th>IVA</th>
+        <th>Net Revenue</th>
+        <th>Gross Profit</th>
+        <th>Sold Items</th>
         <th>View</th>
       </tr>
     </thead>
 
     <tbody>
-      {% for sale in sales %}
+      {% for row in rows %}
         <tr>
-          <td>{{ sale.sale_id }}</td>
-          <td>{{ sale.sale_date }}</td>
-          <td>{{ sale.channel }}</td>
-          <td>{{ sale.items.count }}</td>
-
-          {% if sale.payment %}
-            <td>${{ sale.payment.cash }}</td>
-            <td>${{ sale.payment.clip }}</td>
-            <td>${{ sale.payment.card }}</td>
-            <td>${{ sale.payment.transfer }}</td>
-            <td>${{ sale.payment.gross_total }}</td>
-          {% else %}
-            <td>—</td>
-            <td>—</td>
-            <td>—</td>
-            <td>—</td>
-            <td>—</td>
-          {% endif %}
-
+          <td>{{ row.id }}</td>
+          <td>{{ row.sale.sale_id }}</td>
+          <td>{{ row.sale.sale_date }}</td>
+          <td>${{ row.total_retail|floatformat:2 }}</td>
+          <td>${{ row.gross_revenue|floatformat:2 }}</td>
+          <td>${{ row.cash|floatformat:2 }}</td>
+          <td>${{ row.transfer|floatformat:2 }}</td>
+          <td>${{ row.clip|floatformat:2 }}</td>
+          <td>${{ row.card|floatformat:2 }}</td>
+          <td>{{ row.commission_type }}</td>
+          <td>${{ row.commission|floatformat:2 }}</td>
+          <td>${{ row.iva|floatformat:2 }}</td>
+          <td>${{ row.net_revenue|floatformat:2 }}</td>
+          <td>${{ row.gross_profit|floatformat:2 }}</td>
+          <td>{{ row.sold_items }}</td>
           <td>
-            <a class="sell-link" href="{% url 'sale_detail' sale.sale_id %}">
+            <a class="sell-link" href="{% url 'sale_detail' row.sale.sale_id %}">
               View
             </a>
           </td>
         </tr>
       {% empty %}
         <tr>
-          <td colspan="10">No sales found.</td>
+          <td colspan="16">No sales found.</td>
         </tr>
       {% endfor %}
     </tbody>
