@@ -95,6 +95,8 @@
                           {% if item.length %}
                             <p class="info" style="border-bottom: none;">{{ item.length }} cm / {{ item.length_in_inches }} in</p>
                           {% endif %}
+
+                          {% comment %}
                           <div class="sleeve" style="border-right: none;">
                             <p style="border-right: none;">Sleeve</p>
                             <img class="measure-info" data-target="sleeve" src="{% static 'images/misc/information-logotype-in-a-circle.png' %}" loading="lazy" alt="">
@@ -106,6 +108,8 @@
                           {% if item.sleeve %}
                             <p class="info">{{ item.sleeve }} cm / {{ item.sleeve_in_inches }} in</p>
                           {% endif %}
+                          {% endcomment %}
+
                         </div>
                       {% endif %}
                     {% endif %}
@@ -298,6 +302,7 @@
                           <p class="info" style="border-bottom: none;">{{ staff_item.length }} cm / {{ staff_item.length_in_inches }} in</p>
                         {% endif %}
 
+                        {% comment %}
                         <div class="sleeve" style="border-right: none;">
                           <p style="border-right: none;">Sleeve</p>
                           <img
@@ -321,6 +326,7 @@
                         {% if staff_item.sleeve %}
                           <p class="info">{{ staff_item.sleeve }} cm / {{ staff_item.sleeve_in_inches }} in</p>
                         {% endif %}
+                        {% endcomment %}
 
                       </div>
                     {% endif %}
@@ -490,7 +496,6 @@
   </div>
 
 {% endblock %}
-
 
 
 
