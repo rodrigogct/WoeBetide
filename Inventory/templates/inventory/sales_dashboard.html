@@ -22,12 +22,12 @@
         <th>ID</th>
         <th>Sales ID</th>
         <th>Date</th>
-        <th>Total Retail</th>
+        <th>Total Cost</th>
         <th>Gross Revenue</th>
         <th>Cash</th>
         <th>Transfer</th>
         <th>Clip</th>
-        <th>Card/Shopify</th>
+        <th>Shopify</th>
         <th>Commission Type</th>
         <th>Commission</th>
         <th>IVA</th>
@@ -44,7 +44,7 @@
           <td>{{ row.id }}</td>
           <td>{{ row.sale.sale_id }}</td>
           <td>{{ row.sale.sale_date }}</td>
-          <td>${{ row.total_retail|floatformat:2 }}</td>
+          <td>${{ row.total_cost|floatformat:2 }}</td>
           <td>${{ row.gross_revenue|floatformat:2 }}</td>
           <td>${{ row.cash|floatformat:2 }}</td>
           <td>${{ row.transfer|floatformat:2 }}</td>

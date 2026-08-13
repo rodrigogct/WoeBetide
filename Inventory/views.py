@@ -129,10 +129,7 @@ def sell_dashboard(request):
     query = request.GET.get("q", "")
 
     garments = Garment.objects.filter(
-        status__in=[
-            Garment.Status.AVAILABLE,
-            Garment.Status.PUBLISHED,
-        ]
+        status=Garment.Status.AVAILABLE
     ).order_by("-created_at")
 
     if query:
@@ -260,9 +257,8 @@ def sales_dashboard(request):
         items = sale.items.select_related("garment").all()
 
         sold_items = items.count()
-        total_retail = sum(item.garment.listed_price for item in items)
-        gross_revenue = sum(item.sold_price for item in items)
         total_cost = sum(item.garment.cost for item in items)
+        gross_revenue = sum(item.sold_price for item in items)
         gross_profit = gross_revenue - total_cost
 
         payment = getattr(sale, "payment", None)
@@ -297,7 +293,7 @@ def sales_dashboard(request):
         rows.append({
             "id": index,
             "sale": sale,
-            "total_retail": total_retail,
+            "total_cost": total_cost,
             "gross_revenue": gross_revenue,
             "cash": cash,
             "transfer": transfer,
