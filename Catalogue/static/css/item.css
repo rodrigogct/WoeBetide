@@ -502,11 +502,11 @@ h6 {
     .main-images img {
         width: 100%;
         min-height: 300px;
-        height: 450px;
+        height: 500px;
     }
 
     .photo {
-        height: 450px;
+        height: 500px;
     }
 
     .image-selector .zoomed-carousel-controls {
