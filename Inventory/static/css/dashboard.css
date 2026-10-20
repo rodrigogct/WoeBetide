@@ -285,3 +285,996 @@
       flex-direction: column;
     }
   }
+
+
+/* ==========================================
+   WOE BETIDE — DASHBOARD DESIGN
+   PHASE 1: VISUAL TEMPLATE
+   ========================================== */
+
+/* GENERAL */
+
+body {
+    background: #f3f0eb;
+    color: #20211f;
+    text-transform: none;
+    font-family: Arial, Helvetica, sans-serif;
+  }
+  
+  .wb-shell {
+    display: flex;
+    min-height: 100vh;
+    max-width: 1600px;
+    margin: 0 auto;
+    background: #faf9f6;
+    box-shadow: 0 0 28px #3a332516;
+  }
+  
+  /* ==========================================
+     SIDEBAR
+     ========================================== */
+  
+  .wb-sidebar {
+    width: 192px;
+    flex: 0 0 192px;
+    border-right: 1px solid #e6e3df;
+    padding: 21px 12px;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    background: #f8f6f3;
+  }
+  
+  .wb-wordmark {
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: 23px;
+    letter-spacing: 0.085em;
+    white-space: nowrap;
+    color: #1e201f;
+    margin: 0 4px 20px;
+  }
+  
+  .wb-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+  
+  .wb-nav-link,
+  .wb-settings {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    padding: 11px 12px;
+    border-radius: 7px;
+    font-size: 12px;
+    color: #31312f;
+    text-transform: none;
+  }
+  
+  .wb-nav-link > span:first-child,
+  .wb-settings > span:first-child {
+    width: 17px;
+    text-align: center;
+    font-size: 16px;
+  }
+  
+  .wb-nav-link:hover,
+  .wb-nav-link.is-active {
+    background: #eae7e2;
+  }
+  
+  .wb-inactive {
+    cursor: default;
+  }
+  
+  .wb-nav-divider {
+    height: 1px;
+    background: #e5e1db;
+    margin: 9px 0;
+  }
+  
+  .wb-settings {
+    margin-top: auto;
+  }
+  
+  /* ==========================================
+     MAIN LAYOUT
+     ========================================== */
+  
+  .wb-page {
+    flex: 1;
+    min-width: 0;
+  }
+  
+  .wb-mobile-header {
+    display: none;
+  }
+  
+  .dashboard-main {
+    padding: 20px 24px 26px;
+  }
+  
+  .wb-dashboard {
+    width: 100%;
+  }
+  
+  /* ==========================================
+     TOP TOOLBAR
+     ========================================== */
+  
+  .wb-toolbar {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    border-bottom: 1px solid #e7e3df;
+    padding-bottom: 9px;
+    margin-bottom: 12px;
+  }
+  
+  .wb-select {
+    border: 1px solid #e1ddd8;
+    background: #fbfaf8;
+    border-radius: 5px;
+    padding: 9px 13px;
+    font-size: 11px;
+    display: flex;
+    gap: 14px;
+  }
+  
+  /* ==========================================
+     ACTION BUTTONS
+     ========================================== */
+  
+  .wb-actions {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 17px;
+  }
+  
+  .wb-action {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 11px;
+    height: 37px;
+    min-width: 156px;
+    padding: 0 17px;
+    border-radius: 5px;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  
+  .wb-action > span {
+    font-size: 18px;
+    font-weight: 400;
+  }
+  
+  .wb-action-primary {
+    background: #35473d;
+    color: white;
+  }
+  
+  .wb-action-primary:hover {
+    background: #29392f;
+    color: white;
+  }
+  
+  .wb-action-neutral {
+    background: #eae7e2;
+    color: #282826;
+  }
+  
+  .wb-disabled {
+    opacity: 0.6;
+  }
+  
+  /* ==========================================
+     SECTION HEADINGS
+     ========================================== */
+  
+  .wb-section-heading,
+  .wb-card h2 {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    margin: 0;
+  }
+  
+  .wb-section-heading {
+    margin-bottom: 8px;
+  }
+  
+  /* ==========================================
+     GENERAL CARDS
+     ========================================== */
+  
+  .wb-card {
+    border: 1px solid #e5e2de;
+    border-radius: 6px;
+    background: #fffefd;
+    box-shadow: 0 1px 2px #211d1706;
+  }
+  
+  .wb-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .wb-card-header > small {
+    font-size: 10px;
+    color: #555;
+  }
+  
+  /* ==========================================
+     PERFORMANCE KPI CARDS
+     ========================================== */
+  
+  .wb-kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+  
+  .wb-kpi {
+    min-height: 76px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+  }
+  
+  .wb-label,
+  .wb-finance-tile small,
+  .wb-three-metrics small,
+  .wb-event-grid small {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+  
+  .wb-kpi-value {
+    font-size: 25px;
+    margin-top: 5px;
+    font-weight: 500;
+    letter-spacing: -0.035em;
+  }
+  
+  .wb-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #f2f0ec;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 auto;
+    color: #676253;
+    font-size: 20px;
+  }
+  
+  /* ==========================================
+     SALES OVER TIME CHART
+     ========================================== */
+  
+  .wb-sales-chart {
+    padding: 12px 16px 11px;
+    margin-bottom: 10px;
+  }
+  
+  .wb-legend {
+    display: flex;
+    gap: 16px;
+    font-size: 10px;
+    color: #666;
+  }
+  
+  .wb-legend > span {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  
+  .wb-dot {
+    width: 9px;
+    height: 9px;
+    display: inline-block;
+    border-radius: 50%;
+    margin-right: 5px;
+  }
+  
+  .wb-green {
+    background: #677e70;
+  }
+  
+  .wb-beige {
+    background: #cfc4b0;
+  }
+  
+  .wb-chart-area {
+    display: flex;
+    height: 112px;
+    margin-top: 13px;
+  }
+  
+  .wb-y-axis {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    width: 27px;
+    flex: 0 0 27px;
+    font-size: 10px;
+    color: #666;
+  }
+  
+  .wb-chart-plot {
+    flex: 1;
+    position: relative;
+    min-width: 0;
+  }
+  
+  .wb-gridlines {
+    position: absolute;
+    inset: 0;
+    background: repeating-linear-gradient(
+      to bottom,
+      #e9e7e3 0,
+      #e9e7e3 1px,
+      transparent 1px,
+      transparent 25%
+    );
+  }
+  
+  .wb-bars {
+    position: absolute;
+    inset: 0 3px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-around;
+    gap: 3px;
+  }
+  
+  .wb-bar {
+    flex: 1;
+    max-width: 18px;
+    height: 100%;
+    display: flex;
+    flex-direction: column-reverse;
+    justify-content: flex-start;
+  }
+  
+  .wb-bar-online,
+  .wb-bar-physical {
+    width: 100%;
+    flex-shrink: 0;
+  }
+  
+  .wb-bar-online {
+    background: #81988a;
+  }
+  
+  .wb-bar-physical {
+    background: #d5cbbb;
+  }
+  
+  .wb-chart-dates {
+    display: flex;
+    justify-content: space-between;
+    margin: 5px 0 0 27px;
+    color: #666;
+    font-size: 9px;
+  }
+  
+  /* ==========================================
+     TWO COLUMN GRID
+     ========================================== */
+  
+  .wb-two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+  
+  .wb-panel {
+    padding: 10px 15px 12px;
+    min-width: 0;
+  }
+  
+  .wb-panel > h2 {
+    padding-bottom: 8px;
+    border-bottom: 1px solid #eeeae6;
+  }
+  
+  /* ==========================================
+     SALES CHANNEL
+     ========================================== */
+  
+  .wb-channel-body {
+    display: flex;
+    align-items: center;
+    gap: 25px;
+    padding: 8px 18px 0;
+  }
+  
+  .wb-donut {
+    width: 76px;
+    height: 76px;
+    border-radius: 50%;
+    background: conic-gradient(
+      #3d5548 0 67%,
+      #d0c7b7 67% 100%
+    );
+    position: relative;
+    flex-shrink: 0;
+  }
+  
+  .wb-donut::after {
+    content: "";
+    position: absolute;
+    inset: 15px;
+    border-radius: 50%;
+    background: #fffefd;
+  }
+  
+  .wb-channel-details {
+    flex: 1;
+    font-size: 11px;
+  }
+  
+  .wb-channel-details > div {
+    display: grid;
+    grid-template-columns: minmax(75px, 1fr) 75px 35px;
+    align-items: center;
+    gap: 5px;
+    padding: 7px 0;
+  }
+  
+  .wb-channel-details strong {
+    font-size: 12px;
+  }
+  
+  .wb-channel-details .wb-dot {
+    vertical-align: middle;
+  }
+  
+  /* ==========================================
+     INVENTORY SUMMARY
+     ========================================== */
+  
+  .wb-three-metrics {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    padding-top: 17px;
+  }
+  
+  .wb-three-metrics > div {
+    padding: 0 18px;
+    border-right: 1px solid #e9e6e2;
+  }
+  
+  .wb-three-metrics > div:last-child {
+    border: 0;
+  }
+  
+  .wb-three-metrics small,
+  .wb-three-metrics strong {
+    display: block;
+  }
+  
+  .wb-three-metrics strong {
+    font-size: 21px;
+    font-weight: 500;
+    margin-top: 5px;
+    white-space: nowrap;
+  }
+  
+  /* ==========================================
+     FINANCIAL POSITION
+     ========================================== */
+  
+  .wb-financial {
+    margin-bottom: 10px;
+  }
+  
+  .wb-financial-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 13px;
+    margin-top: 8px;
+  }
+  
+  .wb-finance-tile {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 9px 14px;
+    border: 1px solid #ebe8e4;
+    border-radius: 6px;
+    min-width: 0;
+  }
+  
+  .wb-finance-tile strong {
+    display: block;
+    font-size: 21px;
+    font-weight: 500;
+    white-space: nowrap;
+    margin-top: 3px;
+  }
+  
+  /* ==========================================
+     PARTNER CAPITAL
+     ========================================== */
+  
+  .wb-capital {
+    margin-bottom: 10px;
+  }
+  
+  .wb-capital .wb-card-header {
+    margin-bottom: 6px;
+  }
+  
+  .wb-table-wrap {
+    overflow-x: auto;
+  }
+  
+  .wb-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+    text-transform: none;
+  }
+  
+  .wb-table th,
+  .wb-table td {
+    border: 0;
+    border-bottom: 1px solid #ebe8e4;
+    padding: 6px 14px;
+    text-align: left;
+  }
+  
+  .wb-table thead {
+    background: #f7f5f2;
+  }
+  
+  .wb-table th {
+    font-weight: 600;
+  }
+  
+  .wb-table td:first-child {
+    font-weight: 600;
+  }
+  
+  .wb-positive {
+    color: #25613f;
+    font-weight: 700;
+  }
+  
+  .wb-negative {
+    color: #bd3535;
+    font-weight: 700;
+  }
+  
+  .wb-capital-footer {
+    text-align: right;
+    margin-top: 5px;
+  }
+  
+  .wb-view {
+    display: inline-block;
+    padding: 5px 13px;
+    border: 1px solid #e4e0db;
+    border-radius: 4px;
+    font-size: 10px;
+  }
+  
+  /* ==========================================
+     PHYSICAL EVENTS
+     ========================================== */
+  
+  .wb-event-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    margin-top: 12px;
+  }
+  
+  .wb-event-grid > div {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    border-right: 1px solid #eae6e2;
+    padding: 0 8px;
+    min-width: 0;
+  }
+  
+  .wb-event-grid > div:last-child {
+    border: 0;
+  }
+  
+  .wb-event-icon {
+    border-radius: 50%;
+    background: #f4f1ed;
+    width: 25px;
+    height: 25px;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+  }
+  
+  .wb-event-grid small,
+  .wb-event-grid strong,
+  .wb-event-grid em {
+    display: block;
+    font-style: normal;
+  }
+  
+  .wb-event-grid strong {
+    font-size: 17px;
+    font-weight: 500;
+    margin: 3px 0;
+  }
+  
+  .wb-event-grid em {
+    font-size: 10px;
+    color: #777;
+  }
+  
+  /* ==========================================
+     NEEDS ATTENTION
+     ========================================== */
+  
+  .wb-alert-row {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    border-bottom: 1px solid #ece9e5;
+    font-size: 11px;
+    padding: 5px 6px;
+  }
+  
+  .wb-alert-row:last-child {
+    border: 0;
+  }
+  
+  .wb-alert-row > span {
+    color: #e14c3a;
+    font-size: 16px;
+  }
+  
+  .wb-alert-row b {
+    margin-left: auto;
+    color: #888;
+    font-size: 18px;
+    font-weight: 400;
+  }
+  
+  /* ==========================================
+     RECENT ACTIVITY
+     ========================================== */
+  
+  .wb-activity-row {
+    display: grid;
+    grid-template-columns:
+      24px 95px minmax(0, 1fr) 90px 90px 12px;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    border-bottom: 1px solid #ece9e5;
+    padding: 7px 6px;
+  }
+  
+  .wb-activity-row:last-child {
+    border: 0;
+  }
+  
+  .wb-activity-row small {
+    color: #777;
+  }
+  
+  .wb-activity-row strong {
+    font-weight: 500;
+  }
+  
+  /* ==========================================
+     TABLET RESPONSIVENESS
+     ========================================== */
+  
+  @media (max-width: 1050px) and (min-width: 769px) {
+  
+    .wb-sidebar {
+      width: 170px;
+      flex-basis: 170px;
+    }
+  
+    .dashboard-main {
+      padding: 16px;
+    }
+  
+    .wb-finance-tile {
+      padding: 8px;
+      gap: 7px;
+    }
+  
+    .wb-finance-tile strong {
+      font-size: 17px;
+    }
+  
+    .wb-channel-body {
+      gap: 10px;
+      padding-left: 0;
+      padding-right: 0;
+    }
+  }
+  
+  /* ==========================================
+     MOBILE RESPONSIVENESS
+     ========================================== */
+  
+  @media (max-width: 768px) {
+  
+    .wb-shell {
+      display: block;
+    }
+  
+    /* MOBILE SIDEBAR */
+  
+    .wb-sidebar {
+      display: none;
+      position: absolute;
+      z-index: 100;
+      top: 60px;
+      left: 0;
+      width: 235px;
+      min-height: 0;
+      box-shadow: 5px 10px 20px #0002;
+      border: 1px solid #e6e3df;
+    }
+  
+    .wb-sidebar.wb-sidebar-open {
+      display: flex;
+    }
+  
+    .wb-sidebar > .wb-wordmark {
+      display: none;
+    }
+  
+    /* MOBILE HEADER */
+  
+    .wb-mobile-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 60px;
+      padding: 0 16px;
+      background: #faf9f6;
+    }
+  
+    .wb-mobile-header .wb-wordmark {
+      margin: 0;
+      font-size: 22px;
+    }
+  
+    .wb-menu-toggle {
+      border: 0;
+      background: transparent;
+      padding: 7px;
+      width: auto;
+      font-size: 23px;
+      color: #222;
+    }
+  
+    .wb-menu-toggle:hover {
+      background: transparent;
+      color: #222;
+    }
+  
+    /* MAIN CONTENT */
+  
+    .dashboard-main {
+      padding: 9px 12px 24px;
+    }
+  
+    .wb-toolbar {
+      display: none;
+    }
+  
+    /* ACTION BUTTONS */
+  
+    .wb-actions {
+      gap: 7px;
+      margin-bottom: 15px;
+    }
+  
+    .wb-action {
+      flex: 1;
+      min-width: 0;
+      height: 33px;
+      padding: 0 4px;
+      gap: 4px;
+      font-size: 9px;
+    }
+  
+    .wb-action > span {
+      font-size: 13px;
+    }
+  
+    /* PERFORMANCE */
+  
+    .wb-kpi-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 7px;
+    }
+  
+    .wb-kpi {
+      padding: 11px 12px;
+      min-height: 69px;
+    }
+  
+    .wb-kpi-value {
+      font-size: 21px;
+    }
+  
+    .wb-icon {
+      width: 29px;
+      height: 29px;
+      font-size: 17px;
+    }
+  
+    /* SALES CHART */
+  
+    .wb-sales-chart {
+      padding: 11px 10px;
+    }
+  
+    .wb-chart-area {
+      height: 110px;
+    }
+  
+    .wb-chart-dates {
+      font-size: 8px;
+    }
+  
+    .wb-chart-dates span:nth-child(even) {
+      display: none;
+    }
+  
+    /* TWO COLUMN SECTIONS */
+  
+    .wb-two-col {
+      grid-template-columns: 1fr;
+      gap: 9px;
+    }
+  
+    .wb-panel {
+      padding: 10px 11px;
+    }
+  
+    /* SALES CHANNEL */
+  
+    .wb-channel-body {
+      justify-content: space-around;
+    }
+  
+    /* INVENTORY */
+  
+    .wb-three-metrics {
+      padding: 15px 0 6px;
+    }
+  
+    /* FINANCIAL POSITION */
+  
+    .wb-financial-grid {
+      gap: 0;
+    }
+  
+    .wb-finance-tile {
+      border: 0;
+      border-right: 1px solid #e9e6e2;
+      border-radius: 0;
+      padding: 6px;
+      gap: 5px;
+    }
+  
+    .wb-finance-tile:last-child {
+      border: 0;
+    }
+  
+    .wb-finance-tile .wb-icon {
+      display: none;
+    }
+  
+    .wb-finance-tile strong {
+      font-size: 16px;
+    }
+  
+    .wb-finance-tile small {
+      font-size: 8px;
+    }
+  
+    /* PARTNER CAPITAL */
+  
+    .wb-capital .wb-table {
+      font-size: 10px;
+    }
+  
+    .wb-table th,
+    .wb-table td {
+      padding: 7px 5px;
+    }
+  
+    .wb-capital-footer {
+      display: none;
+    }
+  
+    /* PHYSICAL EVENTS */
+  
+    .wb-event-grid {
+      margin-bottom: 4px;
+    }
+  
+    /* RECENT ACTIVITY */
+  
+    .wb-activity-row {
+      grid-template-columns:
+        16px 52px minmax(0, 1fr) 40px 47px 9px;
+      gap: 4px;
+      font-size: 9px;
+    }
+  
+    .wb-activity-row small {
+      font-size: 9px;
+    }
+  }
+  
+  /* ==========================================
+     SMALL MOBILE SCREENS
+     ========================================== */
+  
+  @media (max-width: 390px) {
+  
+    .wb-mobile-header .wb-wordmark {
+      font-size: 19px;
+    }
+  
+    .wb-action {
+      font-size: 8px;
+    }
+  
+    .wb-kpi-value {
+      font-size: 19px;
+    }
+  
+    .wb-label {
+      font-size: 9px;
+    }
+  
+    .wb-three-metrics > div {
+      padding: 0 9px;
+    }
+  
+    .wb-three-metrics strong {
+      font-size: 17px;
+    }
+  
+    .wb-finance-tile strong {
+      font-size: 13px;
+    }
+  
+    .wb-event-grid > div {
+      gap: 4px;
+      padding: 0 4px;
+    }
+  
+    .wb-event-grid strong {
+      font-size: 14px;
+    }
+  
+    .wb-event-icon {
+      display: none;
+    }
+  }
+  
