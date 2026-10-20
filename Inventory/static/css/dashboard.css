@@ -1333,12 +1333,15 @@ body {
     font-weight: 600;
     letter-spacing: 0.03em;
   }
-  
-  /* Keep brand identity distinct */
-  
-  .wb-wordmark {
-    font-family: var(--wb-font-brand);
-    font-weight: 400;
-    letter-spacing: 0.085em;
+
+/* WOE BETIDE WORDMARK */
+
+.wb-wordmark {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.045em;
+    text-transform: uppercase;
   }
+  
   
