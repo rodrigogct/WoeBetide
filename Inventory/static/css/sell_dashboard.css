@@ -1,0 +1,1296 @@
+
+/* 1. DESIGN VARIABLES */
+
+   :root {
+    --pos-bg: #faf9f6;
+    --pos-card: #fffefd;
+    --pos-neutral: #f5f3ef;
+    --pos-neutral-dark: #eeebe6;
+  
+    --pos-border: #e5e2de;
+    --pos-border-dark: #c9c5be;
+  
+    --pos-text: #20211f;
+    --pos-text-secondary: #777670;
+  
+    --pos-green: #35473d;
+    --pos-green-hover: #29392f;
+  
+    --pos-radius: 6px;
+  
+    --pos-font: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  }
+  
+  
+  /* 2. GENERAL PAGE */
+  
+  .pos-page {
+    width: 100%;
+    max-width: 1250px;
+    margin: 0 auto;
+    padding: 0;
+  
+    font-family: var(--pos-font);
+    font-size: 13px;
+    line-height: 1.5;
+  
+    color: var(--pos-text);
+    text-transform: none;
+  }
+  
+  .pos-page *,
+  .pos-page *::before,
+  .pos-page *::after {
+    box-sizing: border-box;
+  }
+  
+  .pos-page a {
+    text-decoration: none;
+  }
+  
+  .pos-page button,
+  .pos-page input {
+    font-family: var(--pos-font);
+  }
+  
+  .pos-page button {
+    cursor: pointer;
+  }
+  
+  /* 3. MOBILE HEADER */
+  
+  /* Hidden on desktop */
+  
+  .pos-mobile-top {
+    display: none;
+  }
+  
+  .pos-back {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  
+    width: 35px;
+    height: 35px;
+  
+    color: var(--pos-text);
+    font-size: 23px;
+    font-weight: 400;
+  }
+  
+  .pos-mobile-brand {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.045em;
+    white-space: nowrap;
+  }
+  
+  .pos-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  
+    padding: 6px 9px;
+  
+    background: var(--pos-neutral-dark);
+    border: 1px solid var(--pos-border);
+    border-radius: 4px;
+  
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+  
+    white-space: nowrap;
+  }
+  
+  
+  /* ==========================================
+     4. PAGE HEADING
+     ========================================== */
+  
+  .pos-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+  
+  .pos-eyebrow {
+    display: block;
+  
+    margin-bottom: 5px;
+  
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+  
+    color: var(--pos-text-secondary);
+  }
+  
+  .pos-heading h1 {
+    margin: 0;
+  
+    font-family: var(--pos-font);
+    font-size: 34px;
+    line-height: 1.1;
+  
+    font-weight: 600;
+    letter-spacing: -0.045em;
+    text-transform: none;
+  }
+  
+  .pos-context {
+    padding-bottom: 4px;
+  
+    font-size: 11px;
+    font-weight: 500;
+  
+    color: var(--pos-text-secondary);
+    white-space: nowrap;
+  }
+  
+  
+  /* ==========================================
+     5. DESKTOP TWO-COLUMN LAYOUT
+     ========================================== */
+  
+  .pos-columns {
+    display: grid;
+  
+    grid-template-columns:
+      minmax(0, 1fr)
+      minmax(0, 1fr);
+  
+    align-items: start;
+  
+    gap: 16px;
+    width: 100%;
+  }
+  
+  
+  /* ==========================================
+     6. GENERAL PANELS
+     ========================================== */
+  
+  .pos-panel {
+    min-width: 0;
+  
+    padding: 22px;
+  
+    background: var(--pos-card);
+    border: 1px solid var(--pos-border);
+    border-radius: var(--pos-radius);
+  
+    box-shadow: 0 1px 2px #211d1706;
+  }
+  
+  .pos-panel-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  
+  .pos-panel-title h2 {
+    margin: 0;
+  
+    font-family: var(--pos-font);
+    font-size: 14px;
+    font-weight: 600;
+  
+    letter-spacing: -0.015em;
+    text-transform: none;
+  }
+  
+  .pos-subtle {
+    font-size: 11px;
+    font-weight: 400;
+  
+    color: var(--pos-text-secondary);
+  }
+  
+  .pos-mobile-label {
+    display: none;
+  }
+  
+  
+  /* ==========================================
+     7. GARMENT SEARCH
+     ========================================== */
+  
+  .pos-search-row {
+    display: flex;
+    align-items: stretch;
+  
+    gap: 9px;
+    margin-bottom: 14px;
+  }
+  
+  .pos-search-box {
+    display: flex;
+    align-items: center;
+  
+    flex: 1;
+    min-width: 0;
+  
+    height: 45px;
+    padding: 0 13px;
+  
+    background: #ffffff;
+    border: 1px solid var(--pos-border);
+    border-radius: var(--pos-radius);
+  
+    transition: border-color 0.15s ease;
+  }
+  
+  .pos-search-box:focus-within {
+    border-color: var(--pos-green);
+  }
+  
+  .pos-search-box svg {
+    width: 17px;
+    height: 17px;
+  
+    flex-shrink: 0;
+  
+    fill: none;
+    stroke: #777670;
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  
+    margin-right: 10px;
+  }
+  
+  .pos-search-box input {
+    flex: 1;
+    min-width: 0;
+  
+    width: 100%;
+    height: 100%;
+  
+    padding: 0;
+  
+    background: transparent;
+    border: none;
+    outline: none;
+  
+    font-size: 12px;
+    font-weight: 400;
+  
+    color: var(--pos-text);
+    text-transform: none;
+  
+    box-shadow: none;
+  }
+  
+  .pos-search-box input::placeholder {
+    color: #96938d;
+    opacity: 1;
+    text-transform: none;
+  }
+  
+  
+  /* ==========================================
+     8. SCANNER PLACEHOLDER
+     ========================================== */
+  
+  .pos-scan {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  
+    width: 45px;
+    height: 45px;
+  
+    flex: 0 0 45px;
+  
+    padding: 0;
+  
+    background: var(--pos-neutral);
+    border: 1px solid var(--pos-border);
+    border-radius: var(--pos-radius);
+  
+    color: var(--pos-text-secondary);
+  
+    cursor: default;
+  }
+  
+  .pos-scan svg {
+    width: 20px;
+    height: 20px;
+  
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  
+  .pos-scan:hover {
+    background: var(--pos-neutral);
+    color: var(--pos-text-secondary);
+  }
+  
+  
+  /* ==========================================
+     9. GARMENT SEARCH RESULTS
+     ========================================== */
+  
+  .pos-results {
+    width: 100%;
+  
+    border: 1px solid var(--pos-border);
+    border-radius: var(--pos-radius);
+  
+    overflow: hidden;
+    background: #ffffff;
+  }
+  
+  .pos-result {
+    display: flex;
+    align-items: center;
+  
+    gap: 14px;
+    min-height: 76px;
+  
+    padding: 13px 15px;
+  
+    border-bottom: 1px solid var(--pos-border);
+    background: #ffffff;
+  }
+  
+  .pos-result:last-child {
+    border-bottom: none;
+  }
+  
+  .pos-result-copy {
+    display: flex;
+    flex-direction: column;
+  
+    flex: 1;
+    min-width: 0;
+  
+    gap: 3px;
+  }
+  
+  .pos-result-copy strong {
+    font-size: 13px;
+    font-weight: 600;
+  
+    line-height: 1.35;
+    letter-spacing: -0.01em;
+  
+    color: var(--pos-text);
+  }
+  
+  .pos-result-copy small {
+    font-size: 11px;
+    font-weight: 400;
+  
+    color: var(--pos-text-secondary);
+    letter-spacing: 0.015em;
+  }
+  
+  .pos-result-price {
+    font-size: 14px;
+    font-weight: 600;
+  
+    white-space: nowrap;
+    letter-spacing: -0.025em;
+  }
+  
+  .pos-add-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  
+    width: 29px;
+    height: 29px;
+  
+    flex: 0 0 29px;
+  
+    border: 1px solid var(--pos-border);
+    border-radius: 5px;
+  
+    background: var(--pos-neutral);
+  
+    font-size: 20px;
+    font-weight: 400;
+    line-height: 1;
+  
+    color: var(--pos-text);
+  }
+  
+  
+  /* ==========================================
+     10. SEARCH HELP TEXT
+     ========================================== */
+  
+  .pos-help {
+    margin: 14px 0 0;
+  
+    font-size: 11px;
+    line-height: 1.5;
+  
+    color: var(--pos-text-secondary);
+  }
+  
+  
+  /* ==========================================
+     11. CURRENT SALE PANEL
+     ========================================== */
+  
+  .pos-checkout {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .pos-checkout .pos-panel-title {
+    margin-bottom: 16px;
+  }
+  
+  
+  /* ==========================================
+     12. CART ITEM
+     ========================================== */
+  
+  .pos-cart-item {
+    display: flex;
+    align-items: center;
+  
+    width: 100%;
+    min-width: 0;
+  
+    gap: 13px;
+  
+    padding: 13px;
+  
+    background: var(--pos-neutral);
+    border: 1px solid var(--pos-border);
+    border-radius: var(--pos-radius);
+  }
+  
+  .pos-thumbnail {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  
+    width: 58px;
+    height: 62px;
+  
+    flex: 0 0 58px;
+  
+    background: #e8e5df;
+    border-radius: 4px;
+  
+    overflow: hidden;
+  }
+  
+  .pos-thumbnail svg {
+    width: 35px;
+    height: 35px;
+  
+    fill: none;
+    stroke: #9b978f;
+    stroke-width: 1.7;
+    stroke-linejoin: round;
+  }
+  
+  .pos-cart-copy {
+    display: flex;
+    flex-direction: column;
+  
+    gap: 4px;
+  
+    flex: 1;
+    min-width: 0;
+  }
+  
+  .pos-cart-copy strong {
+    font-size: 12px;
+    font-weight: 600;
+  
+    line-height: 1.4;
+    letter-spacing: -0.01em;
+  
+    color: var(--pos-text);
+  }
+  
+  .pos-cart-copy small {
+    font-size: 11px;
+    color: var(--pos-text-secondary);
+  }
+  
+  .pos-cart-price {
+    font-size: 14px;
+    font-weight: 600;
+  
+    letter-spacing: -0.025em;
+    white-space: nowrap;
+  }
+  
+  .pos-remove {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  
+    width: 23px;
+    height: 23px;
+  
+    flex: 0 0 23px;
+  
+    color: #777670;
+  
+    font-size: 19px;
+    font-weight: 300;
+    line-height: 1;
+  
+    cursor: default;
+  }
+  
+  
+  /* ==========================================
+     13. DISCOUNT INPUT
+     ========================================== */
+  
+  .pos-discount {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  
+    gap: 15px;
+    margin-top: 20px;
+  
+    padding: 0 0 19px;
+  
+    border-bottom: 1px solid var(--pos-border);
+  }
+  
+  .pos-discount label {
+    font-size: 12px;
+    font-weight: 500;
+  
+    color: var(--pos-text);
+  }
+  
+  .pos-discount input {
+    width: 90px;
+    height: 39px;
+  
+    padding: 0 10px;
+  
+    background: #ffffff;
+    border: 1px solid var(--pos-border);
+    border-radius: 5px;
+  
+    color: var(--pos-text);
+  
+    font-size: 13px;
+    font-weight: 500;
+    text-align: right;
+  
+    text-transform: none;
+    outline: none;
+  }
+  
+  /* Hide number input arrows */
+  
+  .pos-discount input::-webkit-inner-spin-button,
+  .pos-discount input::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  
+  .pos-discount input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+  
+  
+  /* ==========================================
+     14. SALE SUMMARY
+     ========================================== */
+  
+  .pos-summary {
+    display: flex;
+    flex-direction: column;
+  
+    gap: 13px;
+  
+    padding: 20px 0;
+    border-bottom: 1px solid var(--pos-border);
+  }
+  
+  .pos-subtotal {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  
+    gap: 15px;
+  
+    font-size: 12px;
+    font-weight: 400;
+  
+    color: var(--pos-text-secondary);
+  }
+  
+  .pos-subtotal span:last-child {
+    font-weight: 500;
+    color: var(--pos-text);
+  }
+  
+  .pos-total {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  
+    gap: 15px;
+  }
+  
+  .pos-total strong:first-child {
+    font-size: 14px;
+    font-weight: 600;
+  }
+  
+  .pos-total strong:last-child {
+    font-size: 26px;
+    font-weight: 600;
+  
+    letter-spacing: -0.045em;
+    white-space: nowrap;
+  }
+  
+  
+  /* ==========================================
+     15. PAYMENT METHOD HEADING
+     ========================================== */
+  
+  .pos-payment-heading {
+    margin: 22px 0 13px;
+  
+    font-family: var(--pos-font);
+    font-size: 11px;
+    font-weight: 700;
+  
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+  
+    color: var(--pos-text);
+  }
+  
+  
+  /* ==========================================
+     16. PAYMENT METHOD CARDS
+     ========================================== */
+  
+  .pos-payment-options {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  
+    gap: 10px;
+    width: 100%;
+  }
+  
+  .pos-payment-option {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  
+    gap: 10px;
+  
+    min-width: 0;
+    min-height: 82px;
+  
+    padding: 12px 8px;
+  
+    background: #ffffff;
+    border: 1px solid var(--pos-border);
+    border-radius: var(--pos-radius);
+  
+    color: var(--pos-text-secondary);
+  
+    font-size: 12px;
+    font-weight: 500;
+  
+    cursor: default;
+  }
+  
+  .pos-payment-option svg {
+    width: 22px;
+    height: 22px;
+  
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  
+  .pos-payment-option span {
+    white-space: nowrap;
+  }
+  
+  
+  /* SELECTED CASH OPTION */
+  
+  .pos-payment-selected {
+    background: #f1f4f0;
+    border: 1.5px solid var(--pos-green);
+  
+    color: var(--pos-green);
+    font-weight: 600;
+  }
+  
+  
+  /* ==========================================
+     17. CHECKOUT SECTION
+     ========================================== */
+  
+  .pos-collect {
+    display: flex;
+    flex-direction: column;
+  
+    gap: 14px;
+  
+    margin-top: 25px;
+    padding: 18px;
+  
+    background: var(--pos-neutral);
+    border: 1px solid var(--pos-border);
+    border-radius: var(--pos-radius);
+  }
+  
+  .pos-collect-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  
+    gap: 15px;
+  }
+  
+  .pos-collect-summary span {
+    font-size: 10px;
+    font-weight: 700;
+  
+    letter-spacing: 0.08em;
+    color: var(--pos-text-secondary);
+  }
+  
+  .pos-collect-summary strong {
+    font-size: 26px;
+    font-weight: 600;
+  
+    letter-spacing: -0.045em;
+    white-space: nowrap;
+  
+    color: var(--pos-text);
+  }
+  
+  
+  /* ==========================================
+     18. CHECKOUT BUTTON
+     ========================================== */
+  
+  .pos-submit {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  
+    gap: 12px;
+  
+    width: 100%;
+    min-height: 49px;
+  
+    padding: 13px 20px;
+  
+    background: var(--pos-green);
+    border: 1px solid var(--pos-green);
+    border-radius: 5px;
+  
+    color: #ffffff;
+  
+    font-family: var(--pos-font);
+    font-size: 12px;
+    font-weight: 600;
+  
+    letter-spacing: 0.015em;
+    text-transform: none;
+  
+    transition: background 0.15s ease;
+  }
+  
+  .pos-submit span {
+    font-size: 18px;
+    font-weight: 400;
+  }
+  
+  .pos-submit:hover {
+    background: var(--pos-green-hover);
+    border-color: var(--pos-green-hover);
+    color: #ffffff;
+  }
+  
+  /* Visual-only button: do not submit transactions */
+  
+  .pos-submit:disabled {
+    background: var(--pos-green);
+    border-color: var(--pos-green);
+    color: #ffffff;
+  
+    opacity: 1;
+    cursor: default;
+  }
+  
+  .pos-submit:disabled:hover {
+    background: var(--pos-green);
+    color: #ffffff;
+  }
+  
+  .pos-submit-mobile {
+    display: none;
+  }
+  
+  .pos-submit-desktop {
+    display: flex;
+  }
+  
+  
+  /* ==========================================
+     19. CHECKOUT SUPPORTING TEXT
+     ========================================== */
+  
+  .pos-collect p {
+    margin: 0;
+  
+    text-align: center;
+  
+    font-size: 10px;
+    line-height: 1.5;
+  
+    color: var(--pos-text-secondary);
+  }
+  
+  
+  /* ==========================================
+     20. TABLET RESPONSIVENESS
+     ========================================== */
+  
+  @media (max-width: 1100px) and (min-width: 769px) {
+  
+    .pos-columns {
+      gap: 12px;
+    }
+  
+    .pos-panel {
+      padding: 16px;
+    }
+  
+    .pos-result {
+      padding: 12px 10px;
+      gap: 8px;
+    }
+  
+    .pos-result-copy strong {
+      font-size: 12px;
+    }
+  
+    .pos-cart-item {
+      padding: 10px;
+      gap: 8px;
+    }
+  
+    .pos-thumbnail {
+      width: 45px;
+      height: 52px;
+  
+      flex-basis: 45px;
+    }
+  
+    .pos-cart-price {
+      font-size: 12px;
+    }
+  
+    .pos-payment-options {
+      gap: 7px;
+    }
+  
+  }
+  
+  
+  /* ==========================================
+     21. MOBILE RESPONSIVENESS
+     ========================================== */
+  
+  @media (max-width: 768px) {
+  
+    /* Hide the shared dashboard mobile header
+       on the Sell page only.
+       The Sell page uses its own back-button header. */
+  
+    body:has(.pos-page) .wb-mobile-header {
+      display: none;
+    }
+  
+    /* GENERAL PAGE */
+  
+    .pos-page {
+      max-width: 100%;
+      padding: 0 0 20px;
+    }
+  
+    /* MOBILE HEADER */
+  
+    .pos-mobile-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+  
+      gap: 12px;
+  
+      min-height: 56px;
+  
+      margin: -9px -12px 18px;
+      padding: 0 13px;
+  
+      border-bottom: 1px solid var(--pos-border);
+      background: var(--pos-bg);
+    }
+  
+    .pos-mobile-brand {
+      font-size: 19px;
+    }
+  
+    /* PAGE HEADING */
+  
+    .pos-heading {
+      margin-bottom: 19px;
+      align-items: flex-end;
+    }
+  
+    .pos-eyebrow {
+      display: none;
+    }
+  
+    .pos-heading h1 {
+      font-size: 25px;
+      font-weight: 600;
+      letter-spacing: -0.045em;
+    }
+  
+    .pos-context {
+      font-size: 10px;
+      padding-bottom: 3px;
+    }
+  
+    /* STACKED COLUMNS */
+  
+    .pos-columns {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 14px;
+    }
+  
+    /* MOBILE PANELS */
+  
+    .pos-panel {
+      padding: 17px 15px;
+      border-radius: 6px;
+    }
+  
+    .pos-panel-title {
+      margin-bottom: 15px;
+    }
+  
+    .pos-panel-title h2 {
+      font-size: 14px;
+    }
+  
+    .pos-desktop-label {
+      display: none;
+    }
+  
+    .pos-mobile-label {
+      display: inline;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.09em;
+    }
+  
+    /* SEARCH */
+  
+    .pos-search-row {
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+  
+    .pos-search-box {
+      height: 46px;
+      padding: 0 12px;
+    }
+  
+    .pos-search-box input {
+      font-size: 13px;
+    }
+  
+    .pos-scan {
+      width: 46px;
+      height: 46px;
+      flex-basis: 46px;
+    }
+  
+    /* SEARCH RESULTS */
+  
+    .pos-result {
+      min-height: 68px;
+      padding: 10px 12px;
+      gap: 10px;
+    }
+  
+    .pos-result-copy strong {
+      font-size: 12px;
+    }
+  
+    .pos-result-copy small {
+      font-size: 10px;
+    }
+  
+    .pos-result-price {
+      font-size: 13px;
+    }
+  
+    .pos-add-icon {
+      width: 30px;
+      height: 30px;
+  
+      flex-basis: 30px;
+  
+      font-size: 20px;
+    }
+  
+    .pos-help {
+      margin-top: 10px;
+      font-size: 10px;
+    }
+  
+    /* CURRENT SALE */
+  
+    .pos-checkout .pos-panel-title {
+      margin-bottom: 14px;
+    }
+  
+    .pos-cart-item {
+      gap: 10px;
+      padding: 11px;
+    }
+  
+    .pos-thumbnail {
+      width: 52px;
+      height: 57px;
+      flex-basis: 52px;
+    }
+  
+    .pos-cart-copy strong {
+      font-size: 12px;
+    }
+  
+    .pos-cart-copy small {
+      font-size: 10px;
+    }
+  
+    .pos-cart-price {
+      font-size: 13px;
+    }
+  
+    /* DISCOUNT */
+  
+    .pos-discount {
+      margin-top: 17px;
+      padding-bottom: 16px;
+    }
+  
+    .pos-discount label {
+      font-size: 12px;
+    }
+  
+    .pos-discount input {
+      width: 80px;
+      height: 38px;
+    }
+  
+    /* SUMMARY */
+  
+    .pos-summary {
+      gap: 13px;
+      padding: 17px 0;
+    }
+  
+    .pos-total strong:last-child {
+      font-size: 25px;
+    }
+  
+    /* PAYMENT METHOD */
+  
+    .pos-payment-heading {
+      margin: 19px 0 12px;
+    }
+  
+    .pos-payment-options {
+      gap: 8px;
+    }
+  
+    .pos-payment-option {
+      min-height: 79px;
+      padding: 11px 5px;
+      gap: 8px;
+  
+      font-size: 11px;
+    }
+  
+    .pos-payment-option svg {
+      width: 22px;
+      height: 22px;
+    }
+  
+    /* CHECKOUT */
+  
+    .pos-collect {
+      margin-top: 20px;
+      padding: 15px;
+  
+      gap: 13px;
+    }
+  
+    .pos-collect-summary strong {
+      font-size: 25px;
+    }
+  
+    .pos-submit {
+      min-height: 51px;
+      font-size: 13px;
+    }
+  
+    /* SHOW MOBILE BUTTON */
+  
+    .pos-submit-mobile {
+      display: flex;
+    }
+  
+    .pos-submit-desktop {
+      display: none;
+    }
+  
+  }
+  
+  
+  /* ==========================================
+     22. SMALL MOBILE SCREENS
+     ========================================== */
+  
+  @media (max-width: 390px) {
+  
+    .pos-mobile-brand {
+      font-size: 17px;
+    }
+  
+    .pos-badge {
+      font-size: 8px;
+      padding: 5px 7px;
+    }
+  
+    .pos-heading h1 {
+      font-size: 23px;
+    }
+  
+    .pos-context {
+      font-size: 9px;
+    }
+  
+    .pos-panel {
+      padding: 14px 11px;
+    }
+  
+    .pos-result {
+      gap: 7px;
+      padding: 10px 8px;
+    }
+  
+    .pos-result-copy strong {
+      font-size: 11px;
+    }
+  
+    .pos-result-price {
+      font-size: 12px;
+    }
+  
+    .pos-add-icon {
+      width: 27px;
+      height: 27px;
+      flex-basis: 27px;
+    }
+  
+    .pos-cart-item {
+      gap: 7px;
+      padding: 9px;
+    }
+  
+    .pos-thumbnail {
+      width: 43px;
+      height: 50px;
+      flex-basis: 43px;
+    }
+  
+    .pos-cart-copy strong {
+      font-size: 11px;
+    }
+  
+    .pos-cart-price {
+      font-size: 12px;
+    }
+  
+    .pos-remove {
+      width: 18px;
+      flex-basis: 18px;
+    }
+  
+    .pos-payment-option {
+      font-size: 10px;
+      min-height: 74px;
+    }
+  
+    .pos-collect-summary strong {
+      font-size: 23px;
+    }
+  
+  }
+  
+  
+  /* ==========================================
+     23. ACCESSIBILITY / POLISH
+     ========================================== */
+  
+  .pos-page :focus-visible {
+    outline: 2px solid var(--pos-green);
+    outline-offset: 2px;
+  }
+  
+  .pos-page ::selection {
+    background: #d9e3da;
+    color: #20211f;
+  }
+  
+  @media (prefers-reduced-motion: reduce) {
+  
+    .pos-page *,
+    .pos-page *::before,
+    .pos-page *::after {
+      transition-duration: 0.01ms !important;
+      animation-duration: 0.01ms !important;
+    }
+  
+  }
+  

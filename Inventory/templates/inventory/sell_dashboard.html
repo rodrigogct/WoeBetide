@@ -1,72 +1,443 @@
 {% extends "inventory/base_dashboard.html" %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/sell_dashboard.css' %}">
+{% endblock %}
 
 {% block content %}
 
-<h1 class="page-title">Sell Item</h1>
+<div class="pos-page">
 
-<form method="GET" class="search-form">
-  <input
-    type="text"
-    name="q"
-    placeholder="Search by ID, name, size, collection..."
-    value="{{ query }}"
-    autofocus
-  >
-  <button type="submit">Search</button>
-</form>
+  <!-- MOBILE HEADER -->
+  <div class="pos-mobile-top">
 
-<div class="table-wrap">
-  <table>
-    <thead>
-      <tr>
-        <th>Image</th>
-        <th>ID</th>
-        <th>Item</th>
-        <th>Size</th>
-        <th>Collection</th>
-        <th>Price</th>
-        <th>Sell</th>
-      </tr>
-    </thead>
+    <a
+      href="{% url 'dashboard_home' %}"
+      class="pos-back"
+      aria-label="Back to dashboard">
+      ←
+    </a>
 
-    <tbody>
-      {% for garment in garments %}
-        <tr>
-          <td>
-            {% if garment.img1 %}
-              <img class="item-image" src="{{ garment.img1.url }}" alt="{{ garment.name }}">
-            {% else %}
-              <div class="item-image"></div>
-            {% endif %}
-          </td>
+    <span class="pos-mobile-brand">
+      WOE BETIDE
+    </span>
 
-          <td>{{ garment.garment_id }}</td>
-          <td>{{ garment.name }}</td>
-          <td>{{ garment.size }}</td>
+    <span class="pos-badge">
+      NEW SALE
+    </span>
 
-          <td>
-            {% if garment.collection %}
-              {{ garment.collection.collection_id }}
-            {% else %}
-              —
-            {% endif %}
-          </td>
+  </div>
 
-          <td>${{ garment.listed_price }}</td>
+  <!-- PAGE HEADING -->
+  <div class="pos-heading">
 
-          <td>
-            <a class="sell-link" href="{% url 'sell_garment' garment.garment_id %}">
-              Sell
-            </a>
-          </td>
-        </tr>
-      {% empty %}
-        <tr>
-          <td colspan="7">No items found.</td>
-        </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+    <div>
+      <span class="pos-eyebrow">
+        POINT OF SALE
+      </span>
+
+      <h1>Sell Item</h1>
+    </div>
+
+    <span class="pos-context">
+      Physical · Event
+    </span>
+
+  </div>
+
+  <!-- MAIN TWO-COLUMN LAYOUT -->
+  <div class="pos-columns">
+
+    <!-- LEFT COLUMN — FIND GARMENTS -->
+    <section
+      class="pos-panel pos-find"
+      aria-labelledby="pos-find-title">
+
+      <div class="pos-panel-title">
+
+        <h2 id="pos-find-title">
+
+          <span class="pos-desktop-label">
+            Find garments
+          </span>
+
+          <span class="pos-mobile-label">
+            SEARCH GARMENT
+          </span>
+
+        </h2>
+
+        <span class="pos-subtle pos-desktop-label">
+          3 examples
+        </span>
+      </div>
+
+      <!-- GARMENT SEARCH -->
+      <div class="pos-search-row">
+        <label class="pos-search-box">
+          <svg
+            viewBox="0 0 24 24"
+            aria-hidden="true">
+
+            <circle
+              cx="10.8"
+              cy="10.8"
+              r="6.8"/>
+
+            <path d="m16 16 5 5"/>
+
+          </svg>
+
+          <input
+            type="search"
+            placeholder="ID or garment name..."
+            aria-label="Search garment (visual demo only)"
+            autocomplete="off">
+        </label>
+
+        <!-- FUTURE BARCODE / QR SCANNER -->
+        <button
+          type="button"
+          class="pos-scan"
+          aria-label="Scanner placeholder"
+          title="Scanner coming later">
+
+          <svg
+            viewBox="0 0 24 24"
+            aria-hidden="true">
+
+            <path
+              d="M8 3H5a2 2 0 0 0-2 2v3
+                 m13-5h3a2 2 0 0 1 2 2v3
+                 M3 16v3a2 2 0 0 0 2 2h3
+                 m13-5v3a2 2 0 0 1-2 2h-3
+                 M7 12h10"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- GARMENT SEARCH RESULTS -->
+      <div class="pos-results">
+
+        <!-- GARMENT 1 -->
+        <div class="pos-result">
+
+          <div class="pos-result-copy">
+
+            <strong>
+              Vintage Radiohead Tee
+            </strong>
+
+            <small>
+              WB-0412
+            </small>
+
+          </div>
+
+          <span class="pos-result-price">
+            $900
+          </span>
+
+          <span
+            class="pos-add-icon"
+            aria-hidden="true">
+            +
+          </span>
+
+        </div>
+
+        <!-- GARMENT 2 -->
+        <div class="pos-result">
+
+          <div class="pos-result-copy">
+
+            <strong>
+              Levi's Denim Jacket
+            </strong>
+
+            <small>
+              WB-0588
+            </small>
+
+          </div>
+
+          <span class="pos-result-price">
+            $1,200
+          </span>
+
+          <span
+            class="pos-add-icon"
+            aria-hidden="true">
+            +
+          </span>
+
+        </div>
+
+        <!-- GARMENT 3 -->
+        <div class="pos-result">
+
+          <div class="pos-result-copy">
+            <strong>
+              90s Nike Sweatshirt
+            </strong>
+
+            <small>
+              WB-0601
+            </small>
+
+          </div>
+
+          <span class="pos-result-price">
+            $800
+          </span>
+
+          <span
+            class="pos-add-icon"
+            aria-hidden="true">
+            +
+          </span>
+
+        </div>
+      </div>
+
+      <!-- INFORMATION TEXT -->
+      <p class="pos-help">
+        Garment search and scanning will be connected
+        in a later phase.
+      </p>
+
+    </section>
+
+    <!-- RIGHT COLUMN — CURRENT SALE -->
+    <section
+      class="pos-panel pos-checkout"
+      aria-labelledby="pos-cart-title">
+
+      <!-- CURRENT SALE HEADER -->
+      <div class="pos-panel-title">
+        <h2 id="pos-cart-title">
+          Current sale
+        </h2>
+
+        <span class="pos-subtle">
+          1 item
+        </span>
+      </div>
+
+      <!-- CART ITEMS -->
+      <div class="pos-cart-item">
+        <!-- GARMENT THUMBNAIL -->
+        <div
+          class="pos-thumbnail"
+          aria-hidden="true">
+          <svg viewBox="0 0 64 64">
+            <path
+              d="M23 12 15 17 7 31
+                 l11 6 5-7v23h18V30
+                 l5 7 11-6-8-14-8-5
+                 -5 7h-8z"/>
+          </svg>
+        </div>
+
+        <!-- GARMENT INFORMATION -->
+        <div class="pos-cart-copy">
+          <strong>
+            Vintage Radiohead Tee
+          </strong>
+
+          <small>
+            WB-0412
+          </small>
+        </div>
+
+        <!-- GARMENT PRICE -->
+        <strong class="pos-cart-price">
+          $900
+        </strong>
+
+        <!-- REMOVE ICON -->
+        <span
+          class="pos-remove"
+          aria-label="Remove placeholder">
+          ×
+        </span>
+
+      </div>
+
+      <!-- DISCOUNT -->
+      <div class="pos-discount">
+
+        <label for="pos-discount-demo">
+          Discount (MXN)
+        </label>
+
+        <input
+          id="pos-discount-demo"
+          type="number"
+          min="0"
+          value="0"
+          readonly
+          aria-label="Discount placeholder">
+
+      </div>
+
+      <!-- SALE SUMMARY -->
+      <div class="pos-summary">
+        <!-- SUBTOTAL -->
+        <div class="pos-subtotal">
+          <span>
+            Subtotal
+          </span>
+
+          <span>
+            $900
+          </span>
+        </div>
+
+
+        <!-- TOTAL -->
+        <div class="pos-total">
+          <strong>
+            Total
+          </strong>
+          <strong>
+            $900
+          </strong>
+        </div>
+      </div>
+
+      <!-- PAYMENT METHOD -->
+      <h3 class="pos-payment-heading">
+        PAYMENT METHOD
+      </h3>
+
+      <div class="pos-payment-options">
+        <!-- CASH -->
+        <div class="pos-payment-option pos-payment-selected">
+          <svg viewBox="0 0 24 24">
+
+            <rect
+              x="3"
+              y="6"
+              width="18"
+              height="12"
+              rx="2"/>
+
+            <circle
+              cx="12"
+              cy="12"
+              r="3"/>
+
+            <path d="M6 9h1m10 6h1"/>
+
+          </svg>
+
+          <span>
+            Cash
+          </span>
+
+        </div>
+
+        <!-- CARD -->
+        <div class="pos-payment-option">
+
+          <svg viewBox="0 0 24 24">
+
+            <rect
+              x="2.5"
+              y="5"
+              width="19"
+              height="14"
+              rx="2"/>
+
+            <path d="M2.5 10h19M6 15h5"/>
+
+          </svg>
+
+          <span>
+            Card
+          </span>
+
+        </div>
+
+        <!-- TRANSFER -->
+
+        <div class="pos-payment-option">
+
+          <svg viewBox="0 0 24 24">
+
+            <path
+              d="M4 8h16l-4-4
+                 m4 4-4 4
+                 M20 16H4l4-4
+                 m-4 4 4 4"/>
+
+          </svg>
+
+          <span>
+            Transfer
+          </span>
+
+        </div>
+      </div>
+
+      <!-- CHECKOUT -->
+      <div class="pos-collect">
+
+        <!-- TOTAL TO COLLECT -->
+
+        <div class="pos-collect-summary">
+
+          <span>
+            TOTAL TO COLLECT
+          </span>
+
+          <strong>
+            $900
+          </strong>
+
+        </div>
+
+
+        <!-- MOBILE CHECKOUT BUTTON -->
+
+        <button
+          class="pos-submit pos-submit-mobile"
+          type="button"
+          disabled>
+
+          Review sale
+          <span>→</span>
+
+        </button>
+
+
+        <!-- DESKTOP CHECKOUT BUTTON -->
+
+        <button
+          class="pos-submit pos-submit-desktop"
+          type="button"
+          disabled>
+
+          Complete sale
+          <span>→</span>
+
+        </button>
+
+
+        <!-- DEMONSTRATION NOTICE -->
+
+        <p>
+          Visual preview only · No transaction will be created
+        </p>
+
+      </div>
+
+    </section>
+
+  </div>
+
 </div>
 
 {% endblock %}
