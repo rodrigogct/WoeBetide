@@ -1,48 +1,526 @@
+
 {% extends "inventory/base_dashboard.html" %}
+
+{% block nav_dashboard_class %}is-active{% endblock %}
 
 {% block content %}
 
-<h1 class="page-title">Dashboard</h1>
+<div class="wb-dashboard">
 
-<section class="stats-grid">
-  <div class="stat-card">
-    <div class="stat-label">Total Inventory</div>
-    <div class="stat-value">{{ total_inventory }}</div>
+  <!-- ======================================
+       TOP TOOLBAR
+       ====================================== -->
+
+  <div class="wb-toolbar">
+    <span class="wb-select">
+      30 Days <span>⌄</span>
+    </span>
+
+    <span class="wb-select">
+      Export <span>⌄</span>
+    </span>
   </div>
 
-  <div class="stat-card">
-    <div class="stat-label">Available</div>
-    <div class="stat-value">{{ available }}</div>
+
+  <!-- ======================================
+       PRIMARY ACTIONS
+       ====================================== -->
+
+  <div class="wb-actions">
+
+    <a
+      class="wb-action wb-action-primary"
+      href="{% url 'sell_dashboard' %}">
+      <span>＋</span> SELL
+    </a>
+
+    <span class="wb-action wb-action-neutral">
+      <span>◇</span> ADD GARMENT
+    </span>
+
+    {% if request.user.is_superuser %}
+      <a
+        class="wb-action wb-action-neutral"
+        href="{% url 'import_inventory' %}">
+        <span>▤</span> IMPORT EXCEL
+      </a>
+    {% else %}
+      <span class="wb-action wb-action-neutral wb-disabled">
+        <span>▤</span> IMPORT EXCEL
+      </span>
+    {% endif %}
+
   </div>
 
-  <div class="stat-card">
-    <div class="stat-label">Published</div>
-    <div class="stat-value">{{ published }}</div>
+
+  <!-- ======================================
+       PERFORMANCE
+       ====================================== -->
+
+  <h2 class="wb-section-heading">PERFORMANCE</h2>
+
+  <div class="wb-kpi-grid">
+
+    <div class="wb-card wb-kpi">
+      <div>
+        <div class="wb-label">REVENUE</div>
+        <div class="wb-kpi-value">$42,300</div>
+      </div>
+      <span class="wb-icon">⌁</span>
+    </div>
+
+    <div class="wb-card wb-kpi">
+      <div>
+        <div class="wb-label">GROSS PROFIT</div>
+        <div class="wb-kpi-value">$26,100</div>
+      </div>
+      <span class="wb-icon">▥</span>
+    </div>
+
+    <div class="wb-card wb-kpi">
+      <div>
+        <div class="wb-label">UNITS SOLD</div>
+        <div class="wb-kpi-value">47</div>
+      </div>
+      <span class="wb-icon">♧</span>
+    </div>
+
+    <div class="wb-card wb-kpi">
+      <div>
+        <div class="wb-label">INVENTORY</div>
+        <div class="wb-kpi-value">169</div>
+      </div>
+      <span class="wb-icon">⬡</span>
+    </div>
+
   </div>
 
-  <div class="stat-card">
-    <div class="stat-label">Sold</div>
-    <div class="stat-value">{{ sold }}</div>
+
+  <!-- ======================================
+       SALES OVER TIME
+       ====================================== -->
+
+  <section class="wb-card wb-sales-chart">
+
+    <div class="wb-card-header">
+
+      <h2>SALES OVER TIME</h2>
+
+      <div class="wb-legend">
+        <span>
+          <i class="wb-dot wb-green"></i> Online
+        </span>
+
+        <span>
+          <i class="wb-dot wb-beige"></i> Physical
+        </span>
+      </div>
+
+    </div>
+
+    <div class="wb-chart-area">
+
+      <div class="wb-y-axis">
+        <span>4K</span>
+        <span>3K</span>
+        <span>2K</span>
+        <span>1K</span>
+        <span>0</span>
+      </div>
+
+      <div class="wb-chart-plot">
+
+        <div class="wb-gridlines"></div>
+
+        <div class="wb-bars" id="wb-bars"></div>
+
+      </div>
+
+    </div>
+
+    <div class="wb-chart-dates">
+      <span>Mar 1</span>
+      <span>Mar 4</span>
+      <span>Mar 7</span>
+      <span>Mar 10</span>
+      <span>Mar 13</span>
+      <span>Mar 16</span>
+      <span>Mar 19</span>
+      <span>Mar 22</span>
+      <span>Mar 25</span>
+      <span>Mar 28</span>
+      <span>Mar 31</span>
+    </div>
+
+  </section>
+
+
+  <!-- ======================================
+       SALES CHANNEL + INVENTORY
+       ====================================== -->
+
+  <div class="wb-two-col">
+
+    <!-- SALES CHANNEL -->
+
+    <section class="wb-card wb-panel">
+
+      <h2>SALES CHANNEL</h2>
+
+      <div class="wb-channel-body">
+
+        <div class="wb-donut"></div>
+
+        <div class="wb-channel-details">
+
+          <div>
+            <span>
+              <i class="wb-dot wb-green"></i>
+              Physical
+            </span>
+
+            <strong>$28,400</strong>
+            <span>67%</span>
+          </div>
+
+          <div>
+            <span>
+              <i class="wb-dot wb-beige"></i>
+              Online
+            </span>
+
+            <strong>$13,900</strong>
+            <span>33%</span>
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- INVENTORY -->
+
+    <section class="wb-card wb-panel">
+
+      <h2>INVENTORY</h2>
+
+      <div class="wb-three-metrics">
+
+        <div>
+          <small>AVAILABLE</small>
+          <strong>169</strong>
+        </div>
+
+        <div>
+          <small>PUBLISHED</small>
+          <strong>298</strong>
+        </div>
+
+        <div>
+          <small>AGE (AVG)</small>
+          <strong>142 days</strong>
+        </div>
+
+      </div>
+
+    </section>
+
   </div>
 
-  <div class="stat-card">
-    <div class="stat-label">Revenue</div>
-    <div class="stat-value">${{ revenue }}</div>
+
+  <!-- ======================================
+       FINANCIAL POSITION
+       ====================================== -->
+
+  <section class="wb-card wb-panel wb-financial">
+
+    <div class="wb-card-header">
+      <h2>FINANCIAL POSITION</h2>
+      <small>ALL TIME</small>
+    </div>
+
+    <div class="wb-financial-grid">
+
+      <div class="wb-finance-tile">
+
+        <span class="wb-icon">▤</span>
+
+        <div>
+          <small>TOTAL EARNED</small>
+          <strong>$161,000</strong>
+        </div>
+
+      </div>
+
+      <div class="wb-finance-tile">
+
+        <span class="wb-icon">▣</span>
+
+        <div>
+          <small>TOTAL SPENT</small>
+          <strong>$118,050</strong>
+        </div>
+
+      </div>
+
+      <div class="wb-finance-tile">
+
+        <span class="wb-icon">▥</span>
+
+        <div>
+          <small>CASH AVAILABLE</small>
+          <strong>$48,420</strong>
+        </div>
+
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- ======================================
+       PARTNER CAPITAL
+       ====================================== -->
+
+  <section class="wb-card wb-panel wb-capital">
+
+    <div class="wb-card-header">
+      <h2>PARTNER CAPITAL</h2>
+      <span>›</span>
+    </div>
+
+    <div class="wb-table-wrap">
+
+      <table class="wb-table">
+
+        <thead>
+          <tr>
+            <th></th>
+            <th>Invested</th>
+            <th>Should</th>
+            <th>Balance</th>
+          </tr>
+        </thead>
+
+        <tbody>
+
+          <tr>
+            <td>Rodrigo</td>
+            <td>$59,790</td>
+            <td>$55,620</td>
+            <td class="wb-positive">+$4,170</td>
+          </tr>
+
+          <tr>
+            <td>Fran</td>
+            <td>$23,054</td>
+            <td>$27,650</td>
+            <td class="wb-negative">-$4,596</td>
+          </tr>
+
+          <tr>
+            <td>Bure</td>
+            <td>$12,400</td>
+            <td>$11,974</td>
+            <td class="wb-positive">+$426</td>
+          </tr>
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+    <div class="wb-capital-footer">
+      <span class="wb-view">
+        View capital →
+      </span>
+    </div>
+
+  </section>
+
+
+  <!-- ======================================
+       PHYSICAL EVENTS + NEEDS ATTENTION
+       ====================================== -->
+
+  <div class="wb-two-col wb-bottom-grid">
+
+    <!-- PHYSICAL EVENTS -->
+
+    <section class="wb-card wb-panel">
+
+      <h2>PHYSICAL EVENTS</h2>
+
+      <div class="wb-event-grid">
+
+        <div>
+
+          <span class="wb-event-icon">▦</span>
+
+          <div>
+            <small>LAST EVENT</small>
+            <strong>$2,840</strong>
+            <em>Mar 22, 2025</em>
+          </div>
+
+        </div>
+
+        <div>
+
+          <span class="wb-event-icon">☆</span>
+
+          <div>
+            <small>BEST EVENT</small>
+            <strong>$4,120</strong>
+            <em>Feb 15, 2025</em>
+          </div>
+
+        </div>
+
+        <div>
+
+          <span class="wb-event-icon">▥</span>
+
+          <div>
+            <small>AVERAGE</small>
+            <strong>$2,310</strong>
+            <em>Per event</em>
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+
+    <!-- NEEDS ATTENTION -->
+
+    <section class="wb-card wb-panel">
+
+      <h2>NEEDS ATTENTION</h2>
+
+      <div class="wb-alert-row">
+        <span>⚠</span>
+        129 garments not published
+        <b>›</b>
+      </div>
+
+      <div class="wb-alert-row">
+        <span>⚠</span>
+        18 garments missing photos
+        <b>›</b>
+      </div>
+
+      <div class="wb-alert-row">
+        <span>⚠</span>
+        7 garments missing measurements
+        <b>›</b>
+      </div>
+
+    </section>
+
   </div>
 
-  <div class="stat-card">
-    <div class="stat-label">Gross Profit</div>
-    <div class="stat-value">${{ gross_profit }}</div>
-  </div>
-</section>
 
-<div class="action-row">
-  <a class="button" href="{% url 'sell_dashboard' %}">Sell Item</a>
-  <a class="button" href="{% url 'inventory_list' %}">View Inventory</a>
+  <!-- ======================================
+       RECENT ACTIVITY
+       ====================================== -->
 
-  {% if request.user.is_superuser %}
-    <a class="button" href="{% url 'import_inventory' %}">Import Excel</a>
-  {% endif %}
+  <section class="wb-card wb-panel wb-activity">
+
+    <h2>RECENT ACTIVITY</h2>
+
+    <div class="wb-activity-row">
+
+      <span>◇</span>
+      <b>Sold</b>
+      <span>Levi's Denim Jacket (M)</span>
+      <strong>$120</strong>
+      <small>2 hours ago</small>
+      <span>›</span>
+
+    </div>
+
+    <div class="wb-activity-row">
+
+      <span>⬡</span>
+      <b>Imported</b>
+      <span>50 garments from supplier</span>
+      <strong></strong>
+      <small>2 hours ago</small>
+      <span>›</span>
+
+    </div>
+
+    <div class="wb-activity-row">
+
+      <span>◇</span>
+      <b>Sold</b>
+      <span>Nike Windbreaker (L)</span>
+      <strong>$85</strong>
+      <small>5 hours ago</small>
+      <span>›</span>
+
+    </div>
+
+  </section>
+
 </div>
+
+
+<!-- ======================================
+     STATIC SALES CHART DATA
+     ====================================== -->
+
+<script>
+(function () {
+
+  const online = [
+    650, 280, 490, 230, 650,
+    1200, 850, 260, 390, 650,
+    1100, 750, 900, 1550, 820,
+    700, 2300, 1600, 950, 570,
+    1800, 1350, 1200, 1500, 850,
+    450, 1100, 1850, 620, 1200, 1500
+  ];
+
+  const physical = [
+    900, 380, 650, 550, 1050,
+    1200, 850, 300, 350, 450,
+    950, 800, 750, 1200, 900,
+    950, 1300, 1350, 1200, 1400,
+    1450, 1400, 1350, 1550, 900,
+    750, 1300, 1400, 800, 950, 1400
+  ];
+
+  const target = document.getElementById('wb-bars');
+
+  if (!target) return;
+
+  online.forEach((value, i) => {
+
+    const bar = document.createElement('div');
+    bar.className = 'wb-bar';
+
+    const green = document.createElement('div');
+    green.className = 'wb-bar-online';
+    green.style.height = (value / 4000 * 100) + '%';
+
+    const beige = document.createElement('div');
+    beige.className = 'wb-bar-physical';
+    beige.style.height = (physical[i] / 4000 * 100) + '%';
+
+    bar.append(green, beige);
+    target.appendChild(bar);
+
+  });
+
+})();
+</script>
 
 {% endblock %}

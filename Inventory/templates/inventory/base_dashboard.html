@@ -1,48 +1,147 @@
-{% load static %}
 
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>WOE BETIDE Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+  <title>WOE BETIDE Dashboard</title>
   <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
 </head>
 
 <body>
-  <header class="dashboard-header">
-    <a href="{% url 'dashboard_home' %}" class="brand-link">WOE BETIDE</a>
+<div class="wb-shell">
 
-    <nav class="dashboard-nav">
-      <a href="{% url 'dashboard_home' %}">Dashboard</a>
-      <a href="{% url 'sell_dashboard' %}">Sell</a>
-      <a href="{% url 'inventory_list' %}">Inventory</a>
+  <!-- DESKTOP SIDEBAR -->
+  <aside class="wb-sidebar" id="wb-sidebar">
+
+    <a class="wb-wordmark" href="{% url 'dashboard_home' %}">
+      WOE BETIDE
+    </a>
+
+    <nav class="wb-nav" aria-label="Dashboard navigation">
+
+      <a class="wb-nav-link {% block nav_dashboard_class %}{% endblock %}"
+         href="{% url 'dashboard_home' %}">
+        <span>⌂</span> Dashboard
+      </a>
+
+      <a class="wb-nav-link" href="{% url 'inventory_list' %}">
+        <span>▣</span> Inventory
+      </a>
+
+      <a class="wb-nav-link" href="{% url 'sales_dashboard' %}">
+        <span>⌁</span> Sales
+      </a>
+
+      <span class="wb-nav-link wb-inactive">
+        <span>▢</span> Events
+      </span>
+
+      <span class="wb-nav-link wb-inactive">
+        <span>◉</span> Finances
+      </span>
+
+      <span class="wb-nav-link wb-inactive">
+        <span>♧</span> Partners
+      </span>
+
+      <span class="wb-nav-link wb-inactive">
+        <span>☑</span> Tasks
+      </span>
+
+      <span class="wb-nav-link wb-inactive">
+        <span>▤</span> Reports
+      </span>
+
+      <div class="wb-nav-divider"></div>
+
+      <a class="wb-nav-link" href="{% url 'sell_dashboard' %}">
+        <span>＋</span> Sell
+      </a>
+
+      <a class="wb-nav-link" href="{% url 'collections_dashboard' %}">
+        <span>▦</span> Collections
+      </a>
 
       {% if request.user.is_superuser %}
-        <a href="{% url 'import_inventory' %}">Import</a>
+        <a class="wb-nav-link" href="{% url 'import_inventory' %}">
+          <span>⇧</span> Import
+        </a>
       {% endif %}
+
     </nav>
-  </header>
 
-  <nav class="dashboard-subnav">
-    <a href="{% url 'collections_dashboard' %}">Collections</a>
-    <a href="{% url 'sales_dashboard' %}">Sales</a>
-  </nav>
+    <!-- SETTINGS -->
+    <span class="wb-settings wb-inactive">
+      <span>⚙</span> Settings
+    </span>
 
-  {% if messages %}
-    <section class="messages">
-      {% for message in messages %}
-        <div class="message {{ message.tags }}">
-          {{ message }}
-        </div>
-      {% endfor %}
-    </section>
-  {% endif %}
+  </aside>
 
-  <main class="dashboard-main">
-    {% block content %}
-    {% endblock %}
-  </main>
+  <!-- MAIN PAGE -->
+  <div class="wb-page">
+
+    <!-- MOBILE HEADER -->
+    <header class="wb-mobile-header">
+
+      <a class="wb-wordmark" href="{% url 'dashboard_home' %}">
+        WOE BETIDE
+      </a>
+
+      <button
+        class="wb-menu-toggle"
+        type="button"
+        aria-controls="wb-sidebar"
+        aria-expanded="false"
+        aria-label="Toggle menu">
+        ☰
+      </button>
+
+    </header>
+
+    <!-- DJANGO MESSAGES -->
+    {% if messages %}
+      <section class="messages">
+
+        {% for message in messages %}
+          <div class="message {{ message.tags }}">
+            {{ message }}
+          </div>
+        {% endfor %}
+
+      </section>
+    {% endif %}
+
+    <!-- PAGE CONTENT -->
+    <main class="dashboard-main">
+      {% block content %}
+      {% endblock %}
+    </main>
+
+  </div>
+
+</div>
+
+<!-- MOBILE MENU SCRIPT -->
+<script>
+(function () {
+
+  const toggle = document.querySelector('.wb-menu-toggle');
+  const sidebar = document.querySelector('.wb-sidebar');
+
+  if (!toggle || !sidebar) return;
+
+  toggle.addEventListener('click', function () {
+
+    const open = sidebar.classList.toggle('wb-sidebar-open');
+
+    toggle.setAttribute('aria-expanded', String(open));
+
+  });
+
+})();
+</script>
+
 </body>
 </html>
