@@ -1278,3 +1278,67 @@ body {
     }
   }
   
+
+/* TYPOGRAPHY */
+
+   :root {
+    --wb-font-primary: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    --wb-font-brand: Georgia, "Times New Roman", serif;
+  }
+  
+  /* Consistent typography throughout dashboard */
+  
+  body,
+  .wb-shell {
+    font-family: var(--wb-font-primary);
+  }
+  
+  /* All interface elements inherit the same font */
+  
+  .wb-shell button,
+  .wb-shell input,
+  .wb-shell select,
+  .wb-shell textarea,
+  .wb-shell table {
+    font-family: inherit;
+  }
+  
+  /* Consistent heading typography */
+  
+  .wb-section-heading,
+  .wb-card h2 {
+    font-family: var(--wb-font-primary);
+    font-weight: 600;
+    letter-spacing: 0.08em;
+  }
+  
+  /* Consistent metric typography */
+  
+  .wb-kpi-value,
+  .wb-three-metrics strong,
+  .wb-finance-tile strong,
+  .wb-event-grid strong {
+    font-family: var(--wb-font-primary);
+    font-weight: 500;
+    letter-spacing: -0.035em;
+  }
+  
+  /* Consistent labels */
+  
+  .wb-label,
+  .wb-finance-tile small,
+  .wb-three-metrics small,
+  .wb-event-grid small {
+    font-family: var(--wb-font-primary);
+    font-weight: 600;
+    letter-spacing: 0.03em;
+  }
+  
+  /* Keep brand identity distinct */
+  
+  .wb-wordmark {
+    font-family: var(--wb-font-brand);
+    font-weight: 400;
+    letter-spacing: 0.085em;
+  }
+  
