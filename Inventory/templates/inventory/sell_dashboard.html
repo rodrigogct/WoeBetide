@@ -69,7 +69,7 @@
         </h2>
 
         <span class="pos-subtle pos-desktop-label">
-          3 examples
+          Live inventory
         </span>
       </div>
 
@@ -92,7 +92,7 @@
           <input
             type="search"
             placeholder="ID or garment name..."
-            aria-label="Search garment (visual demo only)"
+            id="pos-search-input" aria-label="Search available garment"
             autocomplete="off">
         </label>
 
@@ -118,93 +118,11 @@
       </div>
 
       <!-- GARMENT SEARCH RESULTS -->
-      <div class="pos-results">
-
-        <!-- GARMENT 1 -->
-        <div class="pos-result">
-
-          <div class="pos-result-copy">
-
-            <strong>
-              Vintage Radiohead Tee
-            </strong>
-
-            <small>
-              WB-0412
-            </small>
-
-          </div>
-
-          <span class="pos-result-price">
-            $900
-          </span>
-
-          <span
-            class="pos-add-icon"
-            aria-hidden="true">
-            +
-          </span>
-
-        </div>
-
-        <!-- GARMENT 2 -->
-        <div class="pos-result">
-
-          <div class="pos-result-copy">
-
-            <strong>
-              Levi's Denim Jacket
-            </strong>
-
-            <small>
-              WB-0588
-            </small>
-
-          </div>
-
-          <span class="pos-result-price">
-            $1,200
-          </span>
-
-          <span
-            class="pos-add-icon"
-            aria-hidden="true">
-            +
-          </span>
-
-        </div>
-
-        <!-- GARMENT 3 -->
-        <div class="pos-result">
-
-          <div class="pos-result-copy">
-            <strong>
-              90s Nike Sweatshirt
-            </strong>
-
-            <small>
-              WB-0601
-            </small>
-
-          </div>
-
-          <span class="pos-result-price">
-            $800
-          </span>
-
-          <span
-            class="pos-add-icon"
-            aria-hidden="true">
-            +
-          </span>
-
-        </div>
-      </div>
+      <div class="pos-results" id="pos-results" aria-live="polite">Loading available garments…</div>
 
       <!-- INFORMATION TEXT -->
       <p class="pos-help">
-        Garment search and scanning will be connected
-        in a later phase.
+        Search is live. QR scanning will be added later.
       </p>
 
     </section>
@@ -221,49 +139,12 @@
         </h2>
 
         <span class="pos-subtle">
-          1 item
+          0 items
         </span>
       </div>
 
       <!-- CART ITEMS -->
-      <div class="pos-cart-item">
-        <!-- GARMENT THUMBNAIL -->
-        <div
-          class="pos-thumbnail"
-          aria-hidden="true">
-          <svg viewBox="0 0 64 64">
-            <path
-              d="M23 12 15 17 7 31
-                 l11 6 5-7v23h18V30
-                 l5 7 11-6-8-14-8-5
-                 -5 7h-8z"/>
-          </svg>
-        </div>
-
-        <!-- GARMENT INFORMATION -->
-        <div class="pos-cart-copy">
-          <strong>
-            Vintage Radiohead Tee
-          </strong>
-
-          <small>
-            WB-0412
-          </small>
-        </div>
-
-        <!-- GARMENT PRICE -->
-        <strong class="pos-cart-price">
-          $900
-        </strong>
-
-        <!-- REMOVE ICON -->
-        <span
-          class="pos-remove"
-          aria-label="Remove placeholder">
-          ×
-        </span>
-
-      </div>
+      <div id="pos-cart-items"><p class="pos-help">No garments added yet.</p></div>
 
       <!-- DISCOUNT -->
       <div class="pos-discount">
@@ -277,8 +158,7 @@
           type="number"
           min="0"
           value="0"
-          readonly
-          aria-label="Discount placeholder">
+          aria-label="Discount in MXN">
 
       </div>
 
@@ -291,7 +171,7 @@
           </span>
 
           <span>
-            $900
+            $0
           </span>
         </div>
 
@@ -302,7 +182,7 @@
             Total
           </strong>
           <strong>
-            $900
+            $0
           </strong>
         </div>
       </div>
@@ -394,7 +274,7 @@
           </span>
 
           <strong>
-            $900
+            $0
           </strong>
 
         </div>
@@ -429,7 +309,7 @@
         <!-- DEMONSTRATION NOTICE -->
 
         <p>
-          Visual preview only · No transaction will be created
+          Stage 1 preview · No transaction will be created
         </p>
 
       </div>
@@ -439,5 +319,8 @@
   </div>
 
 </div>
+
+<script>window.WOE_POS_SEARCH_URL = '{% url "pos_garment_search" %}';</script>
+<script src="{% static 'js/sell_dashboard.js' %}" defer></script>
 
 {% endblock %}
