@@ -1185,11 +1185,8 @@
     }
   
   }
-  
-  
-  /* ==========================================
-     22. SMALL MOBILE SCREENS
-     ========================================== */
+   
+  /* 22. SMALL MOBILE SCREENS  */
   
   @media (max-width: 390px) {
   
@@ -1267,11 +1264,8 @@
     }
   
   }
-  
-  
-  /* ==========================================
-     23. ACCESSIBILITY / POLISH
-     ========================================== */
+   
+  /* 23. ACCESSIBILITY / POLISH */
   
   .pos-page :focus-visible {
     outline: 2px solid var(--pos-green);
