@@ -1294,3 +1294,58 @@
   
   }
   
+/* ========================================
+   SELL — SEARCH INPUT FIX
+   ======================================== */
+
+   .pos-search-box input,
+   .pos-search-box input[type="search"] {
+       flex: 1;
+       width: 100%;
+       min-width: 0;
+   
+       /* Remove browser input styling */
+       appearance: none;
+       -webkit-appearance: none;
+   
+       border: none !important;
+       outline: none !important;
+       box-shadow: none !important;
+   
+       background: transparent !important;
+       border-radius: 0;
+   
+       padding: 0;
+       margin: 0;
+   
+       font: inherit;
+       color: #222222;
+   }
+   
+   /* Prevent additional focus borders */
+   .pos-search-box input:focus,
+   .pos-search-box input:focus-visible {
+       border: none !important;
+       outline: none !important;
+       box-shadow: none !important;
+   }
+   
+   /* Remove native search clear button */
+   .pos-search-box input::-webkit-search-cancel-button,
+   .pos-search-box input::-webkit-search-decoration {
+       -webkit-appearance: none;
+       appearance: none;
+       display: none;
+   }
+   
+   /* Keep the outer container as the only border */
+   .pos-search-box {
+       display: flex;
+       align-items: center;
+       min-width: 0;
+   }
+   
+   /* Accessible, subtle focus indication */
+   .pos-search-box:focus-within {
+       border-color: #344c40;
+   }
