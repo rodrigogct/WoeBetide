@@ -389,128 +389,66 @@ def payments_dashboard(request):
     })
 
 # Excel-backed garment lookup for the POS.
+from django.db.models import Q, Case, When, Value, IntegerField
 from django.http import JsonResponse
 from django.views.decorators.http import require_GET
+from django.contrib.auth.decorators import login_required
 
 @login_required
 @require_GET
 def pos_garment_search(request):
-    # Only return results after a query; exact-ID lookup is used when returning from Inventory.
     query = request.GET.get("q", "").strip()[:100]
-    exact_id = request.GET.get("id", "").strip()[:100]
-    if not query and not exact_id:
+
+    if not query:
         return JsonResponse({"results": []})
-    qs = Garment.objects.filter(status__in=[Garment.Status.AVAILABLE, Garment.Status.PUBLISHED])
-    if exact_id:
-        qs = qs.filter(garment_id=exact_id)
-    else:
-        qs = qs.filter(
-            models.Q(garment_id__icontains=query) |
-            models.Q(name__icontains=query) |
-            models.Q(brand__icontains=query) |
-            models.Q(collection__collection_id__icontains=query)
-        )
-    qs = qs.order_by("garment_id")[:1 if exact_id else 5]
-    results = []
-    for garment in qs:
-        try:
-            image_url = garment.img1.url if garment.img1 else None
-        except (ValueError, OSError):
-            image_url = None
-        results.append({
-            "id": garment.garment_id,
-            "name": garment.name,
-            "price": str(garment.listed_price),
-            "image_url": image_url,
-            "status": garment.status,
-        })
-    return JsonResponse({"results": results})
 
-    query = request.GET.get("q", "").strip()[:100]
-    qs = Garment.objects.filter(status__in=[Garment.Status.AVAILABLE, Garment.Status.PUBLISHED])
-    if query:
-        qs = qs.filter(
-            models.Q(garment_id__icontains=query) |
-            models.Q(name__icontains=query) |
-            models.Q(brand__icontains=query) |
-            models.Q(collection__collection_id__icontains=query)
-        )
-    qs = qs.order_by("garment_id")[:20]
-    results = []
-    for garment in qs:
-        try:
-            image_url = garment.img1.url if garment.img1 else None
-        except (ValueError, OSError):
-            image_url = None
-        results.append({
-            "id": garment.garment_id,
-            "name": garment.name,
-            "price": str(garment.listed_price),
-            "image_url": image_url,
-            "status": garment.status,
-        })
-    return JsonResponse({"results": results})
-
-    payments = Payment.objects.select_related("sale").all().order_by("-sale__sale_date")
-
-    totals = payments.aggregate(
-        total_cash=Sum("cash"),
-        total_clip=Sum("clip"),
-        total_card=Sum("card"),
-        total_transfer=Sum("transfer"),
-        total_fees=Sum("fees"),
+    qs = Garment.objects.filter(
+        status__in=[
+            Garment.Status.AVAILABLE,
+            Garment.Status.PUBLISHED,
+        ]
     )
 
-    total_cash = totals["total_cash"] or 0
-    total_clip = totals["total_clip"] or 0
-    total_card = totals["total_card"] or 0
-    total_transfer = totals["total_transfer"] or 0
-    total_fees = totals["total_fees"] or 0
+    qs = qs.filter(
+        Q(garment_id__icontains=query)
+        | Q(name__icontains=query)
+        | Q(brand__icontains=query)
+        | Q(category__icontains=query)
+        | Q(collection__collection_id__icontains=query)
+    )
 
-    gross_total = total_cash + total_clip + total_card + total_transfer
-    net_total = gross_total - total_fees
+    qs = qs.annotate(
+        relevance=Case(
+            When(garment_id__iexact=query, then=Value(0)),
+            When(garment_id__iendswith=f"-{query}", then=Value(1)),
+            When(garment_id__istartswith=query, then=Value(2)),
+            When(name__iexact=query, then=Value(3)),
+            When(name__istartswith=query, then=Value(4)),
+            When(garment_id__icontains=query, then=Value(5)),
+            When(name__icontains=query, then=Value(6)),
+            When(brand__iexact=query, then=Value(7)),
+            When(brand__icontains=query, then=Value(8)),
+            When(category__icontains=query, then=Value(9)),
+            When(collection__collection_id__icontains=query, then=Value(10)),
+            default=Value(99),
+            output_field=IntegerField(),
+        )
+    ).order_by("relevance", "garment_id")[:5]
 
-    return render(request, "inventory/payments_dashboard.html", {
-        "payments": payments,
-        "total_cash": total_cash,
-        "total_clip": total_clip,
-        "total_card": total_card,
-        "total_transfer": total_transfer,
-        "total_fees": total_fees,
-        "gross_total": gross_total,
-        "net_total": net_total,
-    })
-    collections = Collection.objects.all().order_by("-date_bought")
+    results = []
 
-    rows = []
+    for garment in qs:
+        try:
+            image_url = garment.img1.url if garment.img1 else None
+        except (ValueError, OSError):
+            image_url = None
 
-    for collection in collections:
-        garments = collection.garments.all()
-        sold_garments = garments.filter(status=Garment.Status.SOLD)
-
-        total_items = garments.count()
-        sold_count = sold_garments.count()
-        available_count = garments.filter(status=Garment.Status.AVAILABLE).count()
-
-        total_cost = garments.aggregate(total=Sum("cost"))["total"] or 0
-        revenue = sold_garments.aggregate(total=Sum("sold_price"))["total"] or 0
-        gross_profit = revenue - total_cost
-
-        sell_through = 0
-        if total_items > 0:
-            sell_through = sold_count / total_items * 100
-
-        rows.append({
-            "collection": collection,
-            "total_items": total_items,
-            "sold_count": sold_count,
-            "available_count": available_count,
-            "total_cost": total_cost,
-            "revenue": revenue,
-            "gross_profit": gross_profit,
-            "sell_through": sell_through,
+        results.append({
+            "id": garment.garment_id,
+            "name": garment.name,
+            "price": str(garment.listed_price),
+            "image_url": image_url,
+            "status": garment.status,
         })
 
-    return render(request, "inventory/collections_dashboard.html", {
-        "rows": rows,
-    })
+    return JsonResponse({"results": results})
