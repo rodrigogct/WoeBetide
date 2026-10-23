@@ -58,11 +58,22 @@ class Item(models.Model):
     img6 = models.ImageField(upload_to='catalogue/original', null=True, blank=True, max_length=500, help_text="Zoom-in 3")
     img7 = models.ImageField(upload_to='catalogue/original', null=True, blank=True, max_length=500, help_text="Zoom-in 4")
 
-    # 6. ID variant for each item
+    # 6. Inventory connection
+    garment = models.OneToOneField(
+        "Inventory.Garment",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="website_item",
+        help_text="Select the corresponding garment from WOE BETIDE inventory."
+    )
+
+    # 7. ID variant for each item
     shopify_variant_id = models.CharField(max_length=50, blank=True, null=True, help_text="Shopify Variant ID used for direct checkout")
     shopify_handle = models.CharField(max_length=100, blank=True, null=True, unique = True, help_text="Used to match products between Shopify and Django")
 
-    # 7. Timestamps
+
+    # 8. Timestamps
     created = models.DateTimeField(auto_now_add=True)
     # updated = models.DateTimeField(auto_now_add=True)
     updated = models.DateTimeField(auto_now=True)

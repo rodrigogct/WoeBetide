@@ -13,6 +13,7 @@ from django.utils.html import format_html
 # Register your models here.
 
 class AdminItem(admin.ModelAdmin):
+    autocomplete_fields = ["garment"]
     list_display = ['name', 'category', 'is_sold', 'sold_price', 'shopify_variant_id', 'shopify_handle']
     list_filter = ['is_sold', 'category', 'is_featured']
     search_fields = ['name', 'description']
@@ -23,6 +24,7 @@ class AdminItem(admin.ModelAdmin):
             "fields": (
                 "name",
                 "category",
+                "garment",
                 "staff_pick", "is_featured", "is_sold", 'sold_at',"is_archive",
                 "price", "sold_price","description",
                 "size", "width", "length", "sleeve",
@@ -112,7 +114,6 @@ class AdminItem(admin.ModelAdmin):
                 self.message_user(request, f"⚠️ Could not match: {preview}{'...' if len(nf)>5 else ''}", messages.WARNING)
 
         return HttpResponseRedirect("../")
-
 admin.site.register(Item, AdminItem)
 
 class AdminJewelry(admin.ModelAdmin):
