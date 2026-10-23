@@ -39,6 +39,22 @@ class GarmentAdmin(ImportExportModelAdmin):
         "size",
     )
 
+    def get_search_results(self, request, queryset, search_term):
+        if (
+            request.resolver_match
+            and request.resolver_match.url_name == "autocomplete"
+            and request.GET.get("app_label", "").lower() == "catalogue"
+            and request.GET.get("model_name") == "item"
+            and request.GET.get("field_name") == "garment"
+        ):
+            queryset = queryset.exclude(
+                status__in=["sold", "discarded", "archive"]
+            )
+
+        return super().get_search_results(
+            request, queryset, search_term
+        )
+
     list_editable = (
         "status",
         "is_visible_on_site",
