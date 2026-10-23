@@ -47,8 +47,8 @@ class GarmentAdmin(ImportExportModelAdmin):
             and request.GET.get("model_name") == "item"
             and request.GET.get("field_name") == "garment"
         ):
-            queryset = queryset.exclude(
-                status__in=["sold", "discarded", "archive"]
+            queryset = queryset.filter(
+                status__in=["available", "published"]
             )
 
         return super().get_search_results(
