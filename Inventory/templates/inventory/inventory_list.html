@@ -78,9 +78,9 @@
           <td><span class="status-pill">{{ garment.status }}</span></td>
 
           <td>
-            {% if garment.status != "sold" and garment.status != "archive" %}
-              <a class="sell-link" href="{% url 'sell_garment' garment.garment_id %}">
-                Sell
+            {% if garment.status == "available" or garment.status == "published" %}
+              <a class="sell-link" href="{% url 'sell_dashboard' %}?add={{ garment.garment_id|urlencode }}">
+                Add to Sell
               </a>
             {% else %}
               —

@@ -30,7 +30,9 @@ def inventory_list(request):
             models.Q(collection__collection_id__icontains=query)
         )
 
-    if status:
+    if status == "sellable":
+        garments = garments.filter(status__in=[Garment.Status.AVAILABLE, Garment.Status.PUBLISHED])
+    elif status:
         garments = garments.filter(status=status)
 
     if category:
@@ -393,6 +395,37 @@ from django.views.decorators.http import require_GET
 @login_required
 @require_GET
 def pos_garment_search(request):
+    # Only return results after a query; exact-ID lookup is used when returning from Inventory.
+    query = request.GET.get("q", "").strip()[:100]
+    exact_id = request.GET.get("id", "").strip()[:100]
+    if not query and not exact_id:
+        return JsonResponse({"results": []})
+    qs = Garment.objects.filter(status__in=[Garment.Status.AVAILABLE, Garment.Status.PUBLISHED])
+    if exact_id:
+        qs = qs.filter(garment_id=exact_id)
+    else:
+        qs = qs.filter(
+            models.Q(garment_id__icontains=query) |
+            models.Q(name__icontains=query) |
+            models.Q(brand__icontains=query) |
+            models.Q(collection__collection_id__icontains=query)
+        )
+    qs = qs.order_by("garment_id")[:1 if exact_id else 5]
+    results = []
+    for garment in qs:
+        try:
+            image_url = garment.img1.url if garment.img1 else None
+        except (ValueError, OSError):
+            image_url = None
+        results.append({
+            "id": garment.garment_id,
+            "name": garment.name,
+            "price": str(garment.listed_price),
+            "image_url": image_url,
+            "status": garment.status,
+        })
+    return JsonResponse({"results": results})
+
     query = request.GET.get("q", "").strip()[:100]
     qs = Garment.objects.filter(status__in=[Garment.Status.AVAILABLE, Garment.Status.PUBLISHED])
     if query:

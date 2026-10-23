@@ -3,6 +3,7 @@
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/sell_dashboard.css' %}">
+<link rel="stylesheet" href="{% static 'css/sell_search.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -74,6 +75,7 @@
       </div>
 
       <!-- GARMENT SEARCH -->
+      <div class="pos-search-wrap">
       <div class="pos-search-row">
         <label class="pos-search-box">
           <svg
@@ -118,7 +120,10 @@
       </div>
 
       <!-- GARMENT SEARCH RESULTS -->
-      <div class="pos-results" id="pos-results" aria-live="polite">Loading available garments…</div>
+      <div class="pos-results" id="pos-results" aria-live="polite" hidden></div>
+      </div>
+
+      <a class="pos-view-inventory" href="{% url 'inventory_list' %}?status=sellable" aria-label="View inventory and select garments">View inventory <span aria-hidden="true">→</span></a>
 
       <!-- INFORMATION TEXT -->
       <p class="pos-help">
