@@ -89,13 +89,39 @@
     const select=()=>{payments.forEach(p=>p.classList.remove('pos-payment-selected'));option.classList.add('pos-payment-selected');selectedPayment=option.textContent.trim();};
     option.addEventListener('click',select);option.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();select();}});
   });
-  buttons.forEach(button=>button.addEventListener('click',()=>{
-    if(!cart.size)return;
+  let submitting = false;
+  function csrfToken(){
+    const formToken=document.querySelector('[name=csrfmiddlewaretoken]');
+    if(formToken)return formToken.value;
+    const value=document.cookie.split('; ').find(s=>s.startsWith('csrftoken='));
+    return value ? decodeURIComponent(value.slice('csrftoken='.length)) : '';
+  }
+  async function completeSale(){
+    if(submitting || !cart.size)return;
     const subtotal=[...cart.values()].reduce((a,g)=>a+price(g),0);
-    const discount=Math.min(subtotal,Math.max(0,Number(discountInput.value)||0));
+    const discount=Math.max(0,Number(discountInput.value)||0);
+    if(!Number.isFinite(discount)||discount>=subtotal){alert('Discount must be lower than subtotal.');return;}
+    const method=selectedPayment.toLowerCase();
+    const total=subtotal-discount;
     const lines=[...cart.values()].map(g=>`${g.id} — ${g.name}: ${money(price(g))}`).join('\n');
-    window.alert(`SALE REVIEW — PREVIEW ONLY\n\n${lines}\n\nDiscount: ${money(discount)}\nTotal: ${money(subtotal-discount)}\nPayment: ${selectedPayment}\n\nNo sale has been recorded.`);
-  }));
+    if(!window.confirm(`CONFIRM PAYMENT RECEIVED\n\n${lines}\n\nDiscount: ${money(discount)}\nTotal: ${money(total)}\nMethod: ${selectedPayment}\n\nThis will record the transaction and mark the garments SOLD. Continue?`))return;
+    submitting=true; buttons.forEach(b=>b.disabled=true);
+    try{
+      const response=await fetch(window.WOE_POS_CHECKOUT_URL,{
+        method:'POST',credentials:'same-origin',
+        headers:{'Content-Type':'application/json','Accept':'application/json','X-CSRFToken':csrfToken()},
+        body:JSON.stringify({garment_ids:[...cart.keys()],discount:discount.toFixed(2),payment_method:method}),
+      });
+      const data=await response.json();
+      if(!response.ok||!data.success)throw Error(data.error||'Checkout failed.');
+      cart.clear();saveCart();discountInput.value='0';refreshCart();hideResults();
+      alert(`Sale ${data.sale_id} recorded successfully.\nTotal: ${money(Number(data.total))}\nFees: ${money(Number(data.fees))}`);
+      window.location.href=window.WOE_POS_SALE_URL.replace('__SALE_ID__',encodeURIComponent(data.sale_id));
+    }catch(err){
+      alert(`${err.message}\n\nIf the request failed due to a connection problem, check Sales before trying again.`);
+    }finally{submitting=false;refreshCart();}
+  }
+  buttons.forEach(button=>button.addEventListener('click',completeSale));
   // Inventory browse link returns with ?add=GARMENT_ID. Validate it against the live endpoint.
   async function importFromInventory(){
     const params=new URLSearchParams(window.location.search);

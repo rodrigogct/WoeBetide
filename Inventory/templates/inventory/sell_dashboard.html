@@ -8,6 +8,7 @@
 
 {% block content %}
 
+{% csrf_token %}
 <div class="pos-page">
 
   <!-- MOBILE HEADER -->
@@ -246,6 +247,15 @@
 
         </div>
 
+        <!-- CLIP -->
+        <div class="pos-payment-option">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="2.5" y="5" width="19" height="14" rx="2"/>
+            <path d="M2.5 10h19M6 15h5"/>
+          </svg>
+          <span>Clip</span>
+        </div>
+
         <!-- TRANSFER -->
 
         <div class="pos-payment-option">
@@ -314,7 +324,7 @@
         <!-- DEMONSTRATION NOTICE -->
 
         <p>
-          Stage 1 preview · No transaction will be created
+          Confirm payment has been received before completing the sale.
         </p>
 
       </div>
@@ -325,7 +335,7 @@
 
 </div>
 
-<script>window.WOE_POS_SEARCH_URL = '{% url "pos_garment_search" %}';</script>
+<script>window.WOE_POS_SEARCH_URL = '{% url "pos_garment_search" %}'; window.WOE_POS_CHECKOUT_URL = '{% url "pos_complete_sale" %}'; window.WOE_POS_SALE_URL = '{% url "sale_detail" "__SALE_ID__" %}';</script>
 <script src="{% static 'js/sell_dashboard.js' %}" defer></script>
 
 {% endblock %}
