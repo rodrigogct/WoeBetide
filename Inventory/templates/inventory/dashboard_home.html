@@ -12,6 +12,7 @@
         <option value="7" {% if days == 7 %}selected{% endif %}>7 Days</option>
         <option value="30" {% if days == 30 %}selected{% endif %}>30 Days</option>
         <option value="90" {% if days == 90 %}selected{% endif %}>90 Days</option>
+        <option value="all" {% if days == "all" %}selected{% endif %}>All Time</option>
       </select>
     </form>
     <small>{{ start_date|date:"M j" }} – {{ end_date|date:"M j, Y" }}</small>
@@ -329,6 +330,27 @@
 
 </div>
 
+
+<style>
+/* Sales-chart tooltip — does not modify existing bar colors or layout. */
+.wb-chart-tooltip {
+  position: fixed; left: 0; top: 0; z-index: 99999;
+  min-width: 184px; max-width: min(280px, calc(100vw - 24px));
+  padding: 11px 13px; border: 1px solid #dfddd5; border-radius: 9px;
+  background: #fff; box-shadow: 0 7px 24px rgba(0,0,0,.14);
+  color: #262b27; font-size: 12px; line-height: 1.5;
+  opacity: 0; visibility: hidden; pointer-events: none;
+  transform: translateX(-50%); transition: opacity .12s ease;
+}
+.wb-chart-tooltip.is-visible { opacity: 1; visibility: visible; }
+.wb-chart-tooltip > strong { display:block; margin-bottom: 7px; font-size: 13px; }
+.wb-tooltip-line { display:flex; justify-content:space-between; gap: 20px; }
+.wb-tooltip-line span { color: #71766f; }
+.wb-tooltip-line b { font-weight: 600; white-space: nowrap; }
+.wb-bars .wb-bar { cursor: pointer; }
+.wb-bars .wb-bar:focus-visible { outline: 2px solid #315644; outline-offset: 2px; }
+</style>
+
 {{ chart_data|json_script:"wb-chart-json" }}
 {{ online_pct|json_script:"wb-online-pct" }}
 {{ physical_pct|json_script:"wb-physical-pct" }}
@@ -344,17 +366,104 @@
   }
   const target = document.getElementById('wb-bars');
   if (!target) return;
-  const max = Math.max(1, ...data.map(d => d.online + d.physical + d.other));
-  const visible = data;
-  visible.forEach(d => {
-    const bar = document.createElement('div'); bar.className = 'wb-bar';
+
+  // Tooltip floats above the dashboard to avoid clipping inside chart containers.
+  const tooltip = document.createElement('div');
+  tooltip.className = 'wb-chart-tooltip';
+  tooltip.id = 'wb-chart-tooltip';
+  tooltip.setAttribute('role', 'tooltip');
+  tooltip.setAttribute('aria-hidden', 'true');
+  document.body.appendChild(tooltip);
+
+  const formatMXN = value => new Intl.NumberFormat('en-MX', {
+    style: 'currency', currency: 'MXN', maximumFractionDigits: 2
+  }).format(Number(value) || 0);
+  let activeBar = null;
+  let pinnedBar = null;
+
+  function hideTooltip(force = false) {
+    if (pinnedBar && !force) return;
+    tooltip.classList.remove('is-visible');
+    tooltip.setAttribute('aria-hidden', 'true');
+    if (activeBar) activeBar.setAttribute('aria-expanded', 'false');
+    activeBar = null;
+    if (force) pinnedBar = null;
+  }
+
+  function positionTooltip(bar) {
+    const rect = bar.getBoundingClientRect();
+    // Fixed positioning keeps the tooltip visible even on narrow mobile charts.
+    const tooltipRect = tooltip.getBoundingClientRect();
+    const half = tooltipRect.width / 2;
+    const x = Math.max(half + 12, Math.min(window.innerWidth - half - 12, rect.left + rect.width / 2));
+    const above = rect.top - tooltipRect.height - 12;
+    tooltip.style.left = x + 'px';
+    tooltip.style.top = (above >= 8 ? above : Math.min(window.innerHeight - tooltipRect.height - 8, rect.bottom + 12)) + 'px';
+  }
+
+  function showTooltip(bar, d) {
+    if (activeBar && activeBar !== bar) activeBar.setAttribute('aria-expanded', 'false');
+    activeBar = bar;
+    const total = (Number(d.online) || 0) + (Number(d.physical) || 0) + (Number(d.other) || 0);
+    // Construct text via textContent: no raw data is interpreted as HTML.
+    tooltip.replaceChildren();
+    const heading = document.createElement('strong');
+    heading.textContent = d.date;
+    tooltip.appendChild(heading);
+    for (const [label, amount] of [
+      ['Total', total], ['Online', d.online], ['Physical', d.physical], ['Other', d.other]
+    ]) {
+      const line = document.createElement('div');
+      line.className = 'wb-tooltip-line';
+      const name = document.createElement('span'); name.textContent = label;
+      const value = document.createElement('b'); value.textContent = formatMXN(amount);
+      line.append(name, value);
+      tooltip.appendChild(line);
+    }
+    bar.setAttribute('aria-expanded', 'true');
+    tooltip.classList.add('is-visible');
+    tooltip.setAttribute('aria-hidden', 'false');
+    positionTooltip(bar);
+  }
+
+  const max = Math.max(1, ...data.map(d => (Number(d.online) || 0) + (Number(d.physical) || 0) + (Number(d.other) || 0)));
+  data.forEach(d => {
+    const bar = document.createElement('div');
+    bar.className = 'wb-bar';
+    bar.tabIndex = 0;
+    bar.setAttribute('role', 'button');
+    bar.setAttribute('aria-controls', 'wb-chart-tooltip');
+    bar.setAttribute('aria-expanded', 'false');
+    bar.setAttribute('aria-label', `${d.date}: total ${formatMXN((Number(d.online)||0) + (Number(d.physical)||0) + (Number(d.other)||0))}. Tap or focus for details.`);
     const online = document.createElement('div'); online.className = 'wb-bar-online';
-    online.style.height = (100 * d.online / max) + '%';
+    online.style.height = (100 * (Number(d.online) || 0) / max) + '%';
     const physical = document.createElement('div'); physical.className = 'wb-bar-physical';
-    physical.style.height = (100 * (d.physical + d.other) / max) + '%';
-    bar.title = `${d.date}: Online $${d.online}, Physical $${d.physical}, Other $${d.other}`;
-    bar.append(online, physical); target.appendChild(bar);
+    physical.style.height = (100 * ((Number(d.physical) || 0) + (Number(d.other) || 0)) / max) + '%';
+    bar.append(online, physical);
+    target.appendChild(bar);
+
+    bar.addEventListener('pointerenter', e => {
+      if (e.pointerType === 'mouse' || e.pointerType === 'pen') {
+        if (!pinnedBar) showTooltip(bar, d);
+      }
+    });
+    bar.addEventListener('pointerleave', () => { if (!pinnedBar) hideTooltip(); });
+    bar.addEventListener('focus', () => { if (!pinnedBar) showTooltip(bar, d); });
+    bar.addEventListener('blur', () => { if (!pinnedBar) hideTooltip(); });
+    bar.addEventListener('click', e => {
+      e.stopPropagation();
+      if (pinnedBar === bar) hideTooltip(true);
+      else { pinnedBar = bar; showTooltip(bar, d); }
+    });
+    bar.addEventListener('keydown', e => {
+      if (e.key === 'Escape') { hideTooltip(true); bar.blur(); }
+    });
   });
+  document.addEventListener('click', e => {
+    if (!e.target.closest('#wb-bars')) hideTooltip(true);
+  });
+  window.addEventListener('resize', () => { if (activeBar) positionTooltip(activeBar); });
+  window.addEventListener('scroll', () => { if (activeBar) positionTooltip(activeBar); }, true);
 })();
 </script>
 {% endblock %}
