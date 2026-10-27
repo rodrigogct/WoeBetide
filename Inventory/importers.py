@@ -37,7 +37,6 @@ def clean_date(value):
         parsed = pd.to_datetime(value, dayfirst=True, errors="coerce")
     return None if pd.isna(parsed) else parsed.date()
 
-
 def map_status(value):
     value = clean_text(value).lower()
 
