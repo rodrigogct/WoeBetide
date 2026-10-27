@@ -14,6 +14,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from .models import Garment, Sale, SaleItem, Payment
+from Catalogue.models import Item
 
 ZERO = Decimal('0.00')
 VALID_PERIODS = {'7': 7, '30': 30, '90': 90}
@@ -25,21 +26,12 @@ def money(value):
 
 @login_required
 def dashboard_home(request):
-    period = request.GET.get("days", "all")
+    period = request.GET.get('days', 'all')
     today = timezone.localdate()
-
-    if period == "all":
-        days = "all"
-
-        earliest_sale = (
-            Sale.objects
-            .order_by("sale_date")
-            .values_list("sale_date", flat=True)
-            .first()
-        )
-
-        start = earliest_sale or today
-
+    if period == 'all':
+        days = 'all'
+        start = (Sale.objects.order_by('sale_date')
+                 .values_list('sale_date', flat=True).first() or today)
     else:
         days = VALID_PERIODS.get(period, 30)
         start = today - timedelta(days=days - 1)
@@ -67,8 +59,8 @@ def dashboard_home(request):
 
     # Cards: stock quantities are current, not filtered by the reporting window.
     available = Garment.objects.filter(status=Garment.Status.AVAILABLE).count()
-    published = Garment.objects.filter(status=Garment.Status.PUBLISHED).count()
-    stock = available + published
+    published = Item.objects.filter(is_sold=False, is_archive=False).count()
+    stock = available + Garment.objects.filter(status=Garment.Status.PUBLISHED).count()
     sold_all_time = Garment.objects.filter(status=Garment.Status.SOLD).count()
     missing_photo = Garment.objects.filter(status__in=['available', 'published']).filter(
         Q(img1__isnull=True) | Q(img1='')
@@ -78,25 +70,45 @@ def dashboard_home(request):
     ).count()
     not_published = available
 
-    labels = []
-    chart = []
-    cursor = start
-    while cursor <= today:
-        bucket = daily[cursor]
-        chart.append({
-            'date': cursor.isoformat(),
-            'online': float(bucket['online']),
-            'physical': float(bucket['physical']),
-            'other': float(bucket['other']),
-        })
-        cursor += timedelta(days=1)
-    # All values are explicit; max includes other even though bars group physical + other.
+    # Daily for short periods; monthly for All Time so no transactions vanish
+    # from the chart when a multi-year daily series is visually subsampled.
+    all_time = str(days) == "all"
+    if all_time:
+        monthly = defaultdict(lambda: {'online': ZERO, 'physical': ZERO, 'other': ZERO})
+        for date, bucket in daily.items():
+            key = date.replace(day=1)
+            for channel, value in bucket.items():
+                monthly[key][channel] += value
+        start_month = start.replace(day=1)
+        cursor = start_month
+        chart = []
+        while cursor <= today:
+            values = monthly[cursor]
+            chart.append({
+                'date': cursor.strftime('%b %Y'),
+                'online': float(values['online']),
+                'physical': float(values['physical']),
+                'other': float(values['other']),
+            })
+            cursor = (cursor.replace(day=28) + timedelta(days=4)).replace(day=1)
+    else:
+        chart = []
+        cursor = start
+        while cursor <= today:
+            values = daily[cursor]
+            chart.append({
+                'date': cursor.isoformat(),
+                'online': float(values['online']),
+                'physical': float(values['physical']),
+                'other': float(values['other']),
+            })
+            cursor += timedelta(days=1)
+
     max_day = max((x['online'] + x['physical'] + x['other'] for x in chart), default=0)
     y_max = max(1, float(max_day))
-    y_labels = [f'{(y_max * f):,.0f}' for f in (1, .75, .5, .25, 0)]
-    for index in sorted({round((len(chart) - 1) * n / 5) for n in range(6)}):
-        dt = start + timedelta(days=index)
-        labels.append(dt.strftime('%b %-d') if hasattr(dt, 'strftime') else dt.isoformat())
+    y_labels = [f'{y_max * f:,.0f}' for f in (1, .75, .5, .25, 0)]
+    label_indexes = sorted({round((len(chart) - 1) * n / 5) for n in range(6)})
+    labels = [chart[i]['date'] for i in label_indexes] if chart else []
 
     # Payments are presented separately from sales revenue to avoid double counting.
     payment_stats = Payment.objects.filter(sale__sale_date__range=(start, today)).aggregate(
@@ -119,27 +131,6 @@ def dashboard_home(request):
         '-sale__sale_date', '-sale__created_at', '-pk'
     )[:5])
     total_channels = sum(totals.values(), ZERO)
-
-    online_pct = (
-        round(float(totals['online'] / total_channels * 100))
-        if total_channels else 0
-    )
-
-    physical_pct = (
-        round(float(totals['physical'] / total_channels * 100))
-        if total_channels else 0
-    )
-
-    physical_end_pct = min(100, online_pct + physical_pct)
-
-    donut_gradient = (
-        f"conic-gradient("
-        f"#315644 0% {online_pct}%, "
-        f"#cdbfa9 {online_pct}% {physical_end_pct}%, "
-        f"#777 {physical_end_pct}% 100%"
-        f")"
-    )
-
     context = {
         'days': days, 'start_date': start, 'end_date': today,
         'revenue': money(revenue), 'gross_profit': money(revenue - cogs),
@@ -160,6 +151,6 @@ def dashboard_home(request):
         'last_popup': latest_popup, 'best_popup': best_popup,
         'popup_average': money(popup_average) if popup_average is not None else None,
         'recent_activity': latest_items,
-        'add_garment_url': reverse('admin:%s_%s_add' % (Garment._meta.app_label, Garment._meta.model_name)),}
-    
+        'add_garment_url': reverse('admin:%s_%s_add' % (Garment._meta.app_label, Garment._meta.model_name)),
+    }
     return render(request, 'inventory/dashboard_home.html', context)

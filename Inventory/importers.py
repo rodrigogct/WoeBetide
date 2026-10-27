@@ -28,15 +28,15 @@ def clean_decimal(value):
         return Decimal("0")
 
 def clean_date(value):
-    if pd.isna(value) or value == "":
+    if pd.isna(value) or str(value).strip() in ("", "-", "NA"):
         return None
+    if isinstance(value, (int, float)) and not isinstance(value, bool):
+        # Excel 1900 date system, including its leap-year offset.
+        parsed = pd.Timestamp("1899-12-30") + pd.to_timedelta(value, unit="D")
+    else:
+        parsed = pd.to_datetime(value, dayfirst=True, errors="coerce")
+    return None if pd.isna(parsed) else parsed.date()
 
-    parsed = pd.to_datetime(value, dayfirst=True, errors="coerce")
-
-    if pd.isna(parsed):
-        return None
-
-    return parsed.date()
 
 def map_status(value):
     value = clean_text(value).lower()
@@ -327,6 +327,40 @@ def import_inventory_excel(excel_file):
             )
 
             created_or_updated_payments += 1
+
+    # SALES is authoritative for channel (Physical/Online) and sale date.
+    # INVENTORY "Sale method" is a payment method (Clip/Cash/etc.), not a channel.
+    try:
+        excel_file.seek(0)
+    except (AttributeError, OSError):
+        pass
+    sales_df = pd.read_excel(excel_file, sheet_name="SALES")
+    sales_df.columns = [str(c).strip() for c in sales_df.columns]
+    required_sales = {"Sales ID", "Type", "Date (DD/MM/YY)"}
+    missing = required_sales.difference(sales_df.columns)
+    if missing:
+        raise ValueError("SALES missing columns: " + ", ".join(sorted(missing)))
+
+    for _, sales_row in sales_df.iterrows():
+        sales_id = clean_text(sales_row.get("Sales ID"))
+        if not sales_id or sales_id.lower() == "all":
+            continue
+        sale = Sale.objects.filter(sale_id=sales_id).first()
+        if sale is None:
+            continue
+        raw_type = clean_text(sales_row.get("Type")).lower()
+        if raw_type == "online":
+            actual_channel = Sale.Channel.WEBSITE
+        elif raw_type == "physical":
+            actual_channel = Sale.Channel.PHYSICAL
+        else:
+            continue  # Do not guess unknown channels.
+        actual_date = clean_date(sales_row.get("Date (DD/MM/YY)"))
+        if actual_date is None:
+            raise ValueError(f"Invalid SALES date for {sales_id}")
+        Sale.objects.filter(pk=sale.pk).update(
+            sale_date=actual_date, channel=actual_channel
+        )
 
     return {
         "created_garments": created_garments,

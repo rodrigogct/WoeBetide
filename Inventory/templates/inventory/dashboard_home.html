@@ -12,8 +12,7 @@
         <option value="7" {% if days == 7 %}selected{% endif %}>7 Days</option>
         <option value="30" {% if days == 30 %}selected{% endif %}>30 Days</option>
         <option value="90" {% if days == 90 %}selected{% endif %}>90 Days</option>
-        <option value="all" {% if days == 'all' %}selected{% endif %}>All Time</option>
-    </select>
+      </select>
     </form>
     <small>{{ start_date|date:"M j" }} – {{ end_date|date:"M j, Y" }}</small>
   </div>
@@ -191,7 +190,7 @@
         </div>
 
         <div>
-          <small>PUBLISHED</small>
+          <small>PUBLISHED (WEBSITE)</small>
           <strong>{{ published }}</strong>
         </div>
 
@@ -331,13 +330,22 @@
 </div>
 
 {{ chart_data|json_script:"wb-chart-json" }}
+{{ online_pct|json_script:"wb-online-pct" }}
+{{ physical_pct|json_script:"wb-physical-pct" }}
 <script>
 (function () {
   const data = JSON.parse(document.getElementById('wb-chart-json').textContent);
+  const onlinePct = Number(JSON.parse(document.getElementById('wb-online-pct').textContent));
+  const physicalPct = Number(JSON.parse(document.getElementById('wb-physical-pct').textContent));
+  const donut = document.getElementById('wb-sales-donut');
+  if (donut) {
+    const physicalEnd = Math.min(100, onlinePct + physicalPct);
+    donut.style.background = `conic-gradient(#cdbfa9 0% ${onlinePct}%, #315644 ${onlinePct}% ${physicalEnd}%, #777 ${physicalEnd}% 100%)`;
+  }
   const target = document.getElementById('wb-bars');
   if (!target) return;
   const max = Math.max(1, ...data.map(d => d.online + d.physical + d.other));
-  const visible = data.length > 45 ? data.filter((_, i) => i % Math.ceil(data.length / 45) === 0 || i === data.length - 1) : data;
+  const visible = data;
   visible.forEach(d => {
     const bar = document.createElement('div'); bar.className = 'wb-bar';
     const online = document.createElement('div'); online.className = 'wb-bar-online';
@@ -349,22 +357,4 @@
   });
 })();
 </script>
-
-<script>
-  document.addEventListener("DOMContentLoaded", function () {
-      const online = Number("{{ online_pct|default:0 }}");
-      const physical = Number("{{ physical_pct|default:0 }}");
-      const physicalEnd = Math.min(100, online + physical);
-  
-      const donut = document.getElementById("wb-sales-donut");
-  
-      if (donut) {
-          donut.style.background = `conic-gradient(
-              #315644 0% ${online}%,
-              #cdbfa9 ${online}% ${physicalEnd}%,
-              #777 ${physicalEnd}% 100%
-          )`;
-      }
-  });
-  </script>
 {% endblock %}
