@@ -6,21 +6,16 @@
 {% block content %}
 
 <div class="wb-dashboard">
-
-  <!-- ======================================
-       TOP TOOLBAR
-       ====================================== -->
-
   <div class="wb-toolbar">
-    <span class="wb-select">
-      30 Days <span>⌄</span>
-    </span>
-
-    <span class="wb-select">
-      Export <span>⌄</span>
-    </span>
+    <form method="get" aria-label="Reporting period">
+      <select class="wb-select" name="days" onchange="this.form.submit()" aria-label="Reporting period">
+        <option value="7" {% if days == 7 %}selected{% endif %}>7 Days</option>
+        <option value="30" {% if days == 30 %}selected{% endif %}>30 Days</option>
+        <option value="90" {% if days == 90 %}selected{% endif %}>90 Days</option>
+      </select>
+    </form>
+    <small>{{ start_date|date:"M j" }} – {{ end_date|date:"M j, Y" }}</small>
   </div>
-
 
   <!-- ======================================
        PRIMARY ACTIONS
@@ -34,9 +29,9 @@
       <span>＋</span> SELL
     </a>
 
-    <span class="wb-action wb-action-neutral">
+    <a class="wb-action wb-action-neutral" href="{{ add_garment_url }}">
       <span>◇</span> ADD GARMENT
-    </span>
+    </a>
 
     {% if request.user.is_superuser %}
       <a
@@ -64,7 +59,7 @@
     <div class="wb-card wb-kpi">
       <div>
         <div class="wb-label">REVENUE</div>
-        <div class="wb-kpi-value">$42,300</div>
+        <div class="wb-kpi-value">${{ revenue }}</div>
       </div>
       <span class="wb-icon">⌁</span>
     </div>
@@ -72,7 +67,7 @@
     <div class="wb-card wb-kpi">
       <div>
         <div class="wb-label">GROSS PROFIT</div>
-        <div class="wb-kpi-value">$26,100</div>
+        <div class="wb-kpi-value">${{ gross_profit }}</div>
       </div>
       <span class="wb-icon">▥</span>
     </div>
@@ -80,7 +75,7 @@
     <div class="wb-card wb-kpi">
       <div>
         <div class="wb-label">UNITS SOLD</div>
-        <div class="wb-kpi-value">47</div>
+        <div class="wb-kpi-value">{{ units_sold }}</div>
       </div>
       <span class="wb-icon">♧</span>
     </div>
@@ -88,7 +83,7 @@
     <div class="wb-card wb-kpi">
       <div>
         <div class="wb-label">INVENTORY</div>
-        <div class="wb-kpi-value">169</div>
+        <div class="wb-kpi-value">{{ stock }}</div>
       </div>
       <span class="wb-icon">⬡</span>
     </div>
@@ -112,7 +107,7 @@
         </span>
 
         <span>
-          <i class="wb-dot wb-beige"></i> Physical
+          <i class="wb-dot wb-beige"></i> Physical + other
         </span>
       </div>
 
@@ -121,11 +116,7 @@
     <div class="wb-chart-area">
 
       <div class="wb-y-axis">
-        <span>4K</span>
-        <span>3K</span>
-        <span>2K</span>
-        <span>1K</span>
-        <span>0</span>
+        {% for tick in chart_y_labels %}<span>{{ tick }}</span>{% endfor %}
       </div>
 
       <div class="wb-chart-plot">
@@ -139,17 +130,7 @@
     </div>
 
     <div class="wb-chart-dates">
-      <span>Mar 1</span>
-      <span>Mar 4</span>
-      <span>Mar 7</span>
-      <span>Mar 10</span>
-      <span>Mar 13</span>
-      <span>Mar 16</span>
-      <span>Mar 19</span>
-      <span>Mar 22</span>
-      <span>Mar 25</span>
-      <span>Mar 28</span>
-      <span>Mar 31</span>
+      {% for label in chart_labels %}<span>{{ label }}</span>{% endfor %}
     </div>
 
   </section>
@@ -167,7 +148,7 @@
 
       <div class="wb-channel-body">
 
-        <div class="wb-donut"></div>
+        <div class="wb-donut" style="background: conic-gradient(#315644 0 {{ online_pct }}%, #cdbfa9 {{ online_pct }}% {{ online_pct|add:physical_pct }}%, #777 {{ online_pct|add:physical_pct }}% 100%);" title="Online, physical, other"></div>
 
         <div class="wb-channel-details">
 
@@ -177,8 +158,8 @@
               Physical
             </span>
 
-            <strong>$28,400</strong>
-            <span>67%</span>
+            <strong>${{ physical_revenue }}</strong>
+            <span>{{ physical_pct }}%</span>
           </div>
 
           <div>
@@ -187,16 +168,13 @@
               Online
             </span>
 
-            <strong>$13,900</strong>
-            <span>33%</span>
+            <strong>${{ online_revenue }}</strong>
+            <span>{{ online_pct }}%</span>
           </div>
-
+          <div><span>Other</span><strong>${{ other_revenue }}</strong><span>{{ other_pct }}%</span></div>
         </div>
-
       </div>
-
     </section>
-
 
     <!-- INVENTORY -->
 
@@ -208,17 +186,17 @@
 
         <div>
           <small>AVAILABLE</small>
-          <strong>169</strong>
+          <strong>{{ available }}</strong>
         </div>
 
         <div>
           <small>PUBLISHED</small>
-          <strong>298</strong>
+          <strong>{{ published }}</strong>
         </div>
 
         <div>
-          <small>AGE (AVG)</small>
-          <strong>142 days</strong>
+          <small>SOLD (ALL TIME)</small>
+          <strong>{{ sold_all_time }}</strong>
         </div>
 
       </div>
@@ -233,8 +211,8 @@
   <section class="wb-card wb-panel wb-financial">
 
     <div class="wb-card-header">
-      <h2>FINANCIAL POSITION</h2>
-      <small>ALL TIME</small>
+      <h2>PAYMENT POSITION</h2>
+      <small>SELECTED PERIOD · EXCLUDES EXPENSES AND CAPITAL</small>
     </div>
 
     <div class="wb-financial-grid">
@@ -244,8 +222,8 @@
         <span class="wb-icon">▤</span>
 
         <div>
-          <small>TOTAL EARNED</small>
-          <strong>$161,000</strong>
+          <small>PAYMENTS RECEIVED (GROSS)</small>
+          <strong>${{ payments_gross }}</strong>
         </div>
 
       </div>
@@ -255,8 +233,8 @@
         <span class="wb-icon">▣</span>
 
         <div>
-          <small>TOTAL SPENT</small>
-          <strong>$118,050</strong>
+          <small>PAYMENT FEES</small>
+          <strong>${{ payments_fees }}</strong>
         </div>
 
       </div>
@@ -266,8 +244,8 @@
         <span class="wb-icon">▥</span>
 
         <div>
-          <small>CASH AVAILABLE</small>
-          <strong>$48,420</strong>
+          <small>NET PAYMENTS RECEIVED</small>
+          <strong>${{ payments_net }}</strong>
         </div>
 
       </div>
@@ -282,62 +260,9 @@
        ====================================== -->
 
   <section class="wb-card wb-panel wb-capital">
-
-    <div class="wb-card-header">
-      <h2>PARTNER CAPITAL</h2>
-      <span>›</span>
-    </div>
-
-    <div class="wb-table-wrap">
-
-      <table class="wb-table">
-
-        <thead>
-          <tr>
-            <th></th>
-            <th>Invested</th>
-            <th>Should</th>
-            <th>Balance</th>
-          </tr>
-        </thead>
-
-        <tbody>
-
-          <tr>
-            <td>Rodrigo</td>
-            <td>$59,790</td>
-            <td>$55,620</td>
-            <td class="wb-positive">+$4,170</td>
-          </tr>
-
-          <tr>
-            <td>Fran</td>
-            <td>$23,054</td>
-            <td>$27,650</td>
-            <td class="wb-negative">-$4,596</td>
-          </tr>
-
-          <tr>
-            <td>Bure</td>
-            <td>$12,400</td>
-            <td>$11,974</td>
-            <td class="wb-positive">+$426</td>
-          </tr>
-
-        </tbody>
-
-      </table>
-
-    </div>
-
-    <div class="wb-capital-footer">
-      <span class="wb-view">
-        View capital →
-      </span>
-    </div>
-
+    <div class="wb-card-header"><h2>PARTNER CAPITAL</h2></div>
+    <p>Not connected yet. Partner investments, obligations and reimbursements still live in your financial ledger.</p>
   </section>
-
 
   <!-- ======================================
        PHYSICAL EVENTS + NEEDS ATTENTION
@@ -351,44 +276,17 @@
 
       <h2>PHYSICAL EVENTS</h2>
 
+      <p><small>Pop-up sales grouped by date (not individual event records).</small></p>
       <div class="wb-event-grid">
-
-        <div>
-
-          <span class="wb-event-icon">▦</span>
-
-          <div>
-            <small>LAST EVENT</small>
-            <strong>$2,840</strong>
-            <em>Mar 22, 2025</em>
-          </div>
-
-        </div>
-
-        <div>
-
-          <span class="wb-event-icon">☆</span>
-
-          <div>
-            <small>BEST EVENT</small>
-            <strong>$4,120</strong>
-            <em>Feb 15, 2025</em>
-          </div>
-
-        </div>
-
-        <div>
-
-          <span class="wb-event-icon">▥</span>
-
-          <div>
-            <small>AVERAGE</small>
-            <strong>$2,310</strong>
-            <em>Per event</em>
-          </div>
-
-        </div>
-
+        <div><span class="wb-event-icon">▦</span><div><small>LAST POP-UP DAY</small>
+          <strong>{% if last_popup %}${{ last_popup.total|floatformat:2 }}{% else %}—{% endif %}</strong>
+          <em>{% if last_popup %}{{ last_popup.sale__sale_date|date:"M j, Y" }}{% else %}No records{% endif %}</em></div></div>
+        <div><span class="wb-event-icon">☆</span><div><small>BEST POP-UP DAY</small>
+          <strong>{% if best_popup %}${{ best_popup.total|floatformat:2 }}{% else %}—{% endif %}</strong>
+          <em>{% if best_popup %}{{ best_popup.sale__sale_date|date:"M j, Y" }}{% else %}No records{% endif %}</em></div></div>
+        <div><span class="wb-event-icon">▥</span><div><small>AVERAGE POP-UP DAY</small>
+          <strong>{% if popup_average %}${{ popup_average }}{% else %}—{% endif %}</strong>
+          <em>Selected period</em></div></div>
       </div>
 
     </section>
@@ -400,23 +298,10 @@
 
       <h2>NEEDS ATTENTION</h2>
 
-      <div class="wb-alert-row">
-        <span>⚠</span>
-        129 garments not published
-        <b>›</b>
-      </div>
-
-      <div class="wb-alert-row">
-        <span>⚠</span>
-        18 garments missing photos
-        <b>›</b>
-      </div>
-
-      <div class="wb-alert-row">
-        <span>⚠</span>
-        7 garments missing measurements
-        <b>›</b>
-      </div>
+      <a href="{% url 'inventory_list' %}?status=available" class="wb-alert-row"><span>⚠</span>
+        {{ not_published }} available garments not marked published <b>›</b></a>
+      <div class="wb-alert-row"><span>⚠</span>{{ missing_photo }} available / published garments missing photo <b>›</b></div>
+      <div class="wb-alert-row"><span>⚠</span>{{ missing_measurements }} available / published garments missing measurements <b>›</b></div>
 
     </section>
 
@@ -430,91 +315,37 @@
 
     <h2>RECENT ACTIVITY</h2>
 
-    <div class="wb-activity-row">
-
-      <span>◇</span>
-      <b>Sold</b>
-      <span>Levi's Denim Jacket (M)</span>
-      <strong>$120</strong>
-      <small>2 hours ago</small>
-      <span>›</span>
-
-    </div>
-
-    <div class="wb-activity-row">
-
-      <span>⬡</span>
-      <b>Imported</b>
-      <span>50 garments from supplier</span>
-      <strong></strong>
-      <small>2 hours ago</small>
-      <span>›</span>
-
-    </div>
-
-    <div class="wb-activity-row">
-
-      <span>◇</span>
-      <b>Sold</b>
-      <span>Nike Windbreaker (L)</span>
-      <strong>$85</strong>
-      <small>5 hours ago</small>
-      <span>›</span>
-
-    </div>
+    {% for line in recent_activity %}
+      <a class="wb-activity-row" href="{% url 'sale_detail' line.sale.sale_id %}">
+        <span>◇</span><b>Sold</b><span>{{ line.garment.name }} ({{ line.garment.size }})</span>
+        <strong>${{ line.sold_price|floatformat:2 }}</strong>
+        <small>{{ line.sale.sale_date|date:"M j, Y" }}</small><span>›</span>
+      </a>
+    {% empty %}
+      <p>No recorded sale items yet.</p>
+    {% endfor %}
 
   </section>
 
 </div>
 
-<!-- ======================================
-     STATIC SALES CHART DATA
-     ====================================== -->
-
+{{ chart_data|json_script:"wb-chart-json" }}
 <script>
 (function () {
-
-  const online = [
-    650, 280, 490, 230, 650,
-    1200, 850, 260, 390, 650,
-    1100, 750, 900, 1550, 820,
-    700, 2300, 1600, 950, 570,
-    1800, 1350, 1200, 1500, 850,
-    450, 1100, 1850, 620, 1200, 1500
-  ];
-
-  const physical = [
-    900, 380, 650, 550, 1050,
-    1200, 850, 300, 350, 450,
-    950, 800, 750, 1200, 900,
-    950, 1300, 1350, 1200, 1400,
-    1450, 1400, 1350, 1550, 900,
-    750, 1300, 1400, 800, 950, 1400
-  ];
-
+  const data = JSON.parse(document.getElementById('wb-chart-json').textContent);
   const target = document.getElementById('wb-bars');
-
   if (!target) return;
-
-  online.forEach((value, i) => {
-
-    const bar = document.createElement('div');
-    bar.className = 'wb-bar';
-
-    const green = document.createElement('div');
-    green.className = 'wb-bar-online';
-    green.style.height = (value / 4000 * 100) + '%';
-
-    const beige = document.createElement('div');
-    beige.className = 'wb-bar-physical';
-    beige.style.height = (physical[i] / 4000 * 100) + '%';
-
-    bar.append(green, beige);
-    target.appendChild(bar);
-
+  const max = Math.max(1, ...data.map(d => d.online + d.physical + d.other));
+  const visible = data.length > 45 ? data.filter((_, i) => i % Math.ceil(data.length / 45) === 0 || i === data.length - 1) : data;
+  visible.forEach(d => {
+    const bar = document.createElement('div'); bar.className = 'wb-bar';
+    const online = document.createElement('div'); online.className = 'wb-bar-online';
+    online.style.height = (100 * d.online / max) + '%';
+    const physical = document.createElement('div'); physical.className = 'wb-bar-physical';
+    physical.style.height = (100 * (d.physical + d.other) / max) + '%';
+    bar.title = `${d.date}: Online $${d.online}, Physical $${d.physical}, Other $${d.other}`;
+    bar.append(online, physical); target.appendChild(bar);
   });
-
 })();
 </script>
-
 {% endblock %}
