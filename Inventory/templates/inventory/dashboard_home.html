@@ -12,7 +12,8 @@
         <option value="7" {% if days == 7 %}selected{% endif %}>7 Days</option>
         <option value="30" {% if days == 30 %}selected{% endif %}>30 Days</option>
         <option value="90" {% if days == 90 %}selected{% endif %}>90 Days</option>
-      </select>
+        <option value="all" {% if days == 'all' %}selected{% endif %}>All Time</option>
+    </select>
     </form>
     <small>{{ start_date|date:"M j" }} – {{ end_date|date:"M j, Y" }}</small>
   </div>

@@ -25,10 +25,24 @@ def money(value):
 
 @login_required
 def dashboard_home(request):
-    period = request.GET.get('days', '30')
-    days = VALID_PERIODS.get(period, 30)
+    period = request.GET.get("days", "all")
     today = timezone.localdate()
-    start = today - timedelta(days=days - 1)
+
+    if period == "all":
+        days = "all"
+
+        earliest_sale = (
+            Sale.objects
+            .order_by("sale_date")
+            .values_list("sale_date", flat=True)
+            .first()
+        )
+
+        start = earliest_sale or today
+
+    else:
+        days = VALID_PERIODS.get(period, 30)
+        start = today - timedelta(days=days - 1)
 
     sale_items = SaleItem.objects.filter(
         sale__sale_date__range=(start, today)
