@@ -105,6 +105,27 @@ def dashboard_home(request):
         '-sale__sale_date', '-sale__created_at', '-pk'
     )[:5])
     total_channels = sum(totals.values(), ZERO)
+
+    online_pct = (
+        round(float(totals['online'] / total_channels * 100))
+        if total_channels else 0
+    )
+
+    physical_pct = (
+        round(float(totals['physical'] / total_channels * 100))
+        if total_channels else 0
+    )
+
+    physical_end_pct = min(100, online_pct + physical_pct)
+
+    donut_gradient = (
+        f"conic-gradient("
+        f"#315644 0% {online_pct}%, "
+        f"#cdbfa9 {online_pct}% {physical_end_pct}%, "
+        f"#777 {physical_end_pct}% 100%"
+        f")"
+    )
+
     context = {
         'days': days, 'start_date': start, 'end_date': today,
         'revenue': money(revenue), 'gross_profit': money(revenue - cogs),

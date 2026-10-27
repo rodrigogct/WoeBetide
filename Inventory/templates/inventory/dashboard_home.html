@@ -148,7 +148,7 @@
 
       <div class="wb-channel-body">
 
-        <div class="wb-donut" style="background: conic-gradient(#315644 0 {{ online_pct }}%, #cdbfa9 {{ online_pct }}% {{ online_pct|add:physical_pct }}%, #777 {{ online_pct|add:physical_pct }}% 100%);" title="Online, physical, other"></div>
+        <div class="wb-donut" id="wb-sales-donut" title="Online, physical, other"></div>
 
         <div class="wb-channel-details">
 
@@ -348,4 +348,22 @@
   });
 })();
 </script>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+      const online = Number("{{ online_pct|default:0 }}");
+      const physical = Number("{{ physical_pct|default:0 }}");
+      const physicalEnd = Math.min(100, online + physical);
+  
+      const donut = document.getElementById("wb-sales-donut");
+  
+      if (donut) {
+          donut.style.background = `conic-gradient(
+              #315644 0% ${online}%,
+              #cdbfa9 ${online}% ${physicalEnd}%,
+              #777 ${physicalEnd}% 100%
+          )`;
+      }
+  });
+  </script>
 {% endblock %}

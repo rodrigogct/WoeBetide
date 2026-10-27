@@ -8,6 +8,7 @@ from django.db import models, transaction
 from django.db.models import Sum, Count
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
+from .dashboard_metrics import dashboard_home
 
 from .models import Collection, Garment, Sale, SaleItem, Payment
 from .importers import import_inventory_excel
@@ -98,32 +99,6 @@ def sell_garment(request, garment_id):
 
     return render(request, "inventory/sell_garment.html", {
         "garment": garment
-    })
-
-@login_required
-def dashboard_home(request):
-    total_inventory = Garment.objects.count()
-    available = Garment.objects.filter(status=Garment.Status.AVAILABLE).count()
-    published = Garment.objects.filter(status=Garment.Status.PUBLISHED).count()
-    sold = Garment.objects.filter(status=Garment.Status.SOLD).count()
-
-    revenue = Garment.objects.filter(
-        status=Garment.Status.SOLD
-    ).aggregate(total=Sum("sold_price"))["total"] or 0
-
-    cost_sold = Garment.objects.filter(
-        status=Garment.Status.SOLD
-    ).aggregate(total=Sum("cost"))["total"] or 0
-
-    gross_profit = revenue - cost_sold
-
-    return render(request, "inventory/dashboard_home.html", {
-        "total_inventory": total_inventory,
-        "available": available,
-        "published": published,
-        "sold": sold,
-        "revenue": revenue,
-        "gross_profit": gross_profit,
     })
 
 @login_required
