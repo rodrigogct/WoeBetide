@@ -9,6 +9,7 @@ from django.db.models import Sum, Count
 from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from .dashboard_metrics import dashboard_home
+from .partner_capital import sync_partner_capital
 
 from .models import Collection, Garment, Sale, SaleItem, Payment
 from .importers import import_inventory_excel
@@ -142,6 +143,13 @@ def import_inventory_view(request):
 
         try:
             result = import_inventory_excel(excel_file)
+            try:
+                sync_partner_capital(excel_file)
+            except (ValueError, KeyError) as exc:
+                messages.warning(
+                    request,
+                    f"Inventory imported, but partner capital was not updated: {exc}"
+                    )
 
             messages.success(
                 request,
