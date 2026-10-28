@@ -144,3 +144,9 @@ class Payment(models.Model):
 
     def __str__(self):
         return f"Payment for {self.sale.sale_id}"
+    
+class PartnerCapitalSnapshot(models.Model):
+    """Latest verified values from the Excel DEBT partner summary."""
+    partners = models.JSONField(default=list)
+    source_filename = models.CharField(max_length=255, blank=True)
+    imported_at = models.DateTimeField(auto_now=True)

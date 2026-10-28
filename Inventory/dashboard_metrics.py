@@ -14,6 +14,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from .models import Garment, Sale, SaleItem, Payment
+from .partner_capital import capital_context
 from Catalogue.models import Item
 
 ZERO = Decimal('0.00')
@@ -153,4 +154,5 @@ def dashboard_home(request):
         'recent_activity': latest_items,
         'add_garment_url': reverse('admin:%s_%s_add' % (Garment._meta.app_label, Garment._meta.model_name)),
     }
+    context.update(capital_context())
     return render(request, 'inventory/dashboard_home.html', context)
