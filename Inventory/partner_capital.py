@@ -62,25 +62,48 @@ def sync_partner_capital(excel_file):
 
 def capital_context():
     snapshot = PartnerCapitalSnapshot.objects.filter(pk=1).first()
+
     if snapshot is None:
         return {"partner_capital": None}
+
     partners = []
+
     for row in snapshot.partners:
+        balance = Decimal(row["balance"])
+
+        if balance > 0:
+            balance_display = f"+${balance:,.2f}"
+            balance_color = "positive"
+        elif balance < 0:
+            balance_display = f"-${abs(balance):,.2f}"
+            balance_color = "negative"
+        else:
+            balance_display = "$0.00"
+            balance_color = "neutral"
+
         partners.append({
-            "name": row['name'],
+            "name": row["name"],
             "gross_paid": f"{Decimal(row['gross_paid']):,.2f}",
             "reimbursements": f"{Decimal(row['reimbursements']):,.2f}",
             "capital_adjustment": f"{Decimal(row['capital_adjustment']):+,.2f}",
             "net_capital": f"{Decimal(row['net_capital']):,.2f}",
             "should_pay": f"{Decimal(row['should_pay']):,.2f}",
-            "balance": f"{Decimal(row['balance']):+,.2f}",
+            "balance": balance_display,
+            "balance_color": balance_color,
             "target_pct": f"{Decimal(row['target_pct']):.1f}",
             "real_pct": f"{Decimal(row['real_pct']):.1f}",
         })
-    total = sum((Decimal(x['net_capital']) for x in snapshot.partners), Decimal(0))
-    return {"partner_capital": {
-        "partners": partners,
-        "total_capital": f"{total:,.2f}",
-        "updated_at": snapshot.imported_at,
-        "source_filename": snapshot.source_filename,
-    }}
+
+    total = sum(
+        (Decimal(x["net_capital"]) for x in snapshot.partners),
+        Decimal("0")
+    )
+
+    return {
+        "partner_capital": {
+            "partners": partners,
+            "total_capital": f"{total:,.2f}",
+            "updated_at": snapshot.imported_at,
+            "source_filename": snapshot.source_filename,
+        }
+    }

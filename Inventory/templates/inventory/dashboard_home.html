@@ -274,7 +274,7 @@
               <td style="padding:10px 9px;">{{ partner.name }}</td>
               <td style="padding:10px 9px;text-align:right;">${{ partner.net_capital }}</td>
               <td style="padding:10px 9px;text-align:right;">${{ partner.should_pay }}</td>
-              <td style="padding:10px 9px;text-align:right;">${{ partner.balance }}</td>
+              <td class="wb-balance {{ partner.balance_color }}" style="padding:10px 9px;text-align:right;"> {{ partner.balance }}</td>
               <td style="padding:10px 9px;text-align:right;">{{ partner.target_pct }}% / {{ partner.real_pct }}%</td>
             </tr>
           {% endfor %}

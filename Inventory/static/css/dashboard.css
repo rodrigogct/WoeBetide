@@ -1343,5 +1343,25 @@ body {
     letter-spacing: -0.045em;
     text-transform: uppercase;
   }
+
+/* Partner Capital — Balance */
+
+.wb-balance {
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.wb-balance.positive {
+    color: #4B7961;
+}
+
+.wb-balance.negative {
+    color: #B36C61;
+}
+
+.wb-balance.neutral {
+    color: #888888;
+}
   
   
