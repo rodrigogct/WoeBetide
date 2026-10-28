@@ -1363,5 +1363,53 @@ body {
 .wb-balance.neutral {
     color: #888888;
 }
+
+/* PARTNER CAPITAL — Consistent Dashboard Styling */
+
+.wb-capital table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: inherit !important;
+    font-size: 13px;
+    border: none !important;
+}
+
+.wb-capital th,
+.wb-capital td {
+    font-family: inherit !important;
+    border-left: none !important;
+    border-right: none !important;
+    border-bottom: 1px solid #e8e5e0 !important;
+}
+
+.wb-capital th {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    color: #77736e;
+    background: transparent;
+}
+
+.wb-capital td {
+    font-size: 13px;
+    font-weight: 400;
+    color: #252525;
+}
+
+.wb-capital .wb-balance {
+    font-weight: 600;
+}
+
+.wb-capital .wb-balance.positive {
+    color: #4B7961;
+}
+
+.wb-capital .wb-balance.negative {
+    color: #B36C61;
+}
+
+.wb-capital .wb-balance.neutral {
+    color: #888888;
+}
   
   
