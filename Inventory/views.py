@@ -143,13 +143,17 @@ def import_inventory_view(request):
 
         try:
             result = import_inventory_excel(excel_file)
+
+            # Reset Excel file before reading the DEBT sheet
+            excel_file.seek(0)
+
             try:
                 sync_partner_capital(excel_file)
             except (ValueError, KeyError) as exc:
                 messages.warning(
                     request,
                     f"Inventory imported, but partner capital was not updated: {exc}"
-                    )
+                )
 
             messages.success(
                 request,
