@@ -161,7 +161,6 @@
   .table-wrap {
     width: 100%;
     overflow-x: auto;
-    border: 1px solid #111111;
   }
   
   table {
