@@ -23,6 +23,33 @@ VALID_PERIODS = {'7': 7, '30': 30, '90': 90}
 def money(value):
     return f'{(value or ZERO):,.2f}'
 
+def has_missing_measurements(measurements):
+    if not measurements:
+        return True
+
+    parts = {}
+
+    for part in measurements.split("|"):
+        if ":" in part:
+            key, value = part.split(":", 1)
+            parts[key.strip().lower()] = (
+                value.replace("cm", "").strip().lower()
+            )
+
+    missing_values = {
+        "", "-", "—", "–",
+        "na", "n/a", "nan", "none", "null",
+        "0", "0.0"
+    }
+
+    width = parts.get("width", "")
+    length = parts.get("length", "")
+
+    return (
+        width in missing_values
+        or length in missing_values
+    )
+
 @login_required
 def dashboard_home(request):
     period = request.GET.get('days', 'all')
@@ -61,12 +88,18 @@ def dashboard_home(request):
     published = Item.objects.filter(is_sold=False, is_archive=False).count()
     stock = available + Garment.objects.filter(status=Garment.Status.PUBLISHED).count()
     sold_all_time = Garment.objects.filter(status=Garment.Status.SOLD).count()
-    missing_photo = Garment.objects.filter(status__in=['available', 'published']).filter(
-        Q(img1__isnull=True) | Q(img1='')
-    ).count()
-    missing_measurements = Garment.objects.filter(status__in=['available', 'published']).filter(
-        Q(measurements__isnull=True) | Q(measurements='')
-    ).count()
+    missing_photo = Garment.objects.filter(status__in=['available', 'published']).filter(Q(img1__isnull=True) | Q(img1='')).count()
+
+    missing_measurements = sum(
+        1
+        for measurements in Garment.objects.filter(
+            status__in=[
+                Garment.Status.AVAILABLE,
+                Garment.Status.PUBLISHED,
+            ]
+        ).values_list("measurements", flat=True)
+        if has_missing_measurements(measurements)
+    )
 
     linked_published_ids = Item.objects.filter(
         is_sold=False,
