@@ -16,7 +16,6 @@ from django.utils import timezone
 from .models import Garment, Sale, SaleItem, Payment
 from Catalogue.models import Item
 from .partner_capital import capital_context
-from .inventory_dashboard import inventory_dashboard_context
 
 ZERO = Decimal('0.00')
 VALID_PERIODS = {'7': 7, '30': 30, '90': 90}
@@ -200,8 +199,6 @@ def dashboard_home(request):
         'recent_activity': latest_items,
         'add_garment_url': reverse('admin:%s_%s_add' % (Garment._meta.app_label, Garment._meta.model_name)),
     }
-    context.update(inventory_dashboard_context())
     context.update(capital_context())
 
     return render(request, 'inventory/dashboard_home.html', context)
-
