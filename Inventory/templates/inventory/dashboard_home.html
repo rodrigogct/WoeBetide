@@ -172,30 +172,53 @@
     </section>
 
     <!-- INVENTORY -->
-
-    <section class="wb-card wb-panel">
-
-      <h2>INVENTORY</h2>
-
-      <div class="wb-three-metrics">
-
-        <div>
-          <small>AVAILABLE</small>
-          <strong>{{ available }}</strong>
-        </div>
-
-        <div>
-          <small>PUBLISHED (WEBSITE)</small>
-          <strong>{{ published }}</strong>
-        </div>
-
-        <div>
-          <small>SOLD (ALL TIME)</small>
-          <strong>{{ sold_all_time }}</strong>
-        </div>
-
+    
+    <section class="wb-card wb-panel wb-inventory-panel">
+      <div class="wb-card-header"><h2>INVENTORY</h2><small>CURRENT STOCK</small></div>
+      <div class="wb-inventory-stats">
+        <div><small>AVAILABLE</small><strong>{{ available }}</strong></div>
+        <div><small>PUBLISHED (WEBSITE)</small><strong>{{ published }}</strong></div>
+        <div><small>NOT PUBLISHED</small><strong>{{ not_published }}</strong></div>
+        <div><small>SOLD (ALL TIME)</small><strong>{{ sold_all_time }}</strong></div>
       </div>
-
+      <div class="wb-coverage">
+        <div class="wb-inventory-row-head"><span>LINKED WEBSITE COVERAGE</span><strong>{{ publication_coverage }}%</strong></div>
+        <progress class="wb-coverage-meter" value="{{ publication_coverage }}" max="100">{{ publication_coverage }}%</progress>
+        <small>{{ linked_published_count }} linked, active website items in available stock</small>
+      </div>
+      <div class="wb-inventory-divider"></div>
+      <div class="wb-inventory-row-head"><h3>RECENT WEBSITE ITEMS</h3><small>Newest catalogue entries</small></div>
+      <div class="wb-inventory-gallery">
+        {% for item in recently_published %}
+          <a href="{{ item.admin_url }}" class="wb-gallery-card" aria-label="Edit {{ item.name }} in Django Admin">
+            {% if item.image_url %}
+              <img src="{{ item.image_url }}" alt="{{ item.name }}" loading="lazy">
+            {% else %}
+              <span class="wb-gallery-no-image">No photograph</span>
+            {% endif %}
+            <span class="wb-gallery-name">{{ item.name }}</span>
+            <small>{% if item.garment_id %}{{ item.garment_id }}{% else %}Not linked{% endif %} · ${{ item.price }}</small>
+          </a>
+        {% empty %}
+          <p class="wb-inventory-empty">No active website items with photographs.</p>
+        {% endfor %}
+      </div>
+      <div class="wb-inventory-divider"></div>
+      <div class="wb-inventory-row-head"><h3>INVENTORY LIST</h3><a class="wb-inventory-view-all" href="{% url 'inventory_list' %}">VIEW ALL INVENTORY ↗</a></div>
+      <form method="get" action="{% url 'inventory_list' %}" class="wb-inventory-search">
+        <input name="q" type="search" aria-label="Search entire inventory" placeholder="Search by garment name or ID…" required>
+        <button type="submit">SEARCH</button>
+      </form>
+      <div class="wb-inventory-mini-list">
+        {% for garment in inventory_preview %}
+          <a href="{% url 'inventory_list' %}?q={{ garment.garment_id|urlencode }}" class="wb-mini-item">
+            <span class="wb-mini-name"><b>{{ garment.garment_id }}</b> {{ garment.name }}</span>
+            <span class="wb-mini-right">{% if garment.linked %}On website{% else %}Available{% endif %} <span aria-hidden="true">›</span></span>
+          </a>
+        {% empty %}
+          <p class="wb-inventory-empty">No available garments found.</p>
+        {% endfor %}
+      </div>
     </section>
 
   </div>
