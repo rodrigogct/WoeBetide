@@ -40,19 +40,27 @@ class GarmentAdmin(ImportExportModelAdmin):
     )
 
     def get_search_results(self, request, queryset, search_term):
-        if (
-            request.resolver_match
-            and request.resolver_match.url_name == "autocomplete"
+        is_catalogue_autocomplete = (
+            request.path.rstrip("/").endswith("/autocomplete")
             and request.GET.get("app_label", "").lower() == "catalogue"
             and request.GET.get("model_name") == "item"
             and request.GET.get("field_name") == "garment"
-        ):
+        )
+
+        if is_catalogue_autocomplete:
             queryset = queryset.filter(
-                status__in=["available", "published"]
+                status__in=[
+                    Garment.Status.AVAILABLE,
+                    Garment.Status.PUBLISHED,
+                ]
+            ).filter(
+                website_item__isnull=True
             )
 
         return super().get_search_results(
-            request, queryset, search_term
+            request,
+            queryset,
+            search_term
         )
 
     list_editable = (

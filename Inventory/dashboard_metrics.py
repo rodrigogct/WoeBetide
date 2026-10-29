@@ -14,16 +14,14 @@ from django.urls import reverse
 from django.utils import timezone
 
 from .models import Garment, Sale, SaleItem, Payment
-from .partner_capital import capital_context
 from Catalogue.models import Item
+from .partner_capital import capital_context
 
 ZERO = Decimal('0.00')
 VALID_PERIODS = {'7': 7, '30': 30, '90': 90}
 
-
 def money(value):
     return f'{(value or ZERO):,.2f}'
-
 
 @login_required
 def dashboard_home(request):
@@ -69,7 +67,21 @@ def dashboard_home(request):
     missing_measurements = Garment.objects.filter(status__in=['available', 'published']).filter(
         Q(measurements__isnull=True) | Q(measurements='')
     ).count()
-    not_published = available
+
+    linked_published_ids = Item.objects.filter(
+        is_sold=False,
+        is_archive=False,
+        garment__isnull=False,
+    ).values_list("garment_id", flat=True)
+
+    not_published = Garment.objects.filter(
+        status__in=[
+            Garment.Status.AVAILABLE,
+            Garment.Status.PUBLISHED,
+        ]
+    ).exclude(
+        pk__in=linked_published_ids
+    ).count()
 
     # Daily for short periods; monthly for All Time so no transactions vanish
     # from the chart when a multi-year daily series is visually subsampled.
@@ -155,4 +167,5 @@ def dashboard_home(request):
         'add_garment_url': reverse('admin:%s_%s_add' % (Garment._meta.app_label, Garment._meta.model_name)),
     }
     context.update(capital_context())
+
     return render(request, 'inventory/dashboard_home.html', context)
