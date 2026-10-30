@@ -266,81 +266,97 @@ def collections_dashboard(request):
 
 @login_required
 def sales_dashboard(request):
-    query = request.GET.get("q", "")
+    """Sales history. Search/filter the full DB; preview only 10 by default."""
+    from datetime import timedelta
+    from decimal import Decimal
+    from django.db.models import Q
+    from django.utils import timezone
 
-    sales = Sale.objects.all().order_by("-sale_date", "-created_at")
+    ZERO = Decimal('0.00')
+    query = request.GET.get('q', '').strip()[:120]
+    channel = request.GET.get('channel', 'all')
+    period = request.GET.get('days', 'all')
+    show_all = request.GET.get('full') == '1'
+    valid_channels = {c.value for c in Sale.Channel}
+    if channel not in valid_channels and channel not in ('all', 'physical', 'online'):
+        channel = 'all'
+    if period not in ('all', '7', '30', '90'):
+        period = 'all'
 
+    sales = Sale.objects.all().order_by('-sale_date', '-created_at', '-pk')
     if query:
         sales = sales.filter(
-            models.Q(sale_id__icontains=query) |
-            models.Q(channel__icontains=query) |
-            models.Q(customer_name__icontains=query) |
-            models.Q(notes__icontains=query)
-        )
+            Q(sale_id__icontains=query) |
+            Q(notes__icontains=query) |
+            Q(customer_name__icontains=query) |
+            Q(channel__icontains=query) |
+            Q(items__garment__garment_id__icontains=query) |
+            Q(items__garment__name__icontains=query)
+        ).distinct()
+    if channel == 'physical':
+        sales = sales.filter(channel__in=[Sale.Channel.PHYSICAL, Sale.Channel.POPUP])
+    elif channel == 'online':
+        sales = sales.filter(channel=Sale.Channel.WEBSITE)
+    elif channel != 'all':
+        sales = sales.filter(channel=channel)
+    if period != 'all':
+        sales = sales.filter(sale_date__gte=timezone.localdate() - timedelta(days=int(period) - 1),
+                             sale_date__lte=timezone.localdate())
 
-    rows = []
-
-    clip_rate = Decimal("0.034")
-    iva_rate = Decimal("0.16")
-    shopify_card_rate = Decimal("0.036")  # adjust if your real Shopify/card fee is different
-
-    for index, sale in enumerate(sales, start=1):
-        items = sale.items.select_related("garment").all()
-
-        sold_items = items.count()
-        total_cost = sum(item.garment.cost for item in items)
-        gross_revenue = sum(item.sold_price for item in items)
-        gross_profit = gross_revenue - total_cost
-
-        payment = getattr(sale, "payment", None)
-
-        cash = Decimal("0")
-        transfer = Decimal("0")
-        clip = Decimal("0")
-        card = Decimal("0")
-
-        if payment:
-            cash = payment.cash
-            transfer = payment.transfer
-            clip = payment.clip
-            card = payment.card
-
-        commission_type = "None"
-        commission = Decimal("0")
-        iva = Decimal("0")
-
+    # Aggregate all filtered records (not just the visible preview).
+    # Preserve the old Sales table's calculated fee assumptions, clearly label estimates.
+    CLIP_RATE = Decimal('0.034')
+    IVA_RATE = Decimal('0.16')
+    SHOPIFY_RATE = Decimal('0.036')
+    def build_row(sale):
+        items = list(sale.items.all())
+        gross = sum((item.sold_price or ZERO for item in items), ZERO)
+        cost = sum((item.garment.cost or ZERO for item in items), ZERO)
+        payment = getattr(sale, 'payment', None)
+        cash = (payment.cash or ZERO) if payment else ZERO
+        transfer = (payment.transfer or ZERO) if payment else ZERO
+        clip = (payment.clip or ZERO) if payment else ZERO
+        card = (payment.card or ZERO) if payment else ZERO
+        recorded_fees = (payment.fees or ZERO) if payment else ZERO
+        fee_basis = 'Estimated'
         if clip > 0:
-            commission_type = "Clip"
-            commission = clip * clip_rate
-            iva = commission * iva_rate
-
+            fee_type = 'Clip (est.)'
+            fee = clip * CLIP_RATE
+            iva = fee * IVA_RATE
         elif card > 0:
-            commission_type = "Shopify/Card"
-            commission = card * shopify_card_rate
-            iva = Decimal("0")
+            fee_type = 'Shopify/Card (est.)'
+            fee = card * SHOPIFY_RATE
+            iva = ZERO
+        else:
+            fee_type = 'None'
+            fee = ZERO
+            iva = ZERO
+        return {
+            'sale': sale, 'sold_items': len(items), 'total_cost': cost,
+            'gross_revenue': gross, 'cash': cash, 'transfer': transfer,
+            'clip': clip, 'card': card, 'commission_type': fee_type,
+            'commission': fee, 'iva': iva, 'net_revenue': gross - fee - iva,
+            'gross_profit': gross - cost, 'recorded_fees': recorded_fees,
+            'payment_present': payment is not None,
+            'channel_label': sale.get_channel_display(),
+        }
 
-        net_revenue = gross_revenue - commission - iva
-
-        rows.append({
-            "id": index,
-            "sale": sale,
-            "total_cost": total_cost,
-            "gross_revenue": gross_revenue,
-            "cash": cash,
-            "transfer": transfer,
-            "clip": clip,
-            "card": card,
-            "commission_type": commission_type,
-            "commission": commission,
-            "iva": iva,
-            "net_revenue": net_revenue,
-            "gross_profit": gross_profit,
-            "sold_items": sold_items,
-        })
-
-    return render(request, "inventory/sales_dashboard.html", {
-        "rows": rows,
-        "query": query,
+    total_count = sales.count()
+    # Prefetch avoids per-sale items/garment/payment database queries.
+    from django.db.models import Prefetch
+    all_sales = sales.prefetch_related('payment', Prefetch('items', queryset=SaleItem.objects.select_related('garment')))
+    rows = [build_row(sale) for sale in all_sales]
+    totals = {
+        'gross_revenue': sum((r['gross_revenue'] for r in rows), ZERO),
+        'gross_profit': sum((r['gross_profit'] for r in rows), ZERO),
+        'net_revenue': sum((r['net_revenue'] for r in rows), ZERO),
+        'units_sold': sum(r['sold_items'] for r in rows),
+    }
+    visible_rows = rows if show_all or query else rows[:10]
+    return render(request, 'inventory/sales_dashboard.html', {
+        'rows': visible_rows, 'query': query, 'channel': channel, 'days': period,
+        'show_all': show_all or bool(query), 'total_count': total_count,
+        'visible_count': len(visible_rows), 'totals': totals,
     })
 
 @login_required
