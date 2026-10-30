@@ -2,6 +2,7 @@ from django.urls import path
 from . import views
 from .pos_checkout import pos_complete_sale
 from .inventory_suggest import inventory_suggest
+from .sales_suggest import sales_suggest
 
 urlpatterns = [
     path("dashboard/", views.dashboard_home, name="dashboard_home"),
@@ -19,4 +20,5 @@ urlpatterns = [
     path("dashboard/sell/complete/",pos_complete_sale, name="pos_complete_sale"),
     path("dashboard/sell/<str:garment_id>/",views.sell_garment,name="sell_garment"),
     path("inventory/suggest/",inventory_suggest,name="inventory_suggest",),
+    path("sales/suggest/",sales_suggest,name="sales_suggest",),
 ]
