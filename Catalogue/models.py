@@ -138,7 +138,6 @@ class Item(models.Model):
 
                         super().save(update_fields=["img2", "updated"])
 
-
 class Jewelry(models.Model):
 
     JEWELRY_TYPE_CHOICES = [
