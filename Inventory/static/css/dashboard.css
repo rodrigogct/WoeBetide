@@ -1410,5 +1410,47 @@ body {
 .wb-capital .wb-balance.neutral {
     color: #888888;
 }
+
+/* WOE BETIDE â€” Home / Financial Position (scoped; design only) */
+.wb-position { min-width: 0; }
+.wb-position-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 18px;
+}
+
+.wb-position-tile {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  background: #f6f5f1;
+  border: 1px solid #ebe9e3;
+  border-radius: 9px;
+  padding: 16px 15px;
+}
+
+.wb-position-tile-primary { background: #f1f4f0; border-color: #dde6de; }
+.wb-position-tile small {
+  color: #6f756e; font-size: 10px; font-weight: 650;
+  line-height: 1.4; letter-spacing: .055em;
+}
+
+.wb-position-tile strong {
+  display: block; margin-top: 13px; color: #2a322d;
+  font-size: clamp(24px, 2.5vw, 31px); font-weight: 600;
+  line-height: 1.12; font-variant-numeric: tabular-nums;
+}
+
+.wb-position-tile-primary strong { color: #315644; }
+.wb-position-tile span { margin-top: 10px; font-size: 11px; line-height: 1.5; color: #646c65; }
+.wb-position-tile em { margin-top: auto; padding-top: 12px; font-size: 10px; font-style: normal; color: #949992; }
+.wb-position-footnote { margin: 15px 0 0; color: #858a83; font-size: 11px; line-height: 1.55; }
+@media (max-width: 1000px) { .wb-position-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 500px) {
+  .wb-position-grid { gap: 9px; }
+  .wb-position-tile { padding: 13px 11px; }
+  .wb-position-tile strong { font-size: 25px; }
+}
   
   
