@@ -16,36 +16,69 @@ from .importers import import_inventory_excel
 
 @login_required
 def inventory_list(request):
-    garments = Garment.objects.all().order_by("-created_at")
+    query = request.GET.get("q", "").strip()
+    status = request.GET.get("status", "").strip().lower()
+    category = request.GET.get("category", "").strip()
+    collection = request.GET.get("collection", "").strip()
 
-    query = request.GET.get("q", "")
-    status = request.GET.get("status")
-    category = request.GET.get("category")
-    collection = request.GET.get("collection")
+    eligible = [Garment.Status.AVAILABLE, Garment.Status.PUBLISHED]
+    active_website_items = Item.objects.filter(is_sold=False, is_archive=False)
+    linked_active_ids = active_website_items.filter(
+        garment__status__in=eligible
+    ).values_list("garment_id", flat=True)
 
+    available_count = Garment.objects.filter(status=Garment.Status.AVAILABLE).count()
+    sold_count = Garment.objects.filter(status=Garment.Status.SOLD).count()
+    published_count = active_website_items.count()  # Actual catalogue listings
+    eligible_count = Garment.objects.filter(status__in=eligible).count()
+    linked_count = Garment.objects.filter(status__in=eligible, pk__in=linked_active_ids).count()
+    not_published_count = eligible_count - linked_count
+    publication_coverage = round(linked_count * 100 / eligible_count, 1) if eligible_count else 0
+
+    garments = Garment.objects.select_related("collection", "website_item").order_by("-created_at")
     if query:
         garments = garments.filter(
-            models.Q(garment_id__icontains=query) |
-            models.Q(name__icontains=query) |
-            models.Q(size__icontains=query) |
-            models.Q(category__icontains=query) |
-            models.Q(collection__collection_id__icontains=query)
+            models.Q(garment_id__icontains=query)
+            | models.Q(name__icontains=query)
+            | models.Q(brand__icontains=query)
+            | models.Q(size__icontains=query)
+            | models.Q(category__icontains=query)
+            | models.Q(collection__collection_id__icontains=query)
         )
 
     if status == "sellable":
-        garments = garments.filter(status__in=[Garment.Status.AVAILABLE, Garment.Status.PUBLISHED])
-    elif status:
+        garments = garments.filter(status__in=eligible)
+    elif status == "published":
+        # 'Published' means linked to an active website listing, not Garment.status.
+        garments = garments.filter(pk__in=linked_active_ids)
+    elif status == "not_published":
+        garments = garments.filter(status__in=eligible).exclude(pk__in=linked_active_ids)
+    elif status in {"available", "sold", "archive", "draft", "reserved"}:
         garments = garments.filter(status=status)
 
     if category:
         garments = garments.filter(category=category)
-
     if collection:
         garments = garments.filter(collection__collection_id=collection)
+
+    recent_items = list(
+        active_website_items.exclude(img1__isnull=True).exclude(img1="")
+        .select_related("garment").order_by("-created")[:6]
+    )
 
     return render(request, "inventory/inventory_list.html", {
         "garments": garments,
         "query": query,
+        "status_filter": status,
+        "category_filter": category,
+        "collection_filter": collection,
+        "available_count": available_count,
+        "published_count": published_count,
+        "not_published_count": not_published_count,
+        "sold_count": sold_count,
+        "linked_count": linked_count,
+        "publication_coverage": publication_coverage,
+        "recent_items": recent_items,
     })
 
 @login_required

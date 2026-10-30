@@ -1,99 +1,113 @@
 {% extends "inventory/base_dashboard.html" %}
+{% load static %}
 
 {% block content %}
+<div class="wb-inventory-page">
+  <div class="wb-inv-heading">
+    <div><h1 class="page-title">Inventory</h1><p>Browse garments, website listings, and available stock.</p></div>
+    <a class="wb-inv-view" href="{% url 'admin:Inventory_garment_add' %}">+ Add garment</a>
+  </div>
 
-<h1 class="page-title">Inventory</h1>
+  <div class="wb-inv-metrics">
+    <a href="{% url 'inventory_list' %}?status=available" class="wb-inv-stat"><small>AVAILABLE</small><strong>{{ available_count }}</strong></a>
+    <a href="{% url 'inventory_list' %}?status=published" class="wb-inv-stat"><small>PUBLISHED ON WEBSITE</small><strong>{{ published_count }}</strong></a>
+    <a href="{% url 'inventory_list' %}?status=not_published" class="wb-inv-stat"><small>NOT PUBLISHED</small><strong>{{ not_published_count }}</strong></a>
+    <a href="{% url 'inventory_list' %}?status=sold" class="wb-inv-stat"><small>SOLD · ALL TIME</small><strong>{{ sold_count }}</strong></a>
+  </div>
 
-<form method="GET" class="search-form">
-  <input
-    type="text"
-    name="q"
-    placeholder="Search inventory..."
-    value="{{ query }}"
-    autofocus
-  >
-  <button type="submit">Search</button>
-</form>
+  <section class="wb-inv-section">
+    <div class="wb-inv-section-title"><h2>Website publication</h2><span>{{ publication_coverage }}% linked coverage</span></div>
+    <progress class="wb-inv-progress" value="{{ publication_coverage }}" max="100">{{ publication_coverage }}%</progress>
+    <p class="wb-inv-subtle">{{ linked_count }} sellable garments linked to active website listings. Published listings without a linked garment ID are counted separately above.</p>
+  </section>
 
-<div class="action-row">
-  <a class="button" href="?status=available">Available</a>
-  <a class="button" href="?status=published">Published</a>
-  <a class="button" href="?status=sold">Sold</a>
-  <a class="button" href="?status=archive">Archive</a>
-  <a class="button" href="{% url 'inventory_list' %}">Clear</a>
-</div>
-
-<div class="table-wrap">
-  <table>
-    <thead>
-      <tr>
-        <th>Image</th>
-        <th>ID</th>
-        <th>Item</th>
-        <th>Type</th>
-        <th>Size</th>
-        <th>Collection</th>
-        <th>Cost</th>
-        <th>Price</th>
-        <th>Sold Price</th>
-        <th>Status</th>
-        <th>Sell</th>
-      </tr>
-    </thead>
-
-    <tbody>
-      {% for garment in garments %}
-        <tr>
-          <td>
-            {% if garment.img1 %}
-              <img class="item-image" src="{{ garment.img1.url }}" alt="{{ garment.name }}">
-            {% else %}
-              <div class="item-image"></div>
-            {% endif %}
-          </td>
-
-          <td>{{ garment.garment_id }}</td>
-          <td>{{ garment.name }}</td>
-          <td>{{ garment.category }}</td>
-          <td>{{ garment.size }}</td>
-
-          <td>
-            {% if garment.collection %}
-              {{ garment.collection.collection_id }}
-            {% else %}
-              —
-            {% endif %}
-          </td>
-
-          <td>${{ garment.cost }}</td>
-          <td>${{ garment.listed_price }}</td>
-          <td>
-            {% if garment.sold_price %}
-              ${{ garment.sold_price }}
-            {% else %}
-              —
-            {% endif %}
-          </td>
-
-          <td><span class="status-pill">{{ garment.status }}</span></td>
-
-          <td>
-            {% if garment.status == "available" or garment.status == "published" %}
-              <a class="sell-link" href="{% url 'sell_dashboard' %}?add={{ garment.garment_id|urlencode }}">
-                Add to Sell
-              </a>
-            {% else %}
-              —
-            {% endif %}
-          </td>
-        </tr>
+  <section class="wb-inv-section">
+    <div class="wb-inv-section-title"><h2>Recent website items</h2><span>Newest active catalogue entries</span></div>
+    <div class="wb-inv-gallery">
+      {% for item in recent_items %}
+        <a class="wb-inv-gallery-item" href="{% url 'admin:Catalogue_item_change' item.pk %}">
+          <div class="wb-inv-photo"><img src="{{ item.img1.url }}" alt="{{ item.name }}" loading="lazy"></div>
+          <strong title="{{ item.name }}">{{ item.name }}</strong>
+          <small>{% if item.garment %}{{ item.garment.garment_id }}{% else %}ID not linked{% endif %} · ${{ item.price|floatformat:2 }}</small>
+        </a>
       {% empty %}
-        <tr>
-          <td colspan="11">No items found.</td>
-        </tr>
+        <p class="wb-inv-subtle">No active catalogue items have photographs yet.</p>
       {% endfor %}
-    </tbody>
-  </table>
-</div>
+    </div>
+  </section>
 
+  <section class="wb-inv-section">
+    <div class="wb-inv-section-title"><h2>Full inventory</h2><a href="{% url 'inventory_list' %}">Clear filters</a></div>
+    <form method="GET" action="{% url 'inventory_list' %}" class="wb-inv-search">
+      <input type="search" name="q" value="{{ query }}" placeholder="Search garment name, ID, brand, collection…" aria-label="Search inventory">
+      {% if status_filter %}<input type="hidden" name="status" value="{{ status_filter }}">{% endif %}
+      {% if category_filter %}<input type="hidden" name="category" value="{{ category_filter }}">{% endif %}
+      {% if collection_filter %}<input type="hidden" name="collection" value="{{ collection_filter }}">{% endif %}
+      <button type="submit">Search</button>
+    </form>
+    <div class="wb-inv-filter-row">
+      <a class="{% if not status_filter %}is-active{% endif %}" href="{% url 'inventory_list' %}">All</a>
+      <a class="{% if status_filter == 'available' %}is-active{% endif %}" href="?status=available">Available</a>
+      <a class="{% if status_filter == 'published' %}is-active{% endif %}" href="?status=published">Published</a>
+      <a class="{% if status_filter == 'not_published' %}is-active{% endif %}" href="?status=not_published">Not published</a>
+      <a class="{% if status_filter == 'sold' %}is-active{% endif %}" href="?status=sold">Sold</a>
+      <a class="{% if status_filter == 'archive' %}is-active{% endif %}" href="?status=archive">Archive</a>
+    </div>
+    <div class="table-wrap wb-inv-table-wrap">
+      <table>
+        <thead><tr>
+          <th>Image</th><th>ID</th><th>Item</th><th>Type</th><th>Size</th><th>Collection</th>
+          <th>Cost</th><th>Price</th><th>Sold Price</th><th>Status</th><th>Website</th><th>Sell</th>
+        </tr></thead>
+        <tbody>
+          {% for garment in garments %}
+            <tr>
+              <td>
+                {% if garment.website_item and garment.website_item.img1 %}
+                  <img class="item-image" src="{{ garment.website_item.img1.url }}" alt="{{ garment.name }}" loading="lazy">
+                {% elif garment.img1 %}
+                  <img class="item-image" src="{{ garment.img1.url }}" alt="{{ garment.name }}" loading="lazy">
+                {% else %}<div class="item-image wb-inv-no-photo">—</div>{% endif %}
+              </td>
+              <td>{{ garment.garment_id }}</td>
+              <td>{{ garment.name }}</td>
+              <td>{{ garment.get_category_display }}</td>
+              <td>{{ garment.size }}</td>
+              <td>{% if garment.collection %}{{ garment.collection.collection_id }}{% else %}—{% endif %}</td>
+              <td>${{ garment.cost }}</td>
+              <td>${{ garment.listed_price }}</td>
+              <td>{% if garment.sold_price != None %}${{ garment.sold_price }}{% else %}—{% endif %}</td>
+              <td><span class="status-pill">{{ garment.get_status_display }}</span></td>
+              <td>{% if garment.website_item %}<a href="{% url 'admin:Catalogue_item_change' garment.website_item.pk %}">View item</a>{% else %}—{% endif %}</td>
+              <td>{% if garment.status == 'available' or garment.status == 'published' %}
+                <a class="sell-link" href="{% url 'sell_dashboard' %}?add={{ garment.garment_id|urlencode }}">Add to Sell</a>
+              {% else %}—{% endif %}</td>
+            </tr>
+          {% empty %}<tr><td colspan="12">No items found.</td></tr>{% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>
+<style>
+.wb-inventory-page{max-width:1500px;margin:0 auto;color:inherit}
+.wb-inv-heading,.wb-inv-section-title{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+.wb-inv-heading{margin-bottom:20px}.wb-inv-heading .page-title{margin-bottom:4px}.wb-inv-heading p,.wb-inv-subtle{font-size:12px;color:#777b74;margin:5px 0 0}
+.wb-inv-view{padding:10px 14px;background:#315644;color:#fff;text-decoration:none;border-radius:6px;font-size:12px;font-weight:600}
+.wb-inv-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:22px}
+.wb-inv-stat{display:flex;flex-direction:column;gap:7px;padding:17px;border:1px solid #e6e5dd;border-radius:9px;background:#faf9f5;color:inherit;text-decoration:none}
+.wb-inv-stat small{color:#797c75;font-size:10px;letter-spacing:.055em}.wb-inv-stat strong{font-size:27px;font-variant-numeric:tabular-nums;font-weight:600}
+.wb-inv-section{margin:0 0 20px;padding:20px;border:1px solid #e7e5df;border-radius:10px;background:#fff;min-width:0}
+.wb-inv-section-title{margin-bottom:15px}.wb-inv-section-title h2{margin:0;font-size:13px;font-weight:700;letter-spacing:.045em;text-transform:uppercase}.wb-inv-section-title span,.wb-inv-section-title a{font-size:11px;color:#66766b}
+.wb-inv-progress{width:100%;height:9px;appearance:none;border:none;border-radius:15px;overflow:hidden;background:#e9e9e4}
+.wb-inv-progress::-webkit-progress-bar{background:#e9e9e4}.wb-inv-progress::-webkit-progress-value{background:#315644}.wb-inv-progress::-moz-progress-bar{background:#315644}
+.wb-inv-gallery{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px}
+.wb-inv-gallery-item{min-width:0;text-decoration:none;color:inherit}.wb-inv-photo{background:#f1f0eb;border-radius:6px;overflow:hidden;aspect-ratio:3/4}.wb-inv-photo img{width:100%;height:100%;object-fit:cover;display:block}
+.wb-inv-gallery-item strong,.wb-inv-gallery-item small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.wb-inv-gallery-item strong{font-size:12px;margin-top:8px}.wb-inv-gallery-item small{font-size:10px;color:#7c7c77;margin-top:4px}
+.wb-inv-search{display:flex;gap:8px;margin:0 0 12px}.wb-inv-search input{flex:1;min-width:0;border:1px solid #deded7;border-radius:6px;padding:10px 12px;font:inherit;background:white;color:inherit}.wb-inv-search button{border:0;background:#315644;color:#fff;padding:10px 17px;border-radius:6px;cursor:pointer}
+.wb-inv-filter-row{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px}.wb-inv-filter-row a{padding:7px 12px;border:1px solid #e4e4de;border-radius:5px;color:#5c655f;text-decoration:none;font-size:11px}.wb-inv-filter-row a.is-active{background:#315644;border-color:#315644;color:white}
+.wb-inv-table-wrap{overflow-x:auto}.wb-inv-table-wrap table{min-width:1050px;width:100%}.wb-inv-table-wrap th,.wb-inv-table-wrap td{font-family:inherit;font-size:12px}.wb-inv-table-wrap td a{color:#315644}.wb-inv-table-wrap .item-image{width:46px;height:58px;object-fit:cover;border-radius:4px}.wb-inv-no-photo{display:flex;align-items:center;justify-content:center;background:#f0efec;color:#a4a49f}
+@media(max-width:850px){.wb-inv-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.wb-inv-gallery{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:450px){.wb-inv-section{padding:14px}.wb-inv-gallery{gap:7px}.wb-inv-heading{align-items:flex-start}.wb-inv-stat{padding:12px}.wb-inv-stat strong{font-size:23px}}
+</style>
 {% endblock %}
