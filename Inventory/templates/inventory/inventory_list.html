@@ -1,11 +1,11 @@
 {% extends "inventory/base_dashboard.html" %}
-{% load static %}
+{% load static inventory_thumbnails %}
 
 {% block content %}
 <div class="wb-inventory-page">
   <div class="wb-inv-heading">
     <div><h1 class="page-title">Inventory</h1><p>Browse garments, website listings, and available stock.</p></div>
-    <a class="wb-inv-view" href="{% url 'admin:Inventory_garment_add' %}">+ Add garment</a>
+    <a class="wb-inv-view" href="{% url 'admin:Catalogue_item_add' %}">+ Add item</a>
   </div>
 
   <div class="wb-inv-metrics">
@@ -26,9 +26,10 @@
     <div class="wb-inv-gallery">
       {% for item in recent_items %}
         <a class="wb-inv-gallery-item" href="{% url 'admin:Catalogue_item_change' item.pk %}">
-          <div class="wb-inv-photo"><img src="{{ item.img1.url }}" alt="{{ item.name }}" loading="lazy"></div>
+          <div class="wb-inv-photo"><img src="{{ item.img1.url|inventory_thumbnail:320 }}" alt="{{ item.name }}" loading="lazy" decoding="async"></div>
           <strong title="{{ item.name }}">{{ item.name }}</strong>
           <small>{% if item.garment %}{{ item.garment.garment_id }}{% else %}ID not linked{% endif %} · ${{ item.price|floatformat:2 }}</small>
+          <small>Added {{ item.created|date:"M j, Y" }}</small>
         </a>
       {% empty %}
         <p class="wb-inv-subtle">No active catalogue items have photographs yet.</p>
@@ -38,14 +39,17 @@
 
   <section class="wb-inv-section">
     <div class="wb-inv-section-title"><h2>Inventory list</h2><a href="{% url 'inventory_list' %}">Clear filters</a></div>
-    <form method="GET" action="{% url 'inventory_list' %}" class="wb-inv-search">
-      <input type="search" name="q" value="{{ query }}" placeholder="Search garment name, ID, brand, collection…" aria-label="Search inventory">
+    <div class="wb-inv-search-shell">
+    <form method="GET" action="{% url 'inventory_list' %}" class="wb-inv-search" id="wb-inv-search-form" role="search" autocomplete="off">
+      <input type="search" name="q" id="wb-inv-search-input" value="{{ query }}" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="wb-inv-suggestions" placeholder="Search garment name, ID, brand, collection…" aria-label="Search inventory">
       {% if show_all %}<input type="hidden" name="show" value="all">{% endif %}
       {% if status_filter %}<input type="hidden" name="status" value="{{ status_filter }}">{% endif %}
       {% if category_filter %}<input type="hidden" name="category" value="{{ category_filter }}">{% endif %}
       {% if collection_filter %}<input type="hidden" name="collection" value="{{ collection_filter }}">{% endif %}
       <button type="submit">Search</button>
     </form>
+    <div id="wb-inv-suggestions" class="wb-inv-suggestions" role="listbox" aria-label="Inventory search suggestions" hidden></div>
+    </div>
     <div class="wb-inv-filter-row">
       <a class="{% if not status_filter %}is-active{% endif %}" href="{% url 'inventory_list' %}">All</a>
       <a class="{% if status_filter == 'available' %}is-active{% endif %}" href="?status=available">Available</a>
@@ -65,9 +69,9 @@
             <tr>
               <td>
                 {% if garment.website_item and garment.website_item.img1 %}
-                  <img class="item-image" src="{{ garment.website_item.img1.url }}" alt="{{ garment.name }}" loading="lazy">
+                  <img class="item-image" src="{{ garment.website_item.img1.url|inventory_thumbnail:160 }}" alt="{{ garment.name }}" loading="lazy">
                 {% elif garment.img1 %}
-                  <img class="item-image" src="{{ garment.img1.url }}" alt="{{ garment.name }}" loading="lazy">
+                  <img class="item-image" src="{{ garment.img1.url|inventory_thumbnail:160 }}" alt="{{ garment.name }}" loading="lazy">
                 {% else %}<div class="item-image wb-inv-no-photo">—</div>{% endif %}
               </td>
               <td>{{ garment.garment_id }}</td>
@@ -96,9 +100,9 @@
           <div class="wb-inv-mobile-main">
             <div class="wb-inv-mobile-image">
               {% if garment.website_item and garment.website_item.img1 %}
-                <img src="{{ garment.website_item.img1.url }}" alt="{{ garment.name }}" loading="lazy">
+                <img src="{{ garment.website_item.img1.url|inventory_thumbnail:160 }}" alt="{{ garment.name }}" loading="lazy">
               {% elif garment.img1 %}
-                <img src="{{ garment.img1.url }}" alt="{{ garment.name }}" loading="lazy">
+                <img src="{{ garment.img1.url|inventory_thumbnail:160 }}" alt="{{ garment.name }}" loading="lazy">
               {% else %}<span>—</span>{% endif %}
             </div>
             <div class="wb-inv-mobile-info">
@@ -326,5 +330,73 @@
   .wb-inv-mobile-sell{display:inline-block;background:#f4f8f4;border:1px solid #cfdbd2;border-radius:5px;padding:8px 12px;text-decoration:none;font-weight:650}
   .wb-inv-list-footer{align-items:flex-start;flex-direction:column}
 }
+
+/* Typeahead search, matching the Sell page interaction timing. */
+.wb-inv-search-shell{position:relative;z-index:5}
+.wb-inv-suggestions{position:absolute;top:calc(100% - 8px);left:0;right:0;z-index:15;background:#fff;border:1px solid #deded7;border-radius:7px;box-shadow:0 10px 24px rgba(0,0,0,.11);max-height:330px;overflow-y:auto}
+.wb-inv-suggestions[hidden]{display:none}
+.wb-inv-suggestion{width:100%;border:0;border-bottom:1px solid #f0efea;background:#fff;color:#28352c;display:flex;align-items:center;gap:12px;text-align:left;padding:10px 12px;cursor:pointer;font:inherit}
+.wb-inv-suggestion:hover,.wb-inv-suggestion:focus-visible{background:#f4f7f3;outline:none}
+.wb-inv-suggestion-image{width:36px;height:45px;flex:none;object-fit:cover;border-radius:4px;background:#efeee9}
+.wb-inv-suggestion-placeholder{width:36px;height:45px;flex:none;border-radius:4px;background:#efeee9;display:grid;place-items:center;color:#999}
+.wb-inv-suggestion-copy{min-width:0;flex:1}
+.wb-inv-suggestion-copy strong{font-size:12px;font-weight:600;display:block;white-space:normal}
+.wb-inv-suggestion-copy small{display:block;font-size:10px;color:#777;line-height:1.5}
+.wb-inv-suggestion-price{font-size:11px;white-space:nowrap}
+.wb-inv-suggestion-message{padding:12px;color:#777;font-size:12px}
 </style>
+
+<script>
+(() => {
+  'use strict';
+  const input = document.getElementById('wb-inv-search-input');
+  const host = document.getElementById('wb-inv-suggestions');
+  const form = document.getElementById('wb-inv-search-form');
+  if (!input || !host || !form) return;
+  const endpoint = "{% url 'inventory_suggest' %}";
+  let debounce, sequence = 0, aborter = null;
+  const make = (tag, cls, content) => {
+    const node = document.createElement(tag);
+    if (cls) node.className = cls;
+    if (content !== undefined) node.textContent = content;
+    return node;
+  };
+  function close() { host.hidden = true; input.setAttribute('aria-expanded', 'false'); }
+  function open() { host.hidden = false; input.setAttribute('aria-expanded', 'true'); }
+  function message(text) { host.replaceChildren(make('div','wb-inv-suggestion-message',text)); open(); }
+  function show(items) {
+    host.replaceChildren();
+    if (!items.length) { message('No matching garments.'); return; }
+    for (const item of items) {
+      const button = make('button','wb-inv-suggestion'); button.type = 'button'; button.setAttribute('role','option');
+      const pic = item.image_url ? make('img','wb-inv-suggestion-image') : make('span','wb-inv-suggestion-placeholder','◇');
+      if (item.image_url) { pic.src = item.image_url; pic.alt = ''; pic.loading = 'lazy'; }
+      const copy = make('span','wb-inv-suggestion-copy');
+      copy.append(make('strong','',item.name),make('small','',item.id+' · '+item.size+' · '+item.status));
+      const price = make('span','wb-inv-suggestion-price',new Intl.NumberFormat('en-MX',{style:'currency',currency:'MXN'}).format(Number(item.price) || 0));
+      button.append(pic,copy,price);
+      button.addEventListener('click',() => { input.value=item.id; close(); form.requestSubmit(); });
+      host.append(button);
+    }
+    open();
+  }
+  async function search() {
+    const query = input.value.trim(); const current = ++sequence;
+    if (aborter) aborter.abort();
+    if (!query) { close(); return; }
+    aborter = new AbortController(); message('Searching…');
+    try {
+      const response = await fetch(endpoint+'?q='+encodeURIComponent(query), {credentials:'same-origin',headers:{'Accept':'application/json'},signal:aborter.signal});
+      if (!response.ok) throw Error('Search unavailable');
+      const payload = await response.json();
+      if (current===sequence) show(payload.results || []);
+    } catch (error) { if (error.name!=='AbortError' && current===sequence) message('Search unavailable. Press Search to continue.'); }
+  }
+  input.addEventListener('input', () => {clearTimeout(debounce); debounce=setTimeout(search,180);});
+  input.addEventListener('focus', () => {if (input.value.trim()) {clearTimeout(debounce);debounce=setTimeout(search,180);}});
+  input.addEventListener('keydown', (event) => {if (event.key==='Escape') close();});
+  document.addEventListener('click',event=>{if(!event.target.closest('.wb-inv-search-shell'))close();});
+  form.addEventListener('submit',()=>{ if(aborter) aborter.abort();close(); });
+})();
+</script>
 {% endblock %}
