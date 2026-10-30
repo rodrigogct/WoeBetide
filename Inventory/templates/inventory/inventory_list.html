@@ -37,9 +37,10 @@
   </section>
 
   <section class="wb-inv-section">
-    <div class="wb-inv-section-title"><h2>Full inventory</h2><a href="{% url 'inventory_list' %}">Clear filters</a></div>
+    <div class="wb-inv-section-title"><h2>Inventory list</h2><a href="{% url 'inventory_list' %}">Clear filters</a></div>
     <form method="GET" action="{% url 'inventory_list' %}" class="wb-inv-search">
       <input type="search" name="q" value="{{ query }}" placeholder="Search garment name, ID, brand, collection…" aria-label="Search inventory">
+      {% if show_all %}<input type="hidden" name="show" value="all">{% endif %}
       {% if status_filter %}<input type="hidden" name="status" value="{{ status_filter }}">{% endif %}
       {% if category_filter %}<input type="hidden" name="category" value="{{ category_filter }}">{% endif %}
       {% if collection_filter %}<input type="hidden" name="collection" value="{{ collection_filter }}">{% endif %}
@@ -53,7 +54,7 @@
       <a class="{% if status_filter == 'sold' %}is-active{% endif %}" href="?status=sold">Sold</a>
       <a class="{% if status_filter == 'archive' %}is-active{% endif %}" href="?status=archive">Archive</a>
     </div>
-    <div class="table-wrap wb-inv-table-wrap">
+    <div class="table-wrap wb-inv-table-wrap wb-inv-desktop-table">
       <table>
         <thead><tr>
           <th>Image</th><th>ID</th><th>Item</th><th>Type</th><th>Size</th><th>Collection</th>
@@ -86,6 +87,66 @@
           {% empty %}<tr><td colspan="12">No items found.</td></tr>{% endfor %}
         </tbody>
       </table>
+    </div>
+
+    <!-- Mobile-first cards: key details visible, additional columns on tap. -->
+    <div class="wb-inv-mobile-list">
+      {% for garment in garments %}
+        <article class="wb-inv-mobile-item">
+          <div class="wb-inv-mobile-main">
+            <div class="wb-inv-mobile-image">
+              {% if garment.website_item and garment.website_item.img1 %}
+                <img src="{{ garment.website_item.img1.url }}" alt="{{ garment.name }}" loading="lazy">
+              {% elif garment.img1 %}
+                <img src="{{ garment.img1.url }}" alt="{{ garment.name }}" loading="lazy">
+              {% else %}<span>—</span>{% endif %}
+            </div>
+            <div class="wb-inv-mobile-info">
+              <strong>{{ garment.name }}</strong>
+              <small>{{ garment.garment_id }} · {{ garment.size }}</small>
+              <span class="status-pill">{{ garment.get_status_display }}</span>
+            </div>
+            <div class="wb-inv-mobile-price">${{ garment.listed_price }}</div>
+          </div>
+          <details class="wb-inv-mobile-details">
+            <summary>Item details <span aria-hidden="true">⌄</span></summary>
+            <dl>
+              <div><dt>Type</dt><dd>{{ garment.get_category_display }}</dd></div>
+              <div><dt>Collection</dt><dd>{% if garment.collection %}{{ garment.collection.collection_id }}{% else %}—{% endif %}</dd></div>
+              <div><dt>Cost</dt><dd>${{ garment.cost }}</dd></div>
+              <div><dt>Sold price</dt><dd>{% if garment.sold_price != None %}${{ garment.sold_price }}{% else %}—{% endif %}</dd></div>
+              <div><dt>Website</dt><dd>{% if garment.website_item %}<a href="{% url 'admin:Catalogue_item_change' garment.website_item.pk %}">View website item</a>{% else %}Not linked{% endif %}</dd></div>
+            </dl>
+            {% if garment.status == 'available' or garment.status == 'published' %}
+              <a class="wb-inv-mobile-sell" href="{% url 'sell_dashboard' %}?add={{ garment.garment_id|urlencode }}">Add to Sell</a>
+            {% endif %}
+          </details>
+        </article>
+      {% empty %}
+        <p class="wb-inv-subtle">No items found.</p>
+      {% endfor %}
+    </div>
+
+    <div class="wb-inv-list-footer">
+      <span>Showing {{ garments|length }} of {{ matching_count }} matching garments</span>
+      {% if show_all %}
+        <form method="get" action="{% url 'inventory_list' %}">
+          {% if query %}<input type="hidden" name="q" value="{{ query }}">{% endif %}
+          {% if status_filter %}<input type="hidden" name="status" value="{{ status_filter }}">{% endif %}
+          {% if category_filter %}<input type="hidden" name="category" value="{{ category_filter }}">{% endif %}
+          {% if collection_filter %}<input type="hidden" name="collection" value="{{ collection_filter }}">{% endif %}
+          <button type="submit" class="wb-inv-toggle">Show only 10 items ↑</button>
+        </form>
+      {% elif matching_count > 10 %}
+        <form method="get" action="{% url 'inventory_list' %}">
+          <input type="hidden" name="show" value="all">
+          {% if query %}<input type="hidden" name="q" value="{{ query }}">{% endif %}
+          {% if status_filter %}<input type="hidden" name="status" value="{{ status_filter }}">{% endif %}
+          {% if category_filter %}<input type="hidden" name="category" value="{{ category_filter }}">{% endif %}
+          {% if collection_filter %}<input type="hidden" name="collection" value="{{ collection_filter }}">{% endif %}
+          <button type="submit" class="wb-inv-toggle">View full inventory ({{ matching_count }}) ↓</button>
+        </form>
+      {% endif %}
     </div>
   </section>
 </div>
@@ -169,7 +230,11 @@
   font-weight: 650;
   white-space: nowrap;
 }
-.wb-inventory-page .wb-inv-table-wrap td:nth-child(3) { min-width: 160px; }
+.wb-inventory-page .wb-inv-table-wrap th:nth-child(3),
+.wb-inventory-page .wb-inv-table-wrap td:nth-child(3) {
+  width: 132px; min-width: 110px; max-width: 150px;
+  white-space: normal; overflow-wrap: anywhere; word-break: normal;
+}
 .wb-inventory-page .wb-inv-table-wrap td:nth-child(7),
 .wb-inventory-page .wb-inv-table-wrap td:nth-child(8),
 .wb-inventory-page .wb-inv-table-wrap td:nth-child(9) {
@@ -228,6 +293,38 @@
 .wb-inventory-page .wb-inv-table-wrap .sell-link:hover {
   background: #eaf1ea;
   text-decoration: none;
+}
+
+/* Inventory list preview and mobile details */
+.wb-inv-list-footer{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;padding-top:16px;color:#777b74;font-size:11px}
+.wb-inv-list-footer form{margin:0}
+.wb-inv-toggle{font:inherit;font-size:11px;font-weight:650;color:#315644;background:#f4f8f4;border:1px solid #cfdbd2;padding:10px 14px;border-radius:6px;cursor:pointer}
+.wb-inv-toggle:hover{background:#eaf1ea}
+.wb-inv-mobile-list{display:none}
+@media(max-width:700px){
+  .wb-inv-desktop-table{display:none}
+  .wb-inv-mobile-list{display:block;border:1px solid #e7e5df;border-radius:8px;overflow:hidden}
+  .wb-inv-mobile-item{padding:13px 12px;background:#fff;border-bottom:1px solid #eeece7}
+  .wb-inv-mobile-item:last-child{border-bottom:0}
+  .wb-inv-mobile-main{display:flex;gap:11px;align-items:center;min-width:0}
+  .wb-inv-mobile-image{width:53px;height:68px;flex:0 0 53px;background:#f3f2ee;border-radius:5px;overflow:hidden;display:flex;justify-content:center;align-items:center;color:#999}
+  .wb-inv-mobile-image img{width:100%;height:100%;object-fit:cover}
+  .wb-inv-mobile-info{flex:1;min-width:0;display:flex;align-items:flex-start;flex-direction:column;gap:5px}
+  .wb-inv-mobile-info strong{font-size:12px;font-weight:650;line-height:1.35;overflow-wrap:anywhere;white-space:normal}
+  .wb-inv-mobile-info small{font-size:10px;color:#7b807a}
+  .wb-inv-mobile-info .status-pill{padding:3px 7px;background:#f3f5f1;border:1px solid #e1e5df;color:#42604c;border-radius:4px;font-size:9px;text-transform:capitalize}
+  .wb-inv-mobile-price{font-size:12px;font-weight:650;white-space:nowrap;align-self:center;color:#303a33}
+  .wb-inv-mobile-details{margin:10px 0 0 64px;font-size:11px}
+  .wb-inv-mobile-details summary{cursor:pointer;color:#315644;font-weight:650;list-style:none;display:flex;gap:8px;align-items:center}
+  .wb-inv-mobile-details summary::-webkit-details-marker{display:none}
+  .wb-inv-mobile-details[open] summary span{transform:rotate(180deg)}
+  .wb-inv-mobile-details dl{margin:12px 0;display:grid;gap:8px}
+  .wb-inv-mobile-details dl div{display:flex;justify-content:space-between;gap:12px}
+  .wb-inv-mobile-details dt{color:#7b807a}
+  .wb-inv-mobile-details dd{margin:0;text-align:right;overflow-wrap:anywhere}
+  .wb-inv-mobile-details a{color:#315644}
+  .wb-inv-mobile-sell{display:inline-block;background:#f4f8f4;border:1px solid #cfdbd2;border-radius:5px;padding:8px 12px;text-decoration:none;font-weight:650}
+  .wb-inv-list-footer{align-items:flex-start;flex-direction:column}
 }
 </style>
 {% endblock %}

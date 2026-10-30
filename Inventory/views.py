@@ -62,6 +62,12 @@ def inventory_list(request):
     if collection:
         garments = garments.filter(collection__collection_id=collection)
 
+    # Search and filters always run against the entire inventory before limiting display.
+    matching_count = garments.count()
+    show_all = request.GET.get("show") == "all"
+    if not show_all:
+        garments = garments[:10]
+
     recent_items = list(
         active_website_items.exclude(img1__isnull=True).exclude(img1="")
         .select_related("garment").order_by("-created")[:6]
@@ -69,6 +75,8 @@ def inventory_list(request):
 
     return render(request, "inventory/inventory_list.html", {
         "garments": garments,
+        "matching_count": matching_count,
+        "show_all": show_all,
         "query": query,
         "status_filter": status,
         "category_filter": category,
