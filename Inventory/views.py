@@ -10,6 +10,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 from .dashboard_metrics import dashboard_home
 from .partner_capital import sync_partner_capital
+from Catalogue.models import Item
 
 from .models import Collection, Garment, Sale, SaleItem, Payment
 from .importers import import_inventory_excel
