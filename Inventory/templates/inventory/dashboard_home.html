@@ -50,17 +50,17 @@
   <div class="wb-kpi-grid wb-performance-kpis">
     <div class="wb-card wb-kpi">
       <div><div class="wb-label">REVENUE</div><div class="wb-kpi-value">${{ revenue }}</div>
-        <small class="wb-kpi-note">{% if performance_comparison_available %}{% if revenue_change_pct != None %}{{ revenue_change_pct|floatformat:1 }}% vs prior period{% else %}No prior-period baseline{% endif %}{% else %}Selected period{% endif %}</small>
+        <small class="wb-kpi-note{% if performance_comparison_available and revenue_change_pct != None %}{% if revenue_change_pct > 0 %} wb-kpi-positive{% elif revenue_change_pct < 0 %} wb-kpi-negative{% endif %}{% endif %}">{% if performance_comparison_available %}{% if revenue_change_pct != None %}{% if revenue_change_pct > 0 %}+{% endif %}{{ revenue_change_pct|floatformat:1 }}% vs prior period{% else %}No prior-period baseline{% endif %}{% else %}Selected period{% endif %}</small>
       </div><span class="wb-icon">⌁</span>
     </div>
     <div class="wb-card wb-kpi">
       <div><div class="wb-label">GROSS PROFIT</div><div class="wb-kpi-value">${{ gross_profit }}</div>
-        <small class="wb-kpi-note">{% if performance_comparison_available %}{% if profit_change_pct != None %}{{ profit_change_pct|floatformat:1 }}% vs prior period{% else %}No prior-period baseline{% endif %}{% else %}Before operating expenses{% endif %}</small>
+        <small class="wb-kpi-note{% if performance_comparison_available and profit_change_pct != None %}{% if profit_change_pct > 0 %} wb-kpi-positive{% elif profit_change_pct < 0 %} wb-kpi-negative{% endif %}{% endif %}">{% if performance_comparison_available %}{% if profit_change_pct != None %}{% if profit_change_pct > 0 %}+{% endif %}{{ profit_change_pct|floatformat:1 }}% vs prior period{% else %}No prior-period baseline{% endif %}{% else %}Before operating expenses{% endif %}</small>
       </div><span class="wb-icon">▥</span>
     </div>
     <div class="wb-card wb-kpi">
       <div><div class="wb-label">GROSS MARGIN</div><div class="wb-kpi-value">{{ gross_margin_pct|floatformat:1 }}%</div>
-        <small class="wb-kpi-note">{% if performance_comparison_available %}{% if gross_margin_change_pp != None %}{{ gross_margin_change_pp|floatformat:1 }} pp vs prior period{% else %}No prior-period baseline{% endif %}{% else %}Revenue less garment COGS{% endif %}</small>
+        <small class="wb-kpi-note{% if performance_comparison_available and gross_margin_change_pp != None %}{% if gross_margin_change_pp > 0 %} wb-kpi-positive{% elif gross_margin_change_pp < 0 %} wb-kpi-negative{% endif %}{% endif %}">{% if performance_comparison_available %}{% if gross_margin_change_pp != None %}{% if gross_margin_change_pp > 0 %}+{% endif %}{{ gross_margin_change_pp|floatformat:1 }} pp vs prior period{% else %}No prior-period baseline{% endif %}{% else %}Revenue less garment COGS{% endif %}</small>
       </div><span class="wb-icon">%</span>
     </div>
     <div class="wb-card wb-kpi">
@@ -364,6 +364,9 @@
 .wb-performance-kpis .wb-kpi-value { font-variant-numeric:tabular-nums; }
 .wb-kpi-note {display:block; margin-top:9px; font-size:11px; line-height:1.4; color:#71776f; font-weight:400;}
 .wb-performance-caption {margin:9px 2px 22px; font-size:11px; color:#7a7f78; line-height:1.5;}
+/* Muted conditional colors for period-over-period KPI changes */
+.wb-performance-kpis .wb-kpi-note.wb-kpi-positive { color:#4b7961; font-weight:600; }
+.wb-performance-kpis .wb-kpi-note.wb-kpi-negative { color:#b36c61; font-weight:600; }
 
 /* Sales-chart tooltip — does not modify existing bar colors or layout. */
 .wb-chart-tooltip {
