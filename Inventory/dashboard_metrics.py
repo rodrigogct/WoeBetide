@@ -16,6 +16,7 @@ from django.utils import timezone
 from .models import Garment, Sale, SaleItem, Payment
 from Catalogue.models import Item
 from .partner_capital import capital_context
+from .home_performance import performance_efficiency_context
 
 ZERO = Decimal('0.00')
 VALID_PERIODS = {'7': 7, '30': 30, '90': 90}
@@ -197,8 +198,10 @@ def dashboard_home(request):
         'last_popup': latest_popup, 'best_popup': best_popup,
         'popup_average': money(popup_average) if popup_average is not None else None,
         'recent_activity': latest_items,
-        'add_garment_url': reverse('admin:%s_%s_add' % (Garment._meta.app_label, Garment._meta.model_name)),
+        'add_garment_url': reverse('admin:%s_%s_add' % (Item._meta.app_label,Item._meta.model_name)
+),
     }
+    context.update(performance_efficiency_context(days, start, today))
     context.update(capital_context())
 
     return render(request, 'inventory/dashboard_home.html', context)

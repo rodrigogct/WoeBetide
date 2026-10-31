@@ -27,7 +27,7 @@
       <span>＋</span> SELL
     </a>
 
-    <a class="wb-action wb-action-neutral" href="{{ add_garment_url }}">
+    <a class="wb-action wb-action-neutral" href="{% url 'admin:Catalogue_item_add' %}">
       <span>◇</span> ADD GARMENT
     </a>
 
@@ -45,44 +45,31 @@
 
   </div>
 
-  <!-- PERFORMANCE -->
+  <!-- PERFORMANCE: selected reporting period -->
   <h2 class="wb-section-heading">PERFORMANCE</h2>
-
-  <div class="wb-kpi-grid">
-
+  <div class="wb-kpi-grid wb-performance-kpis">
     <div class="wb-card wb-kpi">
-      <div>
-        <div class="wb-label">REVENUE</div>
-        <div class="wb-kpi-value">${{ revenue }}</div>
-      </div>
-      <span class="wb-icon">⌁</span>
+      <div><div class="wb-label">REVENUE</div><div class="wb-kpi-value">${{ revenue }}</div>
+        <small class="wb-kpi-note">{% if performance_comparison_available %}{% if revenue_change_pct != None %}{{ revenue_change_pct|floatformat:1 }}% vs prior period{% else %}No prior-period baseline{% endif %}{% else %}Selected period{% endif %}</small>
+      </div><span class="wb-icon">⌁</span>
     </div>
-
     <div class="wb-card wb-kpi">
-      <div>
-        <div class="wb-label">GROSS PROFIT</div>
-        <div class="wb-kpi-value">${{ gross_profit }}</div>
-      </div>
-      <span class="wb-icon">▥</span>
+      <div><div class="wb-label">GROSS PROFIT</div><div class="wb-kpi-value">${{ gross_profit }}</div>
+        <small class="wb-kpi-note">{% if performance_comparison_available %}{% if profit_change_pct != None %}{{ profit_change_pct|floatformat:1 }}% vs prior period{% else %}No prior-period baseline{% endif %}{% else %}Before operating expenses{% endif %}</small>
+      </div><span class="wb-icon">▥</span>
     </div>
-
     <div class="wb-card wb-kpi">
-      <div>
-        <div class="wb-label">UNITS SOLD</div>
-        <div class="wb-kpi-value">{{ units_sold }}</div>
-      </div>
-      <span class="wb-icon">♧</span>
+      <div><div class="wb-label">GROSS MARGIN</div><div class="wb-kpi-value">{{ gross_margin_pct|floatformat:1 }}%</div>
+        <small class="wb-kpi-note">{% if performance_comparison_available %}{% if gross_margin_change_pp != None %}{{ gross_margin_change_pp|floatformat:1 }} pp vs prior period{% else %}No prior-period baseline{% endif %}{% else %}Revenue less garment COGS{% endif %}</small>
+      </div><span class="wb-icon">%</span>
     </div>
-
     <div class="wb-card wb-kpi">
-      <div>
-        <div class="wb-label">INVENTORY</div>
-        <div class="wb-kpi-value">{{ stock }}</div>
-      </div>
-      <span class="wb-icon">⬡</span>
+      <div><div class="wb-label">SALES FREQUENCY</div><div class="wb-kpi-value">{{ selling_days }} / {{ observed_days }}</div>
+        <small class="wb-kpi-note">{{ sales_frequency_pct|floatformat:1 }}% of calendar days with sales</small>
+      </div><span class="wb-icon">◷</span>
     </div>
-
   </div>
+  <p class="wb-performance-caption">{{ units_sold }} units sold · Sales frequency counts distinct days with at least one recorded sale; event-driven sales may be concentrated on a few days.</p>
 
   <!-- SALES OVER TIME -->
   <section class="wb-card wb-sales-chart">
@@ -124,6 +111,43 @@
     </div>
 
   </section>
+
+  <!-- FINANCIAL POSITION -->
+  <section class="wb-card wb-panel wb-position" aria-labelledby="wb-position-title">
+    <div class="wb-card-header">
+      <h2 id="wb-position-title">FINANCIAL POSITION</h2>
+      <small>CURRENT SNAPSHOT · MXN</small>
+    </div>
+
+    <div class="wb-position-grid">
+      <div class="wb-position-tile wb-position-tile-primary">
+        <small>CASH AVAILABLE</small>
+        <strong>—</strong>
+        <span>Bank + physical cash</span>
+        <em>Awaiting reconciled cash balance</em>
+      </div>
+      <div class="wb-position-tile">
+        <small>INVENTORY AT COST</small>
+        <strong>—</strong>
+        <span>Acquisition cost of saleable stock</span>
+        <em>Awaiting inventory valuation</em>
+      </div>
+      <div class="wb-position-tile">
+        <small>INVENTORY AT RETAIL</small>
+        <strong>—</strong>
+        <span>Potential selling value · not realized revenue</span>
+        <em>Awaiting inventory valuation</em>
+      </div>
+      <div class="wb-position-tile">
+        <small>CASH + INVENTORY AT COST</small>
+        <strong>—</strong>
+        <span>Partial asset view · not company equity</span>
+        <em>Awaiting cash and stock data</em>
+      </div>
+    </div>
+    <p class="wb-position-footnote">Design preview — values are not connected yet. Cash and stock are different types of assets; this section does not represent profit or available spending money.</p>
+  </section>
+
 
   <!-- SALES CHANNEL + INVENTORY -->
   <div class="wb-two-col">
@@ -191,43 +215,7 @@
 
   </div>
 
-  <!-- FINANCIAL POSITION -->
-  <section class="wb-card wb-panel wb-position" aria-labelledby="wb-position-title">
-    <div class="wb-card-header">
-      <h2 id="wb-position-title">FINANCIAL POSITION</h2>
-      <small>CURRENT SNAPSHOT · MXN</small>
-    </div>
-
-    <div class="wb-position-grid">
-      <div class="wb-position-tile wb-position-tile-primary">
-        <small>CASH AVAILABLE</small>
-        <strong>—</strong>
-        <span>Bank + physical cash</span>
-        <em>Awaiting reconciled cash balance</em>
-      </div>
-      <div class="wb-position-tile">
-        <small>INVENTORY AT COST</small>
-        <strong>—</strong>
-        <span>Acquisition cost of saleable stock</span>
-        <em>Awaiting inventory valuation</em>
-      </div>
-      <div class="wb-position-tile">
-        <small>INVENTORY AT RETAIL</small>
-        <strong>—</strong>
-        <span>Potential selling value · not realized revenue</span>
-        <em>Awaiting inventory valuation</em>
-      </div>
-      <div class="wb-position-tile">
-        <small>CASH + INVENTORY AT COST</small>
-        <strong>—</strong>
-        <span>Partial asset view · not company equity</span>
-        <em>Awaiting cash and stock data</em>
-      </div>
-    </div>
-    <p class="wb-position-footnote">Design preview — values are not connected yet. Cash and stock are different types of assets; this section does not represent profit or available spending money.</p>
-  </section>
-
-  <!-- FINANCIAL POSITION -->
+  <!-- PAYMENT POSITION -->
   <section class="wb-card wb-panel wb-financial">
 
     <div class="wb-card-header">
@@ -313,6 +301,20 @@
   <!-- PHYSICAL EVENTS + NEEDS ATTENTION -->
   <div class="wb-two-col wb-bottom-grid">
 
+    <!-- NEEDS ATTENTION -->
+
+    <section class="wb-card wb-panel">
+
+      <h2>NEEDS ATTENTION</h2>
+
+      <a href="{% url 'inventory_list' %}?status=available" class="wb-alert-row"><span>⚠</span>
+        {{ not_published }} available garments not marked published <b>›</b></a>
+      <div class="wb-alert-row"><span>⚠</span>{{ missing_photo }} available / published garments missing photo <b>›</b></div>
+      <div class="wb-alert-row"><span>⚠</span>{{ missing_measurements }} available / published garments missing measurements <b>›</b></div>
+
+    </section>
+
+
     <!-- PHYSICAL EVENTS -->
 
     <section class="wb-card wb-panel">
@@ -334,19 +336,6 @@
 
     </section>
 
-
-    <!-- NEEDS ATTENTION -->
-
-    <section class="wb-card wb-panel">
-
-      <h2>NEEDS ATTENTION</h2>
-
-      <a href="{% url 'inventory_list' %}?status=available" class="wb-alert-row"><span>⚠</span>
-        {{ not_published }} available garments not marked published <b>›</b></a>
-      <div class="wb-alert-row"><span>⚠</span>{{ missing_photo }} available / published garments missing photo <b>›</b></div>
-      <div class="wb-alert-row"><span>⚠</span>{{ missing_measurements }} available / published garments missing measurements <b>›</b></div>
-
-    </section>
 
   </div>
 
@@ -370,6 +359,12 @@
 </div>
 
 <style>
+/* Performance metric annotations */
+.wb-performance-kpis .wb-kpi { min-width:0; }
+.wb-performance-kpis .wb-kpi-value { font-variant-numeric:tabular-nums; }
+.wb-kpi-note {display:block; margin-top:9px; font-size:11px; line-height:1.4; color:#71776f; font-weight:400;}
+.wb-performance-caption {margin:9px 2px 22px; font-size:11px; color:#7a7f78; line-height:1.5;}
+
 /* Sales-chart tooltip — does not modify existing bar colors or layout. */
 .wb-chart-tooltip {
   position: fixed; left: 0; top: 0; z-index: 99999;
