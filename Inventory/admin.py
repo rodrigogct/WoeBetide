@@ -1,6 +1,6 @@
 from django.contrib import admin
 from import_export.admin import ImportExportModelAdmin
-from .models import Collection, Garment, Sale, SaleItem, Payment
+from .models import Collection, Garment, Sale, SaleItem, Payment, SourceWorkbook
 from .resources import GarmentResource
 
 @admin.register(Collection)
@@ -111,3 +111,30 @@ class PaymentAdmin(admin.ModelAdmin):
     search_fields = (
         "sale__sale_id",
     )
+
+@admin.register(SourceWorkbook)
+class SourceWorkbookAdmin(admin.ModelAdmin):
+    list_display = (
+        "id",
+        "filename",
+        "imported_at",
+        "imported_by",
+    )
+
+    list_display_links = ("id", "filename")
+    ordering = ("-imported_at",)
+
+    readonly_fields = (
+        "filename",
+        "imported_at",
+        "imported_by",
+    )
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False

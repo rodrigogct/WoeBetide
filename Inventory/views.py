@@ -11,8 +11,9 @@ from django.utils import timezone
 from .dashboard_metrics import dashboard_home
 from .partner_capital import sync_partner_capital
 from Catalogue.models import Item
+from django.db import transaction
 
-from .models import Collection, Garment, Sale, SaleItem, Payment
+from .models import Collection, Garment, Sale, SaleItem, Payment, SourceWorkbook
 from .importers import import_inventory_excel
 
 @login_required
@@ -168,33 +169,73 @@ def sell_dashboard(request):
 
 @login_required
 def import_inventory_view(request):
+
     if not request.user.is_superuser:
-        messages.error(request, "You do not have permission to import inventory.")
+        messages.error(
+            request,
+            "You do not have permission to import inventory."
+        )
         return redirect("dashboard_home")
 
     if request.method == "POST":
+
         excel_file = request.FILES.get("excel_file")
 
         if not excel_file:
-            messages.error(request, "Please upload an Excel file.")
+            messages.error(
+                request,
+                "Please upload an Excel file."
+            )
             return redirect("import_inventory")
 
-        if not excel_file.name.endswith((".xlsx", ".xls")):
-            messages.error(request, "Please upload a valid Excel file.")
+        if not excel_file.name.lower().endswith(".xlsx"):
+            messages.error(
+                request,
+                "Please upload a valid .xlsx Excel file."
+            )
+            return redirect("import_inventory")
+
+        # Read the original file before the import consumes it.
+        MAX_FILE_SIZE = 15 * 1024 * 1024
+
+        if excel_file.size > MAX_FILE_SIZE:
+            messages.error(
+                request,
+                "Excel files must be 15 MB or smaller."
+            )
             return redirect("import_inventory")
 
         try:
-            result = import_inventory_excel(excel_file)
-
-            # Reset Excel file before reading the DEBT sheet
+            raw_bytes = excel_file.read()
             excel_file.seek(0)
 
-            try:
-                sync_partner_capital(excel_file)
-            except (ValueError, KeyError) as exc:
-                messages.warning(
-                    request,
-                    f"Inventory imported, but partner capital was not updated: {exc}"
+            # Import the workbook and save it as one transaction.
+            with transaction.atomic():
+
+                # 1. Import inventory, sales, and payments.
+                result = import_inventory_excel(excel_file)
+
+                # 2. Reset the file before reading the DEBT sheet.
+                excel_file.seek(0)
+
+                try:
+                    sync_partner_capital(excel_file)
+
+                except (ValueError, KeyError) as exc:
+                    messages.warning(
+                        request,
+                        (
+                            "Inventory imported, but partner capital "
+                            f"was not updated: {exc}"
+                        )
+                    )
+
+                # 3. Save the original workbook in PostgreSQL.
+                # Only runs after the main import succeeds.
+                SourceWorkbook.objects.create(
+                    filename=excel_file.name,
+                    file_data=raw_bytes,
+                    imported_by=request.user,
                 )
 
             messages.success(
@@ -204,17 +245,25 @@ def import_inventory_view(request):
                     f"Created garments: {result['created_garments']}. "
                     f"Updated garments: {result['updated_garments']}. "
                     f"Created sales: {result['created_sales']}. "
-                    f"Created/updated payments: {result['created_or_updated_payments']}."
+                    "Created/updated payments: "
+                    f"{result['created_or_updated_payments']}. "
+                    "Source Excel saved successfully."
                 )
             )
 
             return redirect("dashboard_home")
 
         except Exception as error:
-            messages.error(request, f"Import failed: {error}")
+            messages.error(
+                request,
+                f"Import failed: {error}"
+            )
             return redirect("import_inventory")
 
-    return render(request, "inventory/import_inventory.html")
+    return render(
+        request,
+        "inventory/import_inventory.html"
+    )
 
 def shop_all(request):
     garments = Garment.objects.filter(

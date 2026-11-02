@@ -1,5 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.conf import settings
+from django.utils import timezone
 
 # Create your models here.
 class Collection(models.Model):
@@ -150,3 +152,25 @@ class PartnerCapitalSnapshot(models.Model):
     partners = models.JSONField(default=list)
     source_filename = models.CharField(max_length=255, blank=True)
     imported_at = models.DateTimeField(auto_now=True)
+
+class SourceWorkbook(models.Model):
+    """Original Excel bytes from a successful dashboard import.
+
+    Stored in PostgreSQL instead of local Railway disk (ephemeral) or image storage.
+    """
+    filename = models.CharField(max_length=255)
+    content_type = models.CharField(max_length=120, default='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    file_data = models.BinaryField()
+    imported_at = models.DateTimeField(default=timezone.now, db_index=True)
+    imported_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='source_workbook_imports',
+    )
+
+    def __str__(self):
+        return f'{self.filename} ({self.imported_at:%Y-%m-%d %H:%M})'
+
+
