@@ -269,7 +269,7 @@ def sales_dashboard(request):
     """Sales history. Search/filter the full DB; preview only 10 by default."""
     from datetime import timedelta
     from decimal import Decimal
-    from django.db.models import Q
+    from django.db.models import Q, Prefetch
     from django.utils import timezone
 
     ZERO = Decimal('0.00')
@@ -300,11 +300,9 @@ def sales_dashboard(request):
     elif channel != 'all':
         sales = sales.filter(channel=channel)
     if period != 'all':
-        sales = sales.filter(sale_date__gte=timezone.localdate() - timedelta(days=int(period) - 1),
-                             sale_date__lte=timezone.localdate())
+        today = timezone.localdate()
+        sales = sales.filter(sale_date__gte=today - timedelta(days=int(period) - 1), sale_date__lte=today)
 
-    # Aggregate all filtered records (not just the visible preview).
-    # Preserve the old Sales table's calculated fee assumptions, clearly label estimates.
     CLIP_RATE = Decimal('0.034')
     IVA_RATE = Decimal('0.16')
     SHOPIFY_RATE = Decimal('0.036')
@@ -318,7 +316,6 @@ def sales_dashboard(request):
         clip = (payment.clip or ZERO) if payment else ZERO
         card = (payment.card or ZERO) if payment else ZERO
         recorded_fees = (payment.fees or ZERO) if payment else ZERO
-        fee_basis = 'Estimated'
         if clip > 0:
             fee_type = 'Clip (est.)'
             fee = clip * CLIP_RATE
@@ -342,13 +339,14 @@ def sales_dashboard(request):
         }
 
     total_count = sales.count()
-    # Prefetch avoids per-sale items/garment/payment database queries.
-    from django.db.models import Prefetch
     all_sales = sales.prefetch_related('payment', Prefetch('items', queryset=SaleItem.objects.select_related('garment')))
     rows = [build_row(sale) for sale in all_sales]
+    revenue = sum((r['gross_revenue'] for r in rows), ZERO)
+    profit = sum((r['gross_profit'] for r in rows), ZERO)
     totals = {
-        'gross_revenue': sum((r['gross_revenue'] for r in rows), ZERO),
-        'gross_profit': sum((r['gross_profit'] for r in rows), ZERO),
+        'gross_revenue': revenue,
+        'gross_profit': profit,
+        'gross_margin_pct': profit * 100 / revenue if revenue > ZERO else ZERO,
         'net_revenue': sum((r['net_revenue'] for r in rows), ZERO),
         'units_sold': sum(r['sold_items'] for r in rows),
     }
@@ -361,10 +359,42 @@ def sales_dashboard(request):
 
 @login_required
 def sale_detail(request, sale_id):
-    sale = get_object_or_404(Sale, sale_id=sale_id)
+    """Read-only one-sale breakdown using the same sales KPI definitions."""
+    from decimal import Decimal
+    from django.db.models import Prefetch
 
-    return render(request, "inventory/sale_detail.html", {
-        "sale": sale,
+    ZERO = Decimal('0.00')
+    sale = get_object_or_404(
+        Sale.objects.prefetch_related(
+            Prefetch('items', queryset=SaleItem.objects.select_related('garment', 'garment__collection', 'garment__website_item'))
+        ).select_related('payment'),
+        sale_id=sale_id,
+    )
+    lines = list(sale.items.all())
+    gross = sum((line.sold_price or ZERO for line in lines), ZERO)
+    cogs = sum((line.garment.cost or ZERO for line in lines), ZERO)
+    gross_profit = gross - cogs
+    items = []
+    for line in lines:
+        garment = line.garment
+        linked = getattr(garment, 'website_item', None)
+        image = garment.img1 or (linked.img1 if linked else None)
+        try:
+            image_url = image.url if image else None
+        except (ValueError, OSError):
+            image_url = None
+        items.append({'line': line, 'image_url': image_url, 'cost': garment.cost or ZERO,
+                      'gross_profit': (line.sold_price or ZERO) - (garment.cost or ZERO)})
+    payment = getattr(sale, 'payment', None)
+    return render(request, 'inventory/sale_detail.html', {
+        'sale': sale,
+        'items': items,
+        'payment': payment,
+        'totals': {
+            'gross_revenue': gross, 'gross_profit': gross_profit,
+            'gross_margin_pct': gross_profit * 100 / gross if gross > ZERO else ZERO,
+            'units_sold': len(items),
+        },
     })
 
 @login_required

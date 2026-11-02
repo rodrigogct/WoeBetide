@@ -5,7 +5,7 @@
   <div class="ws-title"><h1>Sales</h1><span>TRANSACTION HISTORY</span></div>
   <div class="ws-stats">
     <div><small>GROSS REVENUE</small><strong>${{ totals.gross_revenue|floatformat:"2g" }}</strong></div>
-    <div><small>NET REVENUE <abbr title="Gross revenue minus estimated Clip/Shopify commissions and related IVA. These are estimates, not settled payouts.">(EST.)</abbr></small><strong>${{ totals.net_revenue|floatformat:"2g" }}</strong></div>
+    <div><small>GROSS MARGIN</small><strong>{{ totals.gross_margin_pct|floatformat:"1" }}%</strong></div>
     <div><small>GROSS PROFIT</small><strong>${{ totals.gross_profit|floatformat:"2g" }}</strong></div>
     <div><small>UNITS SOLD</small><strong>{{ totals.units_sold|floatformat:"0g" }}</strong></div>
   </div>

@@ -1,115 +1,125 @@
 {% extends "inventory/base_dashboard.html" %}
 
 {% block content %}
-
-<h1 class="page-title">Sale {{ sale.sale_id }}</h1>
-
-<section class="stats-grid">
-  <div class="stat-card">
-    <div class="stat-label">Date</div>
-    <div class="stat-value">{{ sale.sale_date }}</div>
+<div class="ws-sales ws-sale-detail">
+  <div class="ws-title">
+    <div><a class="ws-back" href="{% url 'sales_dashboard' %}">← BACK TO SALES</a><h1>Sale {{ sale.sale_id }}</h1></div>
+    <span>{{ sale.sale_date|date:"M j, Y" }} · {{ sale.get_channel_display }}</span>
   </div>
-
-  <div class="stat-card">
-    <div class="stat-label">Channel</div>
-    <div class="stat-value">{{ sale.channel }}</div>
+  <div class="ws-stats">
+    <div><small>GROSS REVENUE</small><strong>${{ totals.gross_revenue|floatformat:"2g" }}</strong></div>
+    <div><small>GROSS PROFIT</small><strong>${{ totals.gross_profit|floatformat:"2g" }}</strong></div>
+    <div><small>GROSS MARGIN</small><strong>{{ totals.gross_margin_pct|floatformat:1 }}%</strong></div>
+    <div><small>UNITS SOLD</small><strong>{{ totals.units_sold|floatformat:"0g" }}</strong></div>
   </div>
-
-  <div class="stat-card">
-    <div class="stat-label">Items</div>
-    <div class="stat-value">{{ sale.items.count }}</div>
-  </div>
-
-  {% if sale.payment %}
-    <div class="stat-card">
-      <div class="stat-label">Total</div>
-      <div class="stat-value">${{ sale.payment.gross_total }}</div>
+  <div class="ws-panel">
+    <div class="ws-heading"><h2>ITEMS SOLD</h2><small>{{ totals.units_sold }} garment{{ totals.units_sold|pluralize }} · {{ sale.get_channel_display }}</small></div>
+    <div class="ws-desktop-table">
+      <table>
+        <thead><tr><th>IMAGE</th><th>GARMENT ID</th><th>ITEM</th><th>SIZE</th><th>COLLECTION</th><th>COST</th><th>SOLD PRICE</th><th>GROSS PROFIT</th></tr></thead>
+        <tbody>{% for item in items %}
+          <tr>
+            <td>{% if item.image_url %}<img class="ws-item-photo" src="{{ item.image_url }}" alt="{{ item.line.garment.name }}" loading="lazy">{% else %}<span class="ws-photo-empty">—</span>{% endif %}</td>
+            <td class="ws-id">{{ item.line.garment.garment_id }}</td>
+            <td class="ws-item-name">{{ item.line.garment.name }}</td>
+            <td>{{ item.line.garment.size|default:"—" }}</td>
+            <td>{% if item.line.garment.collection %}{{ item.line.garment.collection.collection_id }}{% else %}—{% endif %}</td>
+            <td class="ws-money">${{ item.cost|floatformat:"2g" }}</td>
+            <td class="ws-money">${{ item.line.sold_price|floatformat:"2g" }}</td>
+            <td class="ws-money">${{ item.gross_profit|floatformat:"2g" }}</td>
+          </tr>
+        {% empty %}<tr><td colspan="8">No garments recorded in this sale.</td></tr>{% endfor %}</tbody>
+      </table>
     </div>
-  {% endif %}
-</section>
-
-<h2 class="section-title">Items</h2>
-
-<div class="table-wrap">
-  <table>
-    <thead>
-      <tr>
-        <th>Image</th>
-        <th>Garment ID</th>
-        <th>Item</th>
-        <th>Size</th>
-        <th>Collection</th>
-        <th>Sold Price</th>
-      </tr>
-    </thead>
-
-    <tbody>
-      {% for item in sale.items.all %}
-        <tr>
-          <td>
-            {% if item.garment.img1 %}
-              <img class="item-image" src="{{ item.garment.img1.url }}" alt="{{ item.garment.name }}">
-            {% else %}
-              <div class="item-image"></div>
-            {% endif %}
-          </td>
-          <td>{{ item.garment.garment_id }}</td>
-          <td>{{ item.garment.name }}</td>
-          <td>{{ item.garment.size }}</td>
-          <td>
-            {% if item.garment.collection %}
-              {{ item.garment.collection.collection_id }}
-            {% else %}
-              —
-            {% endif %}
-          </td>
-          <td>${{ item.sold_price }}</td>
-        </tr>
-      {% empty %}
-        <tr>
-          <td colspan="6">No items in this sale.</td>
-        </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+    <div class="ws-mobile-list">
+      {% for item in items %}
+      <details class="ws-mobile-sale">
+        <summary>
+          {% if item.image_url %}<img class="ws-item-photo" src="{{ item.image_url }}" alt="" loading="lazy">{% else %}<span class="ws-photo-empty">—</span>{% endif %}
+          <div class="ws-mobile-item-title"><b>{{ item.line.garment.name }}</b><small>{{ item.line.garment.garment_id }} · {{ item.line.garment.size|default:"—" }}</small></div>
+          <div class="ws-mobile-totals"><strong>${{ item.line.sold_price|floatformat:"2g" }}</strong><small>Profit ${{ item.gross_profit|floatformat:"2g" }}</small></div>
+          <span class="ws-chevron">⌄</span>
+        </summary>
+        <div class="ws-mobile-detail">
+          <div><span>Collection</span><b>{% if item.line.garment.collection %}{{ item.line.garment.collection.collection_id }}{% else %}—{% endif %}</b></div>
+          <div><span>Acquisition cost</span><b>${{ item.cost|floatformat:"2g" }}</b></div>
+          <div><span>Sold price</span><b>${{ item.line.sold_price|floatformat:"2g" }}</b></div>
+          <div><span>Gross profit</span><b>${{ item.gross_profit|floatformat:"2g" }}</b></div>
+        </div>
+      </details>
+      {% empty %}<p class="ws-empty">No garments recorded in this sale.</p>{% endfor %}
+    </div>
+  </div>
+  <div class="ws-panel ws-payment-panel">
+    <div class="ws-heading"><h2>PAYMENT BREAKDOWN</h2><small>Recorded payment data · MXN</small></div>
+    {% if payment %}
+    <div class="ws-payment-grid">
+      <div><small>CASH</small><strong>${{ payment.cash|floatformat:"2g" }}</strong></div>
+      <div><small>TRANSFER</small><strong>${{ payment.transfer|floatformat:"2g" }}</strong></div>
+      <div><small>CLIP</small><strong>${{ payment.clip|floatformat:"2g" }}</strong></div>
+      <div><small>SHOPIFY / CARD</small><strong>${{ payment.card|floatformat:"2g" }}</strong></div>
+      <div><small>RECORDED FEES</small><strong>${{ payment.fees|floatformat:"2g" }}</strong></div>
+      <div><small>NET PAYMENT RECEIVED</small><strong>${{ payment.net_total|floatformat:"2g" }}</strong></div>
+    </div>
+    <p class="ws-note">Net payment received equals recorded payment-method totals less recorded fees. This is not gross profit or operating profit. Payments may differ from recorded garment selling prices.</p>
+    {% else %}
+      <p class="ws-empty">No payment record for this transaction.</p>
+    {% endif %}
+  </div>
 </div>
+<style>
 
-{% if sale.payment %}
-  <h2 class="section-title" style="margin-top: 32px;">Payment</h2>
+.ws-sales{font-family:inherit;color:#29332d;max-width:1450px}.ws-sales *{box-sizing:border-box}.ws-title{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:22px}.ws-title h1{font-size:27px;margin:0;font-weight:600}.ws-title>span{color:#7b807a;font-size:10px;letter-spacing:.1em}.ws-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:20px}.ws-stats>div,.ws-panel{background:#fff;border:1px solid #e6e5de;border-radius:11px}.ws-stats>div{padding:18px 16px}.ws-stats small{display:block;color:#777d75;font-size:10px;font-weight:600;letter-spacing:.065em;margin-bottom:12px}.ws-stats strong{font-size:23px;font-weight:600;font-variant-numeric:tabular-nums}.ws-panel{padding:20px}.ws-heading{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:17px}.ws-heading h2{font-size:13px;letter-spacing:.08em;margin:0}.ws-heading small{color:#858981;font-size:11px}.ws-search-form{display:flex;gap:9px;align-items:stretch;margin:0 0 14px}.ws-searchbox{flex:1;position:relative;min-width:0}.ws-search-form input{width:100%;min-width:0;padding:11px 13px;border:1px solid #dbddd5;border-radius:7px;background:#fafaf8;font:inherit;font-size:13px;color:#27332b}.ws-search-form button{background:#315644;color:#fff;border:1px solid #315644;border-radius:7px;padding:10px 17px;font:inherit;font-size:11px;font-weight:700;cursor:pointer}.ws-suggestions{position:absolute;z-index:12;left:0;right:0;top:calc(100% + 3px);background:white;border:1px solid #dedfd8;border-radius:8px;box-shadow:0 10px 22px #00000012;max-height:310px;overflow:auto}.ws-suggestions[hidden]{display:none!important}.ws-suggestion{display:flex;justify-content:space-between;gap:14px;padding:11px;text-decoration:none;color:#26352c;border-bottom:1px solid #efefe9}.ws-suggestion:hover,.ws-suggestion.is-active{background:#f2f5f0}.ws-suggestion small{display:block;color:#777;font-size:11px;margin-top:3px}.ws-suggestion b{font-size:12px}.ws-suggestion-message{padding:12px;font-size:12px;color:#737970}.ws-filter-row{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:12px;margin-bottom:17px}.ws-pills{display:flex;flex-wrap:wrap;gap:6px}.ws-pills a{text-decoration:none;color:#68726a;font-size:11px;border:1px solid #e6e7e1;border-radius:6px;padding:8px 12px}.ws-pills a.is-selected{background:#315644;border-color:#315644;color:white}.ws-filter-row select{border:1px solid #e0e2db;border-radius:7px;padding:8px 10px;background:#fff;color:#48514b;font:inherit;font-size:11px}.ws-desktop-table{overflow:auto}.ws-desktop-table table{width:100%;border-collapse:collapse;min-width:700px;background:#fff;font:inherit}.ws-desktop-table th{background:#f7f7f3;border-bottom:1px solid #e9e9e3;color:#858a82;padding:13px 12px;text-align:left;font-size:10px;font-weight:700;letter-spacing:.055em;white-space:nowrap}.ws-desktop-table td{border-bottom:1px solid #efefe9;padding:14px 12px;font-size:12px;color:#414943;white-space:nowrap}.ws-desktop-table tr:hover td{background:#fafbf8}.ws-id{font-weight:700;color:#273d2e!important}.ws-money{font-variant-numeric:tabular-nums}.ws-status{display:inline-block;padding:4px 8px;border-radius:5px;background:#eef3ed;color:#41644c;font-size:10px}.ws-view{color:#315644;text-decoration:none;font-weight:700;font-size:11px}.ws-view:hover{text-decoration:underline}.ws-expand{display:block;text-align:center;margin:16px auto 0;padding:12px;border:1px solid #cbd8cd;border-radius:7px;color:#315644;font-size:11px;font-weight:700;letter-spacing:.045em;text-decoration:none}.ws-expand:hover{background:#f4f7f3}.ws-note{margin:15px 0 0;color:#848a82;font-size:10px;line-height:1.6}.ws-mobile-list{display:none}.ws-mobile-sale{border-bottom:1px solid #eaece5}.ws-mobile-sale summary{display:flex;align-items:center;gap:8px;list-style:none;cursor:pointer;padding:14px 0}.ws-mobile-sale summary::-webkit-details-marker{display:none}.ws-mobile-sale summary>div:first-child{flex:1;min-width:0}.ws-mobile-sale summary b{font-size:12px}.ws-mobile-sale summary small{display:block;font-size:11px;color:#7d837b;margin-top:5px}.ws-mobile-totals{text-align:right;white-space:nowrap}.ws-mobile-totals strong{font-size:13px}.ws-chevron{font-size:18px;color:#8b9089}.ws-mobile-sale[open] .ws-chevron{transform:rotate(180deg)}.ws-mobile-detail{padding:13px;background:#f8f9f6;border-radius:7px;margin-bottom:12px}.ws-mobile-detail>div{display:flex;justify-content:space-between;gap:10px;padding:7px 0;font-size:11px;border-bottom:1px solid #e9ede5}.ws-mobile-detail span{color:#767d74}.ws-mobile-detail b{text-align:right;font-weight:600}.ws-detail-link{display:block;margin-top:13px;padding:11px;border:1px solid #315644;border-radius:6px;color:#315644;text-align:center;text-decoration:none;font-size:10px;font-weight:700}.ws-empty{padding:20px 0;color:#737970;font-size:12px}
+@media(max-width:800px){.ws-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.ws-desktop-table{display:none}.ws-mobile-list{display:block}.ws-stats strong{font-size:19px}.ws-panel{padding:15px}.ws-title h1{font-size:23px}}@media(max-width:390px){.ws-stats>div{padding:13px}.ws-search-form button{padding:10px}.ws-search-form input{font-size:12px}}
 
-  <section class="stats-grid">
-    <div class="stat-card">
-      <div class="stat-label">Cash</div>
-      <div class="stat-value">${{ sale.payment.cash }}</div>
-    </div>
+/* Scoped overrides: neutralize global dashboard table borders on Sales only. */
+.ws-sales .ws-desktop-table,
+.ws-sales .ws-desktop-table table,
+.ws-sales .ws-desktop-table thead,
+.ws-sales .ws-desktop-table tbody,
+.ws-sales .ws-desktop-table tr {
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+}
+.ws-sales .ws-desktop-table table {
+  border-collapse: collapse !important;
+  border-spacing: 0 !important;
+  font-family: inherit !important;
+  border-radius: 0 !important;
+}
+.ws-sales .ws-desktop-table th,
+.ws-sales .ws-desktop-table td {
+  border: 0 !important;
+  border-bottom: 1px solid #e9ebe5 !important;
+  border-left: 0 !important;
+  border-right: 0 !important;
+  border-top: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  font-family: inherit !important;
+}
+.ws-sales .ws-desktop-table th { background: #f7f7f3 !important; }
+.ws-sales .ws-desktop-table tbody tr:last-child td { border-bottom: 0 !important; }
+.ws-sales .ws-stats strong { font-family: inherit; font-variant-numeric: tabular-nums; letter-spacing: -.025em; }
 
-    <div class="stat-card">
-      <div class="stat-label">Clip</div>
-      <div class="stat-value">${{ sale.payment.clip }}</div>
-    </div>
-
-    <div class="stat-card">
-      <div class="stat-label">Card</div>
-      <div class="stat-value">${{ sale.payment.card }}</div>
-    </div>
-
-    <div class="stat-card">
-      <div class="stat-label">Transfer</div>
-      <div class="stat-value">${{ sale.payment.transfer }}</div>
-    </div>
-
-    <div class="stat-card">
-      <div class="stat-label">Fees</div>
-      <div class="stat-value">${{ sale.payment.fees }}</div>
-    </div>
-
-    <div class="stat-card">
-      <div class="stat-label">Net Total</div>
-      <div class="stat-value">${{ sale.payment.net_total }}</div>
-    </div>
-  </section>
-{% endif %}
-
-<a class="button" href="{% url 'sales_dashboard' %}">Back to Sales</a>
+.ws-sale-detail .ws-back {display:inline-block;color:#315644;text-decoration:none;font-size:10px;font-weight:700;letter-spacing:.05em;margin-bottom:9px}
+.ws-sale-detail .ws-back:hover{text-decoration:underline}
+.ws-sale-detail .ws-title>div{min-width:0}
+.ws-sale-detail .ws-panel{margin-bottom:18px}
+.ws-sale-detail .ws-item-photo{width:48px;height:60px;object-fit:cover;border-radius:5px;background:#f0f1ed;display:block}
+.ws-sale-detail .ws-photo-empty{width:48px;height:60px;display:flex;align-items:center;justify-content:center;background:#f0f1ed;border-radius:5px;color:#9b9e98}
+.ws-sale-detail .ws-item-name{max-width:230px;min-width:125px;white-space:normal;overflow-wrap:anywhere;line-height:1.45}
+.ws-sale-detail .ws-mobile-item-title{flex:1;min-width:0}
+.ws-sale-detail .ws-mobile-item-title b{display:block;white-space:normal;overflow-wrap:anywhere}
+.ws-sale-detail .ws-payment-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.ws-sale-detail .ws-payment-grid>div{background:#f7f8f5;border:1px solid #e9ebe5;border-radius:8px;padding:15px;min-width:0}
+.ws-sale-detail .ws-payment-grid small{display:block;font-size:10px;color:#777d75;letter-spacing:.05em;margin-bottom:9px}
+.ws-sale-detail .ws-payment-grid strong{font-weight:600;font-size:18px;font-variant-numeric:tabular-nums}
+.ws-sale-detail .ws-mobile-sale summary{align-items:center}
+.ws-sale-detail .ws-mobile-list .ws-item-photo,.ws-sale-detail .ws-mobile-list .ws-photo-empty{flex:0 0 46px;width:46px;height:58px}
+@media(max-width:800px){.ws-sale-detail .ws-payment-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.ws-sale-detail .ws-payment-grid strong{font-size:16px}.ws-sale-detail .ws-title>span{max-width:42%;text-align:right}}
+@media(max-width:390px){.ws-sale-detail .ws-mobile-totals strong{font-size:12px}}
+</style>
 
 {% endblock %}
