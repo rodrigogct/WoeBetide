@@ -4,6 +4,7 @@ from .pos_checkout import pos_complete_sale
 from .inventory_suggest import inventory_suggest
 from .sales_suggest import sales_suggest
 from .financial_pages import finances_page, partners_page
+from .source_workbook import download_source_excel
 
 urlpatterns = [
     path("dashboard/", views.dashboard_home, name="dashboard_home"),
@@ -25,4 +26,5 @@ urlpatterns = [
 
     path("dashboard/finances/",finances_page,name="finances_dashboard",),
     path("dashboard/partners/",partners_page,name="partners_dashboard",),
+    path("source-excel/download/",download_source_excel, name="download_source_excel",),
 ]
