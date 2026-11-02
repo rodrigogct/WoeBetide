@@ -1,0 +1,36 @@
+{% extends "inventory/base_dashboard.html" %}
+{% block nav_finances_class %}is-active{% endblock %}
+{% block content %}
+<div class="wbm-page">
+  <div class="wbm-heading"><div><h1>Finances</h1><p>Business financial health · WOE BETIDE</p></div><span class="wbm-topnote">CURRENT POSITION · MXN</span></div>
+  <div class="wbm-section-title"><h2>FINANCIAL POSITION</h2><small>Snapshot {{ snapshot_date|date:"M j, Y" }}</small></div>
+  <div class="wbm-kpis">
+    <div class="wbm-kpi wbm-priority"><small>CASH AVAILABLE</small><strong>—</strong><span>Bank + physical cash</span><em>Awaiting reconciled cash balance</em></div>
+    <div class="wbm-kpi"><small>INVENTORY AT COST</small><strong>${{ inventory_cost }}</strong><span>Acquisition cost · saleable garments</span></div>
+    <div class="wbm-kpi"><small>INVENTORY AT RETAIL</small><strong>${{ inventory_retail }}</strong><span>Current listed prices · before discounts</span></div>
+    <div class="wbm-kpi"><small>CASH + INVENTORY AT COST</small><strong>—</strong><span>Partial assets, not business equity</span><em>Available when cash is connected</em></div>
+  </div>
+  <section class="wbm-panel"><div class="wbm-section-title"><h2>MERCHANDISE POSITION</h2><small>Live inventory</small></div>
+    <div class="wbm-data-grid">
+      <div><small>SALEABLE GARMENTS</small><strong>{{ stock_units }}</strong></div>
+      <div><small>POTENTIAL GROSS PROFIT</small><strong>${{ potential_gross_profit }}</strong></div>
+      <div><small>WEBSITE-LINKED GARMENTS</small><strong>{{ linked_count }}</strong></div>
+      <div><small>GARMENTS MISSING VALID PRICE</small><strong>{{ missing_prices }}</strong></div>
+    </div>
+    <p class="wbm-muted">Retail value is the sum of listed prices—not guaranteed proceeds or accounting asset value. Potential profit is not realized profit. Missing prices are excluded from the retail sum; review them before relying on the total.</p>
+  </section>
+  <section class="wbm-panel"><div class="wbm-section-title"><h2>RECORDED SALES PERFORMANCE</h2><small>All time · SaleItem records</small></div>
+    <div class="wbm-data-grid">
+      <div><small>SALES REVENUE</small><strong>${{ sales_revenue }}</strong></div>
+      <div><small>GROSS PROFIT</small><strong>${{ sales_profit }}</strong></div>
+      <div><small>GROSS MARGIN</small><strong>{{ sales_margin }}%</strong></div>
+      <div><small>OPERATING PROFIT</small><strong>—</strong><em>Expenses not yet integrated</em></div>
+    </div>
+    <p class="wbm-muted">Gross profit deducts recorded garment acquisition costs only. Cash flow, operating expenses, liabilities, and true operating profit will need reconciled financial records.</p>
+  </section>
+  <div class="wbm-footerlink"><a href="{% url 'dashboard_home' %}">← Back to Home Dashboard</a></div>
+</div>
+<style>
+.wbm-page{font-family:inherit;color:#28332b;max-width:1380px}.wbm-page *{box-sizing:border-box}.wbm-heading{display:flex;justify-content:space-between;align-items:end;flex-wrap:wrap;gap:12px;margin-bottom:25px}.wbm-heading h1{font-size:27px;font-weight:600;margin:0 0 5px}.wbm-heading p{color:#788078;margin:0;font-size:12px}.wbm-topnote{font-size:10px;color:#7d857d;letter-spacing:.1em}.wbm-section-title{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:0 0 14px}.wbm-section-title h2{font-size:12px;font-weight:700;letter-spacing:.085em;margin:0}.wbm-section-title small{font-size:11px;color:#848b83}.wbm-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;margin-bottom:23px}.wbm-kpi,.wbm-panel{background:#fff;border:1px solid #e8e7e1;border-radius:11px}.wbm-kpi{padding:19px 16px;min-width:0}.wbm-kpi.wbm-priority{background:#f6f8f5}.wbm-kpi small,.wbm-data-grid small{display:block;font-size:10px;letter-spacing:.055em;font-weight:700;color:#737e75;margin-bottom:11px}.wbm-kpi strong{display:block;font-size:24px;font-weight:600;letter-spacing:-.025em;font-variant-numeric:tabular-nums;overflow-wrap:anywhere;margin-bottom:8px}.wbm-kpi span{display:block;font-size:11px;color:#788078;line-height:1.4}.wbm-kpi em,.wbm-data-grid em{display:block;margin-top:9px;color:#9a8b74;font-style:normal;font-size:10px}.wbm-panel{padding:21px;margin-bottom:18px}.wbm-data-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.wbm-data-grid>div{padding:14px;background:#f8f8f5;border-radius:8px;min-width:0}.wbm-data-grid strong{font-size:20px;font-weight:600;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}.wbm-muted{font-size:11px;line-height:1.6;color:#80877f;margin:17px 0 0}.wbm-footerlink{margin:22px 0}.wbm-footerlink a{font-size:12px;text-decoration:none;color:#315644;font-weight:600}@media(max-width:1000px){.wbm-kpis,.wbm-data-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:460px){.wbm-heading h1{font-size:23px}.wbm-kpi{padding:15px 12px}.wbm-kpi strong{font-size:20px}.wbm-panel{padding:15px}.wbm-data-grid strong{font-size:17px}}
+</style>
+{% endblock %}
