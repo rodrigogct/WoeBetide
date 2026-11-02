@@ -1,45 +1,587 @@
+
 {% extends "inventory/base_dashboard.html" %}
+
+{% block nav_collections_class %}is-active{% endblock %}
 
 {% block content %}
 
-<h1 class="page-title">Collections</h1>
+<div class="wbc-page">
 
-<div class="table-wrap">
-  <table>
-    <thead>
-      <tr>
-        <th>Collection</th>
-        <th>Date Bought</th>
-        <th>Items</th>
-        <th>Sold</th>
-        <th>Available</th>
-        <th>Cost</th>
-        <th>Revenue</th>
-        <th>Gross Profit</th>
-        <th>ROI</th>
-      </tr>
-    </thead>
+  <!-- PAGE HEADING -->
+  <div class="wbc-heading">
 
-    <tbody>
-      {% for row in rows %}
-        <tr>
-          <td>{{ row.collection.collection_id }}</td>
-          <td>{{ row.collection.date_bought }}</td>
-          <td>{{ row.total_items }}</td>
-          <td>{{ row.sold_count }}</td>
-          <td>{{ row.available_count }}</td>
-          <td>${{ row.total_cost }}</td>
-          <td>${{ row.revenue }}</td>
-          <td>${{ row.gross_profit }}</td>
-          <td>{{ row.sell_through }}%</td>
-        </tr>
-      {% empty %}
-        <tr>
-          <td colspan="9">No collections found.</td>
-        </tr>
-      {% endfor %}
-    </tbody>
-  </table>
+    <div>
+      <h1>Collections</h1>
+      <p>Acquisition performance · inventory recovery</p>
+    </div>
+
+    <span class="wbc-topnote">
+      ALL COLLECTIONS · MXN
+    </span>
+
+  </div>
+
+  <!-- COLLECTION OVERVIEW -->
+  <div class="wbc-section-title">
+    <h2>COLLECTION OVERVIEW</h2>
+    <small>All time</small>
+  </div>
+
+  <!-- SUMMARY KPIs -->
+  <div class="wbc-kpis">
+
+    <div class="wbc-kpi">
+      <small>TOTAL ACQUISITION COST</small>
+
+      <strong>
+        {% if summary %}
+          ${{ summary.total_cost }}
+        {% else %}
+          —
+        {% endif %}
+      </strong>
+
+      <span>Capital invested in collections</span>
+    </div>
+
+    <div class="wbc-kpi">
+      <small>REVENUE GENERATED</small>
+
+      <strong>
+        {% if summary %}
+          ${{ summary.revenue }}
+        {% else %}
+          —
+        {% endif %}
+      </strong>
+
+      <span>Realized sales from collections</span>
+    </div>
+
+    <div class="wbc-kpi wbc-priority">
+      <small>CAPITAL RECOVERY</small>
+
+      <strong>
+        {% if summary %}
+          {{ summary.capital_recovery }}%
+        {% else %}
+          —
+        {% endif %}
+      </strong>
+
+      <span>Revenue / acquisition cost</span>
+    </div>
+
+    <div class="wbc-kpi">
+      <small>GROSS PROFIT</small>
+
+      <strong>
+        {% if summary %}
+          ${{ summary.gross_profit }}
+        {% else %}
+          —
+        {% endif %}
+      </strong>
+
+      <span>Revenue less cost of sold items</span>
+    </div>
+
+    <div class="wbc-kpi">
+      <small>SELL-THROUGH</small>
+
+      <strong>
+        {% if summary %}
+          {{ summary.sell_through }}%
+        {% else %}
+          —
+        {% endif %}
+      </strong>
+
+      <span>Sold units / acquired units</span>
+    </div>
+
+    <div class="wbc-kpi">
+      <small>AVAILABLE INVENTORY</small>
+
+      <strong>
+        {% if summary %}
+          {{ summary.available_items }}
+        {% else %}
+          —
+        {% endif %}
+      </strong>
+
+      <span>Garments remaining in stock</span>
+    </div>
+
+  </div>
+
+  <!-- COLLECTION PERFORMANCE -->
+  <section class="wbc-panel">
+
+    <div class="wbc-section-title">
+      <h2>COLLECTION PERFORMANCE</h2>
+      <small>Collection-level breakdown</small>
+    </div>
+
+    <div class="wbc-table-wrap">
+
+      <table class="wbc-table">
+
+        <thead>
+          <tr>
+            <th>COLLECTION</th>
+            <th>DATE BOUGHT</th>
+            <th>ITEMS</th>
+            <th>SOLD</th>
+            <th>AVAILABLE</th>
+            <th>ACQUISITION COST</th>
+            <th>REVENUE</th>
+            <th>GROSS PROFIT</th>
+            <th>SELL-THROUGH</th>
+            <th>REALIZED ROI</th>
+          </tr>
+        </thead>
+
+        <tbody>
+
+          {% for row in rows %}
+
+            <tr>
+
+              <td class="wbc-collection-id">
+                {{ row.collection.collection_id }}
+              </td>
+
+              <td>
+                {{ row.collection.date_bought|date:"M j, Y" }}
+              </td>
+
+              <td>{{ row.total_items }}</td>
+
+              <td>{{ row.sold_count }}</td>
+
+              <td>{{ row.available_count }}</td>
+
+              <td class="wbc-money">
+                ${{ row.total_cost }}
+              </td>
+
+              <td class="wbc-money">
+                ${{ row.revenue }}
+              </td>
+
+              <td class="wbc-money">
+                ${{ row.gross_profit }}
+              </td>
+
+              <td>
+                <div class="wbc-sellthrough">
+
+                  <span>
+                    {{ row.sell_through }}%
+                  </span>
+
+                  <progress
+                    class="wbc-progress"
+                    value="{{ row.sell_through }}"
+                    max="100"
+                    aria-label="Collection sell-through">
+                  </progress>
+
+                </div>
+              </td>
+
+              <td class="wbc-money">
+                {% if row.realized_roi != None %}
+                  {{ row.realized_roi }}%
+                {% else %}
+                  —
+                {% endif %}
+              </td>
+
+            </tr>
+
+          {% empty %}
+
+            <tr>
+              <td colspan="10" class="wbc-empty">
+                No collections found.
+              </td>
+            </tr>
+
+          {% endfor %}
+
+        </tbody>
+
+      </table>
+
+    </div>
+
+    <p class="wbc-muted">
+      Acquisition cost includes all garments in each collection.
+      Gross profit deducts the acquisition cost of sold garments only.
+      Sell-through measures units sold relative to units acquired.
+      Realized ROI measures gross profit relative to the cost
+      of sold garments.
+    </p>
+
+  </section>
+
+  <!-- CAPITAL RECOVERY EXPLANATION -->
+  <section class="wbc-panel">
+
+    <div class="wbc-section-title">
+      <h2>UNDERSTANDING COLLECTION PERFORMANCE</h2>
+    </div>
+
+    <div class="wbc-insights">
+
+      <div>
+        <small>CAPITAL RECOVERY</small>
+
+        <p>
+          Measures how much of the original collection investment
+          has been recovered through sales revenue.
+        </p>
+      </div>
+
+      <div>
+        <small>SELL-THROUGH</small>
+
+        <p>
+          Measures how quickly a collection is being converted
+          from inventory into sold garments.
+        </p>
+      </div>
+
+      <div>
+        <small>REALIZED ROI</small>
+
+        <p>
+          Measures the gross return on garments already sold.
+          It excludes remaining unsold inventory and
+          operating expenses.
+        </p>
+      </div>
+
+    </div>
+
+  </section>
+
+  <!-- BACK NAVIGATION -->
+  <div class="wbc-footerlink">
+    <a href="{% url 'dashboard_home' %}">
+      ← Back to Home Dashboard
+    </a>
+  </div>
+
 </div>
 
+<style>
+
+/* 1. PAGE BASE */
+
+.wbc-page {
+  font-family: inherit;
+  color: #28332b;
+  max-width: 1380px;
+}
+
+.wbc-page * {
+  box-sizing: border-box;
+}
+
+
+/* 2. PAGE HEADING */
+
+.wbc-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 25px;
+}
+
+.wbc-heading h1 {
+  font-size: 27px;
+  font-weight: 600;
+  margin: 0 0 5px;
+}
+
+.wbc-heading p {
+  margin: 0;
+  color: #788078;
+  font-size: 12px;
+}
+
+.wbc-topnote {
+  font-size: 10px;
+  color: #7d857d;
+  letter-spacing: 0.1em;
+}
+
+
+/* 3. SECTION TITLES */
+
+.wbc-section-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.wbc-section-title h2 {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.085em;
+}
+
+.wbc-section-title small {
+  font-size: 11px;
+  color: #848b83;
+}
+
+
+/* 4. SUMMARY KPI GRID */
+
+.wbc-kpis {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 13px;
+  margin-bottom: 24px;
+}
+
+.wbc-kpi,
+.wbc-panel {
+  background: #fff;
+  border: 1px solid #e8e7e1;
+  border-radius: 11px;
+}
+
+.wbc-kpi {
+  padding: 19px 16px;
+  min-width: 0;
+}
+
+.wbc-kpi.wbc-priority {
+  background: #f6f8f5;
+}
+
+.wbc-kpi small,
+.wbc-insights small {
+  display: block;
+  font-size: 10px;
+  letter-spacing: 0.055em;
+  font-weight: 700;
+  color: #737e75;
+  margin-bottom: 11px;
+}
+
+.wbc-kpi strong {
+  display: block;
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+  margin-bottom: 8px;
+}
+
+.wbc-kpi span {
+  display: block;
+  font-size: 11px;
+  color: #788078;
+  line-height: 1.4;
+}
+
+
+/* 5. PANELS */
+
+.wbc-panel {
+  padding: 21px;
+  margin-bottom: 18px;
+}
+
+
+/* 6. COLLECTION TABLE */
+
+.wbc-table-wrap {
+  overflow-x: auto;
+}
+
+.wbc-table {
+  width: 100%;
+  min-width: 1050px;
+  border-collapse: collapse;
+  border: 0 !important;
+  font: inherit;
+}
+
+.wbc-table th,
+.wbc-table td {
+  padding: 13px 11px !important;
+  border: 0 !important;
+  border-bottom: 1px solid #eeefe9 !important;
+  background: #fff !important;
+  text-align: right;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.wbc-table th {
+  background: #f8f8f5 !important;
+  color: #7b837b;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.wbc-table th:first-child,
+.wbc-table td:first-child {
+  text-align: left;
+}
+
+.wbc-table tbody tr:last-child td {
+  border-bottom: 0 !important;
+}
+
+.wbc-collection-id {
+  font-weight: 600;
+  color: #315644;
+}
+
+.wbc-money {
+  font-variant-numeric: tabular-nums;
+}
+
+.wbc-empty {
+  padding: 25px 12px !important;
+  text-align: center !important;
+  color: #858b85;
+}
+
+
+/* 7. SELL-THROUGH INDICATOR */
+
+.wbc-sellthrough {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.wbc-sellthrough span {
+  min-width: 38px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.wbc-progress {
+  width: 65px;
+  height: 6px;
+  border: 0;
+  border-radius: 10px;
+  background: #e9ece6;
+  overflow: hidden;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.wbc-progress::-webkit-progress-bar {
+  background: #e9ece6;
+  border-radius: 10px;
+}
+
+.wbc-progress::-webkit-progress-value {
+  background: #315644;
+  border-radius: 10px;
+}
+
+.wbc-progress::-moz-progress-bar {
+  background: #315644;
+  border-radius: 10px;
+}
+
+
+/* 8. PERFORMANCE EXPLANATIONS */
+
+.wbc-insights {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.wbc-insights p {
+  margin: 0;
+  font-size: 11px;
+  color: #788078;
+  line-height: 1.6;
+}
+
+.wbc-muted {
+  margin: 17px 0 0;
+  font-size: 11px;
+  line-height: 1.6;
+  color: #80877f;
+}
+
+
+/* 9. BACK NAVIGATION */
+
+.wbc-footerlink {
+  margin: 22px 0;
+}
+
+.wbc-footerlink a {
+  font-size: 12px;
+  text-decoration: none;
+  color: #315644;
+  font-weight: 600;
+}
+
+
+/* 10. RESPONSIVE LAYOUT */
+
+@media (max-width: 1000px) {
+
+  .wbc-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .wbc-insights {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+}
+
+@media (max-width: 520px) {
+
+  .wbc-heading h1 {
+    font-size: 23px;
+  }
+
+  .wbc-kpis {
+    grid-template-columns: 1fr;
+  }
+
+  .wbc-kpi {
+    padding: 15px 12px;
+  }
+
+  .wbc-kpi strong {
+    font-size: 21px;
+  }
+
+  .wbc-panel {
+    padding: 15px;
+  }
+
+}
+
+</style>
 {% endblock %}
