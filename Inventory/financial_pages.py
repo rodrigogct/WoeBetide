@@ -66,6 +66,7 @@ def partners_page(request):
     total_net = ZERO
     total_target = ZERO
     total_shortfall = ZERO
+
     if snapshot:
         for row in snapshot.partners:
             try:
@@ -79,9 +80,25 @@ def partners_page(request):
                 actual_pct = Decimal(str(row['real_pct']))
             except (KeyError, InvalidOperation, TypeError, ValueError):
                 continue
+
+            # Determine each partner's funding status
+            if target <= 0:
+                progress_status = "neutral"
+            elif net > target:
+                progress_status = "overpaid"
+            elif net == target:
+                progress_status = "paid"
+            elif net >= target * Decimal("0.75"):
+                progress_status = "warning"
+            else:
+                progress_status = "danger"
+
+            # Calculate totals
             total_net += net
             total_target += target
-            total_shortfall += max(target-net, ZERO)
+            total_shortfall += max(target - net, ZERO)
+
+            # Add each partner's data
             partners.append({
                 'name': row['name'],
                 'gross_paid': fmt(gross),
@@ -91,11 +108,19 @@ def partners_page(request):
                 'target': fmt(target),
                 'target_pct': f'{target_pct:.1f}',
                 'actual_pct': f'{actual_pct:.1f}',
-                'remaining': fmt(max(target-net, ZERO)),
-                'excess': fmt(max(net-target, ZERO)),
+                'remaining': fmt(max(target - net, ZERO)),
+                'excess': fmt(max(net - target, ZERO)),
                 'balance': f'{balance:+,.2f}',
-                'balance_kind': 'shortfall' if balance < 0 else 'excess' if balance > 0 else 'settled',
-                'progress': round(min(100, max(0, float(net / target * 100)))) if target > 0 else 100,
+                'balance_kind': (
+                    'shortfall' if balance < 0
+                    else 'excess' if balance > 0
+                    else 'settled'
+                ),
+                'progress': (
+                    round(min(100, max(0, float(net / target * 100))))
+                    if target > 0 else 0
+                ),
+                'progress_status': progress_status,
             })
 
     home_capital = capital_context()

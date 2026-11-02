@@ -1,75 +1,709 @@
-{% extends "inventory/base_dashboard.html" %}
-{% block nav_partners_class %}is-active{% endblock %}
-{% block content %}
-<div class="wbp-page">
- <div class="wbp-heading"><div><h1>Partners</h1><p>Capital contributions · individual funding positions</p></div><span class="wbp-topnote">DEBT SHEET · ALL TIME · MXN</span></div>
- {% if has_snapshot and partner_capital %}
- <div class="wbp-summary">
-  <div><small>TOTAL NET CAPITAL INVESTED</small><strong>${{ total_net }}</strong><span>Across all partners</span></div>
-  <div><small>AGREED CAPITAL TARGET</small><strong>${{ total_target }}</strong><span>Based on current Excel targets</span></div>
-  <div><small>COMBINED FUNDING SHORTFALLS</small><strong>${{ total_shortfall }}</strong><span>Sum of individual amounts below target</span></div>
- </div>
- <div class="wbp-section-head"><h2>PARTNER CONTRIBUTIONS</h2><small>Target vs actual</small></div>
- <div class="wbp-partners">
- {% for p in partners %}
- <section class="wbp-card">
-  <div class="wbp-card-head"><h3>{{ p.name }}</h3><span class="wbp-chip {% if p.balance_kind == 'shortfall' %}is-short{% elif p.balance_kind == 'excess' %}is-ahead{% endif %}">{% if p.balance_kind == 'shortfall' %}Below target{% elif p.balance_kind == 'excess' %}Above target{% else %}At target{% endif %}</span></div>
-  <div class="wbp-percent"><div><small>TARGET SHARE</small><strong>{{ p.target_pct }}%</strong></div><div><small>ACTUAL FUNDING SHARE</small><strong>{{ p.actual_pct }}%</strong></div></div>
-  <progress class="wbp-meter" value="{{ p.progress }}" max="100" aria-label="{{ p.name }} target funding progress"></progress>
-  <div class="wbp-figures"><div><span>Net capital invested</span><strong>${{ p.net }}</strong></div><div><span>Target contribution</span><strong>${{ p.target }}</strong></div><div><span>Still to contribute</span><strong class="{% if p.balance_kind == 'shortfall' %}wbp-red{% else %}wbp-green{% endif %}">${{ p.remaining }}</strong></div><div><span>Contribution above target</span><strong>${{ p.excess }}</strong></div></div>
-  <details class="wbp-breakdown"><summary>View contribution breakdown <span>⌄</span></summary><div class="wbp-figures"><div><span>Paid personally (gross)</span><strong>${{ p.gross_paid }}</strong></div><div><span>Business reimbursements</span><strong>${{ p.reimbursed }}</strong></div><div><span>Partner capital adjustment</span><strong>{{ p.adjustment }}</strong></div><div><span>Excel final balance</span><strong>{{ p.balance }}</strong></div></div></details>
- </section>
- {% endfor %}
- </div>
- <section class="wbp-panel wbp-reconciliation">
-  <div class="wbp-section-head"><h2>CONTRIBUTION RECONCILIATION</h2><small>ALL TIME · DEBT SHEET</small></div>
-  <p class="wbp-reconciliation-total">Net capital invested: <strong>${{ partner_capital.total_capital }}</strong></p>
-  <div class="wbp-scroll">
-   <table class="wbp-home-capital-table">
-    <thead><tr>
-     <th>PARTNER</th>
-     <th>NET CAPITAL</th>
-     <th>SHOULD PAY</th>
-     <th>BALANCE</th>
-     <th>TARGET / ACTUAL</th>
-    </tr></thead>
-    <tbody>
-     {% for partner in partner_capital.partners %}
-     <tr>
-      <td>{{ partner.name }}</td>
-      <td>${{ partner.net_capital }}</td>
-      <td>${{ partner.should_pay }}</td>
-      <td class="wb-balance {{ partner.balance_color }}">{{ partner.balance }}</td>
-      <td>{{ partner.target_pct }}% / {{ partner.real_pct }}%</td>
-     </tr>
-     {% endfor %}
-    </tbody>
-   </table>
-  </div>
-  <p class="wbp-reconciliation-help">Positive balance means capital above the Excel target; negative balance means below target. Capital is not sales revenue.</p>
- </section>
- <p class="wbp-muted">Source: {{ snapshot.source_filename }} · Imported {{ snapshot.imported_at|date:"M j, Y H:i" }}. Figures are based on the latest imported Excel DEBT summary, not live card or bank transactions. A funding shortfall is an agreed contribution target, not automatically a legally payable debt. An excess contribution is not automatically a company reimbursement liability.</p>
- {% else %}
- <section class="wbp-panel"><h2>No partner capital snapshot yet</h2><p>Import the current Excel workbook using the existing Import Excel screen. This view reads the DEBT snapshot already stored in Django and will not invent partner balances.</p></section>
- {% endif %}
- <div class="wbp-back"><a href="{% url 'dashboard_home' %}">← Back to Home Dashboard</a></div>
-</div>
-<style>
-.wbp-page{font-family:inherit;color:#28332b;max-width:1380px}.wbp-page *{box-sizing:border-box}.wbp-heading{display:flex;justify-content:space-between;gap:12px;align-items:end;flex-wrap:wrap;margin-bottom:24px}.wbp-heading h1{margin:0 0 5px;font-size:27px;font-weight:600}.wbp-heading p{margin:0;color:#778078;font-size:12px}.wbp-topnote{font-size:10px;letter-spacing:.09em;color:#7b837b}.wbp-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-bottom:26px}.wbp-summary>div,.wbp-card,.wbp-panel{background:#fff;border:1px solid #e8e7e1;border-radius:11px}.wbp-summary>div{padding:18px}.wbp-summary small,.wbp-percent small{display:block;font-size:10px;font-weight:700;letter-spacing:.06em;color:#7c857d;margin-bottom:10px}.wbp-summary strong{display:block;font-size:24px;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums}.wbp-summary span{display:block;font-size:11px;color:#808881;margin-top:9px}.wbp-section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 13px}.wbp-section-head h2{margin:0;font-size:12px;letter-spacing:.07em}.wbp-section-head small{color:#858b85;font-size:11px}.wbp-partners{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px;margin-bottom:24px}.wbp-card{padding:20px;min-width:0}.wbp-card-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:20px}.wbp-card h3{font-size:18px;font-weight:600;margin:0}.wbp-chip{font-size:10px;border-radius:15px;padding:6px 9px;background:#f1f2ef;color:#717a72;white-space:nowrap}.wbp-chip.is-short{background:#f8eeee;color:#ab6e64}.wbp-chip.is-ahead{background:#eef5ef;color:#4b7961}.wbp-percent{display:grid;grid-template-columns:1fr 1fr;gap:9px}.wbp-percent strong{font-size:21px;font-weight:600;font-variant-numeric:tabular-nums}.wbp-meter{display:block;width:100%;height:7px;border:0;border-radius:10px;background:#e9ece6;overflow:hidden;margin:17px 0;appearance:none;-webkit-appearance:none}.wbp-meter::-webkit-progress-bar{background:#e9ece6;border-radius:10px}.wbp-meter::-webkit-progress-value{background:#315644;border-radius:10px}.wbp-meter::-moz-progress-bar{background:#315644;border-radius:10px}.wbp-figures>div{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid #eeefe9;font-size:11px}.wbp-figures span{color:#788078}.wbp-figures strong{font-weight:600;text-align:right;font-variant-numeric:tabular-nums}.wbp-red{color:#b36c61!important}.wbp-green{color:#4b7961!important}.wbp-breakdown{margin-top:14px}.wbp-breakdown summary{cursor:pointer;color:#315644;font-weight:600;font-size:11px;list-style:none}.wbp-breakdown summary::-webkit-details-marker{display:none}.wbp-breakdown summary span{float:right}.wbp-breakdown[open] summary span{transform:rotate(180deg)}.wbp-breakdown .wbp-figures{margin-top:10px;background:#f8f9f6;border-radius:7px;padding:4px 10px}.wbp-panel{padding:20px;margin-bottom:16px}.wbp-scroll{overflow-x:auto}.wbp-scroll table{width:100%;border-collapse:collapse;font:inherit;min-width:670px;border:0!important}.wbp-scroll th,.wbp-scroll td{border:0!important;border-bottom:1px solid #eeefe9!important;padding:13px 10px!important;text-align:left;background:#fff!important;font-size:11px}.wbp-scroll th{font-size:10px;color:#7b837b;font-weight:700;letter-spacing:.05em;background:#f8f8f5!important}.wbp-muted{font-size:11px;color:#818880;line-height:1.65}.wbp-back{margin:20px 0}.wbp-back a{color:#315644;text-decoration:none;font-size:12px;font-weight:600}@media(max-width:1050px){.wbp-partners{grid-template-columns:1fr}.wbp-summary{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:520px){.wbp-summary{grid-template-columns:1fr}.wbp-summary strong{font-size:21px}.wbp-card{padding:16px}.wbp-heading h1{font-size:23px}}
 
-/* Home dashboard's Partner Capital reconciliation style, scoped to this page. */
-.wbp-reconciliation-total{margin:0 0 14px;font-size:13px;}
-.wbp-reconciliation .wbp-scroll{overflow-x:auto;}
-.wbp-reconciliation .wbp-home-capital-table{width:100%;min-width:570px;border-collapse:collapse;border:0!important;font-size:13px;white-space:nowrap;}
-.wbp-reconciliation .wbp-home-capital-table thead th{padding:9px!important;text-align:right!important;border:0!important;border-bottom:1px solid #e5e2dc!important;background:#fff!important;font-size:11px;font-weight:600;color:#414943;}
-.wbp-reconciliation .wbp-home-capital-table thead th:first-child{text-align:left!important;}
-.wbp-reconciliation .wbp-home-capital-table tbody tr{border-top:1px solid #e5e2dc;}
-.wbp-reconciliation .wbp-home-capital-table tbody td{padding:10px 9px!important;text-align:right!important;border:0!important;background:#fff!important;font-size:13px;color:#414943;}
-.wbp-reconciliation .wbp-home-capital-table tbody td:first-child{text-align:left!important;}
-.wbp-reconciliation .wbp-home-capital-table .wb-balance{font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap;}
-.wbp-reconciliation .wbp-home-capital-table .wb-balance.positive{color:#4b7961!important;}
-.wbp-reconciliation .wbp-home-capital-table .wb-balance.negative{color:#b36c61!important;}
-.wbp-reconciliation .wbp-home-capital-table .wb-balance.neutral{color:#888!important;}
-.wbp-reconciliation-help{margin:12px 0 0;font-size:12px;line-height:1.5;color:#6e756f;}
+{% extends "inventory/base_dashboard.html" %}
+
+{% block nav_partners_class %}is-active{% endblock %}
+
+{% block content %}
+
+<div class="wbp-page">
+
+  <!-- PAGE HEADING -->
+  <div class="wbp-heading">
+    <div>
+      <h1>Partners</h1>
+      <p>Capital contributions · individual funding positions</p>
+    </div>
+
+    <span class="wbp-topnote">
+      DEBT SHEET · ALL TIME · MXN
+    </span>
+  </div>
+
+  {% if has_snapshot and partner_capital %}
+    <!-- SUMMARY KPIs -->
+    <div class="wbp-summary">
+
+      <div>
+        <small>TOTAL NET CAPITAL INVESTED</small>
+        <strong>${{ total_net }}</strong>
+        <span>Across all partners</span>
+      </div>
+
+      <div>
+        <small>AGREED CAPITAL TARGET</small>
+        <strong>${{ total_target }}</strong>
+        <span>Based on current Excel targets</span>
+      </div>
+
+      <div>
+        <small>COMBINED FUNDING SHORTFALLS</small>
+        <strong>${{ total_shortfall }}</strong>
+        <span>Sum of individual amounts below target</span>
+      </div>
+
+    </div>
+
+    <!-- PARTNER CONTRIBUTIONS HEADING -->
+    <div class="wbp-section-head">
+      <h2>PARTNER CONTRIBUTIONS</h2>
+      <small>Target vs actual</small>
+    </div>
+
+    <!-- INDIVIDUAL PARTNER CARDS -->
+    <div class="wbp-partners">
+
+      {% for p in partners %}
+
+        <section class="wbp-card">
+
+          <!-- PARTNER NAME AND STATUS -->
+          <div class="wbp-card-head">
+
+            <h3>{{ p.name }}</h3>
+
+            <span class="wbp-chip {% if p.balance_kind == 'shortfall' %}is-short{% elif p.balance_kind == 'excess' %}is-ahead{% endif %}">
+              {% if p.balance_kind == 'shortfall' %}
+                Below target
+              {% elif p.balance_kind == 'excess' %}
+                Above target
+              {% else %}
+                At target
+              {% endif %}
+            </span>
+
+          </div>
+
+          <!-- TARGET VS ACTUAL FUNDING SHARE -->
+          <div class="wbp-percent">
+
+            <div>
+              <small>TARGET SHARE</small>
+              <strong>{{ p.target_pct }}%</strong>
+            </div>
+
+            <div>
+              <small>ACTUAL FUNDING SHARE</small>
+              <strong>{{ p.actual_pct }}%</strong>
+            </div>
+
+          </div>
+
+          <!-- CONDITIONAL FUNDING PROGRESS BAR -->
+          <progress
+            class="wbp-meter wbp-{{ p.progress_status }}"
+            value="{{ p.progress }}"
+            max="100"
+            aria-label="{{ p.name }} funding progress">
+          </progress>
+
+          <!-- CONTRIBUTION FIGURES -->
+          <div class="wbp-figures">
+
+            <div>
+              <span>Net capital invested</span>
+              <strong>${{ p.net }}</strong>
+            </div>
+
+            <div>
+              <span>Target contribution</span>
+              <strong>${{ p.target }}</strong>
+            </div>
+
+            <div>
+              <span>Still to contribute</span>
+
+              <strong class="{% if p.balance_kind == 'shortfall' %}wbp-red{% else %}wbp-green{% endif %}">
+                ${{ p.remaining }}
+              </strong>
+            </div>
+
+            <div>
+              <span>Contribution above target</span>
+              <strong>${{ p.excess }}</strong>
+            </div>
+
+          </div>
+
+          <!-- EXPANDABLE CONTRIBUTION BREAKDOWN -->
+          <details class="wbp-breakdown">
+
+            <summary>
+              View contribution breakdown
+              <span>⌄</span>
+            </summary>
+
+            <div class="wbp-figures">
+
+              <div>
+                <span>Paid personally (gross)</span>
+                <strong>${{ p.gross_paid }}</strong>
+              </div>
+
+              <div>
+                <span>Business reimbursements</span>
+                <strong>${{ p.reimbursed }}</strong>
+              </div>
+
+              <div>
+                <span>Partner capital adjustment</span>
+                <strong>{{ p.adjustment }}</strong>
+              </div>
+
+              <div>
+                <span>Excel final balance</span>
+                <strong>{{ p.balance }}</strong>
+              </div>
+
+            </div>
+
+          </details>
+
+        </section>
+
+      {% endfor %}
+
+    </div>
+
+    <!-- CONTRIBUTION RECONCILIATION TABLE -->
+    <section class="wbp-panel wbp-reconciliation">
+
+      <div class="wbp-scroll">
+
+        <table class="wbp-home-capital-table">
+
+          <thead>
+            <tr>
+              <th>PARTNER</th>
+              <th>NET CAPITAL</th>
+              <th>SHOULD PAY</th>
+              <th>BALANCE</th>
+              <th>TARGET / ACTUAL</th>
+            </tr>
+          </thead>
+
+          <tbody>
+
+            {% for partner in partner_capital.partners %}
+
+              <tr>
+                <td>{{ partner.name }}</td>
+                <td>${{ partner.net_capital }}</td>
+                <td>${{ partner.should_pay }}</td>
+
+                <td class="wb-balance {{ partner.balance_color }}">
+                  {{ partner.balance }}
+                </td>
+
+                <td>
+                  {{ partner.target_pct }}% / {{ partner.real_pct }}%
+                </td>
+              </tr>
+
+            {% endfor %}
+
+          </tbody>
+
+        </table>
+
+      </div>
+
+      <p class="wbp-reconciliation-help">
+        Positive balance means capital above the Excel target;
+        negative balance means below target.
+        Capital is not sales revenue.
+      </p>
+
+    </section>
+
+    <!-- SOURCE AND ACCOUNTING DISCLAIMER -->
+    <p class="wbp-muted">
+      Source: {{ snapshot.source_filename }} ·
+      Imported {{ snapshot.imported_at|date:"M j, Y H:i" }}.
+
+      Figures are based on the latest imported Excel DEBT summary,
+      not live card or bank transactions.
+
+      A funding shortfall is an agreed contribution target,
+      not automatically a legally payable debt.
+
+      An excess contribution is not automatically a company
+      reimbursement liability.
+    </p>
+
+  {% else %}
+    <!-- EMPTY STATE -->
+    <section class="wbp-panel">
+
+      <h2>No partner capital snapshot yet</h2>
+
+      <p>
+        Import the current Excel workbook using the existing Import Excel
+        screen. This view reads the DEBT snapshot already stored in Django
+        and will not invent partner balances.
+      </p>
+
+    </section>
+
+  {% endif %}
+  <!-- BACK NAVIGATION -->
+  <div class="wbp-back">
+    <a href="{% url 'dashboard_home' %}">
+      ← Back to Home Dashboard
+    </a>
+  </div>
+</div>
+
+<style>
+/* 1. PAGE BASE */
+
+.wbp-page {
+  font-family: inherit;
+  color: #28332b;
+  max-width: 1380px;
+}
+
+.wbp-page * {
+  box-sizing: border-box;
+}
+
+/* 2. PAGE HEADING */
+
+.wbp-heading {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: end;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+
+.wbp-heading h1 {
+  margin: 0 0 5px;
+  font-size: 27px;
+  font-weight: 600;
+}
+
+.wbp-heading p {
+  margin: 0;
+  color: #778078;
+  font-size: 12px;
+}
+
+.wbp-topnote {
+  font-size: 10px;
+  letter-spacing: 0.09em;
+  color: #7b837b;
+}
+
+/* 3. SUMMARY KPI CARDS */
+
+.wbp-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 26px;
+}
+
+.wbp-summary > div,
+.wbp-card,
+.wbp-panel {
+  background: #fff;
+  border: 1px solid #e8e7e1;
+  border-radius: 11px;
+}
+
+.wbp-summary > div {
+  padding: 18px;
+}
+
+.wbp-summary small,
+.wbp-percent small {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #7c857d;
+  margin-bottom: 10px;
+}
+
+.wbp-summary strong {
+  display: block;
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.wbp-summary span {
+  display: block;
+  font-size: 11px;
+  color: #808881;
+  margin-top: 9px;
+}
+
+/* 4. SECTION HEADINGS */
+
+.wbp-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 13px;
+}
+
+.wbp-section-head h2 {
+  margin: 0;
+  font-size: 12px;
+  letter-spacing: 0.07em;
+}
+
+.wbp-section-head small {
+  color: #858b85;
+  font-size: 11px;
+}
+
+/* 5. PARTNER CARDS */
+
+.wbp-partners {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 13px;
+  margin-bottom: 24px;
+}
+
+.wbp-card {
+  padding: 20px;
+  min-width: 0;
+}
+
+.wbp-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.wbp-card h3 {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0;
+}
+
+/* 6. PARTNER STATUS CHIPS */
+
+.wbp-chip {
+  font-size: 10px;
+  border-radius: 15px;
+  padding: 6px 9px;
+  background: #f1f2ef;
+  color: #717a72;
+  white-space: nowrap;
+}
+
+.wbp-chip.is-short {
+  background: #f8eeee;
+  color: #ab6e64;
+}
+
+.wbp-chip.is-ahead {
+  background: #eef5ef;
+  color: #4b7961;
+}
+
+/* 7. TARGET AND ACTUAL FUNDING PERCENTAGES */
+
+.wbp-percent {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 9px;
+}
+
+.wbp-percent strong {
+  font-size: 21px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 8. CONTRIBUTION PROGRESS BARS */
+
+.wbp-meter {
+  display: block;
+  width: 100%;
+  height: 7px;
+  border: 0;
+  border-radius: 10px;
+  background: #e9ece6;
+  overflow: hidden;
+  margin: 17px 0;
+  appearance: none;
+  -webkit-appearance: none;
+}
+
+.wbp-meter::-webkit-progress-bar {
+  background: #e9ece6;
+  border-radius: 10px;
+}
+
+.wbp-meter::-webkit-progress-value {
+  background: var(--progress-color, #929791);
+  border-radius: 10px;
+}
+
+.wbp-meter::-moz-progress-bar {
+  background: var(--progress-color, #929791);
+  border-radius: 10px;
+}
+
+/* CONDITIONAL PROGRESS COLORS */
+
+.wbp-paid {
+  --progress-color: #4b7961;
+}
+
+.wbp-warning {
+  --progress-color: #ca9144;
+}
+
+.wbp-danger {
+  --progress-color: #b36c61;
+}
+
+.wbp-overpaid {
+  --progress-color: #5876a4;
+}
+
+.wbp-neutral {
+  --progress-color: #929791;
+}
+
+/* 9. PARTNER CONTRIBUTION FIGURES */
+
+.wbp-figures > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid #eeefe9;
+  font-size: 11px;
+}
+
+.wbp-figures span {
+  color: #788078;
+}
+
+.wbp-figures strong {
+  font-weight: 600;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.wbp-red {
+  color: #b36c61 !important;
+}
+
+.wbp-green {
+  color: #4b7961 !important;
+}
+
+/* 10. EXPANDABLE CONTRIBUTION BREAKDOWN */
+
+.wbp-breakdown {
+  margin-top: 14px;
+}
+
+.wbp-breakdown summary {
+  cursor: pointer;
+  color: #315644;
+  font-weight: 600;
+  font-size: 11px;
+  list-style: none;
+}
+
+.wbp-breakdown summary::-webkit-details-marker {
+  display: none;
+}
+
+.wbp-breakdown summary span {
+  float: right;
+}
+
+.wbp-breakdown[open] summary span {
+  transform: rotate(180deg);
+}
+
+.wbp-breakdown .wbp-figures {
+  margin-top: 10px;
+  background: #f8f9f6;
+  border-radius: 7px;
+  padding: 4px 10px;
+}
+
+/* 11. GENERAL PANELS */
+
+.wbp-panel {
+  padding: 20px;
+  margin-bottom: 16px;
+}
+
+.wbp-scroll {
+  overflow-x: auto;
+}
+
+.wbp-scroll table {
+  width: 100%;
+  border-collapse: collapse;
+  font: inherit;
+  min-width: 670px;
+  border: 0 !important;
+}
+
+.wbp-scroll th,
+.wbp-scroll td {
+  border: 0 !important;
+  border-bottom: 1px solid #eeefe9 !important;
+  padding: 13px 10px !important;
+  text-align: left;
+  background: #fff !important;
+  font-size: 11px;
+}
+
+.wbp-scroll th {
+  font-size: 10px;
+  color: #7b837b;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  background: #f8f8f5 !important;
+}
+
+/* 12. HOME-STYLE CONTRIBUTION RECONCILIATION */
+
+.wbp-reconciliation-total {
+  margin: 0 0 14px;
+  font-size: 13px;
+}
+
+.wbp-reconciliation .wbp-scroll {
+  overflow-x: auto;
+}
+
+.wbp-reconciliation .wbp-home-capital-table {
+  width: 100%;
+  min-width: 570px;
+  border-collapse: collapse;
+  border: 0 !important;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.wbp-reconciliation .wbp-home-capital-table thead th {
+  padding: 9px !important;
+  text-align: right !important;
+  border: 0 !important;
+  border-bottom: 1px solid #e5e2dc !important;
+  background: #fff !important;
+  font-size: 11px;
+  font-weight: 600;
+  color: #414943;
+}
+
+.wbp-reconciliation .wbp-home-capital-table thead th:first-child {
+  text-align: left !important;
+}
+
+.wbp-reconciliation .wbp-home-capital-table tbody tr {
+  border-top: 1px solid #e5e2dc;
+}
+
+.wbp-reconciliation .wbp-home-capital-table tbody td {
+  padding: 10px 9px !important;
+  text-align: right !important;
+  border: 0 !important;
+  background: #fff !important;
+  font-size: 13px;
+  color: #414943;
+}
+
+.wbp-reconciliation .wbp-home-capital-table tbody td:first-child {
+  text-align: left !important;
+}
+
+.wbp-reconciliation .wbp-home-capital-table .wb-balance {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.wbp-reconciliation .wbp-home-capital-table .wb-balance.positive {
+  color: #4b7961 !important;
+}
+
+.wbp-reconciliation .wbp-home-capital-table .wb-balance.negative {
+  color: #b36c61 !important;
+}
+
+.wbp-reconciliation .wbp-home-capital-table .wb-balance.neutral {
+  color: #888 !important;
+}
+
+.wbp-reconciliation-help {
+  margin: 12px 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #6e756f;
+}
+
+/* 13. SOURCE INFORMATION AND BACK LINK */
+
+.wbp-muted {
+  font-size: 11px;
+  color: #818880;
+  line-height: 1.65;
+}
+
+.wbp-back {
+  margin: 20px 0;
+}
+
+.wbp-back a {
+  color: #315644;
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* 14. RESPONSIVE LAYOUT */
+
+@media (max-width: 1050px) {
+
+  .wbp-partners {
+    grid-template-columns: 1fr;
+  }
+
+  .wbp-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+}
+
+@media (max-width: 520px) {
+
+  .wbp-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .wbp-summary strong {
+    font-size: 21px;
+  }
+
+  .wbp-card {
+    padding: 16px;
+  }
+
+  .wbp-heading h1 {
+    font-size: 23px;
+  }
+
+}
 </style>
 {% endblock %}
