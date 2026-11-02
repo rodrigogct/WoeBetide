@@ -228,40 +228,116 @@ def shop_all(request):
 
 @login_required
 def collections_dashboard(request):
-    collections = Collection.objects.all().order_by("-date_bought")
+    from django.http import Http404
+    from decimal import Decimal
 
-    rows = []
+    ZERO = Decimal('0.00')
 
-    for collection in collections:
-        garments = collection.garments.all()
-        sold_garments = garments.filter(status=Garment.Status.SOLD)
-        available_garments = garments.filter(status=Garment.Status.AVAILABLE)
+    def money(amount):
+        return f'{amount:,.2f}'
 
-        total_items = garments.count()
-        sold_count = sold_garments.count()
-        available_count = available_garments.count()
+    # SaleItem is the authoritative transaction price when present. For legacy
+    # imported sold garments without SaleItem, use Garment.sold_price instead.
+    garment_list = list(Garment.objects.select_related('collection').filter(
+        collection__isnull=False
+    ).order_by('garment_id'))
+    sale_prices = dict(SaleItem.objects.filter(
+        garment_id__in=[g.pk for g in garment_list]
+    ).values_list('garment_id', 'sold_price'))
 
-        total_cost = garments.aggregate(total=Sum("cost"))["total"] or 0
-        revenue = sold_garments.aggregate(total=Sum("sold_price"))["total"] or 0
-        gross_profit = revenue - total_cost
+    collections = list(Collection.objects.all().order_by('-date_bought', '-pk'))
+    by_collection = {c.pk: [] for c in collections}
+    for garment in garment_list:
+        by_collection[garment.collection_id].append(garment)
 
-        sell_through = 0
-        if total_items > 0:
-            sell_through = round((sold_count / total_items) * 100, 1)
+    def calculate(collection, garments):
+        sold = [g for g in garments if g.status == Garment.Status.SOLD]
+        unsold = [g for g in garments if g.status not in (Garment.Status.SOLD, Garment.Status.ARCHIVE)]
+        archived = [g for g in garments if g.status == Garment.Status.ARCHIVE]
 
-        rows.append({
-            "collection": collection,
-            "total_items": total_items,
-            "sold_count": sold_count,
-            "available_count": available_count,
-            "total_cost": total_cost,
-            "revenue": revenue,
-            "gross_profit": gross_profit,
-            "sell_through": sell_through,
-        })
+        total_cost = sum((g.cost or ZERO for g in garments), ZERO)
+        sold_cost = sum((g.cost or ZERO for g in sold), ZERO)
+        revenue = sum((sale_prices.get(g.pk, g.sold_price) or ZERO for g in sold), ZERO)
+        gross_profit = revenue - sold_cost
+        sell_through = (Decimal(len(sold)) / Decimal(len(garments)) * 100) if garments else ZERO
+        recovery = (revenue / total_cost * 100) if total_cost > 0 else None
+        realized_roi = (gross_profit / sold_cost * 100) if sold_cost > 0 else None
 
-    return render(request, "inventory/collections_dashboard.html", {
-        "rows": rows,
+        return {
+            'collection': collection,
+            'total_items': len(garments),
+            'sold_count': len(sold),
+            'available_count': len(unsold),
+            'archived_count': len(archived),
+            'total_cost_value': total_cost,
+            'sold_cost_value': sold_cost,
+            'revenue_value': revenue,
+            'gross_profit_value': gross_profit,
+            'total_cost': money(total_cost),
+            'revenue': money(revenue),
+            'gross_profit': money(gross_profit),
+            'sell_through': f'{sell_through:.1f}',
+            'capital_recovery': f'{recovery:.1f}' if recovery is not None else None,
+            'realized_roi': f'{realized_roi:.1f}' if realized_roi is not None else None,
+        }
+
+    rows = [calculate(c, by_collection[c.pk]) for c in collections]
+
+    # Drill-down is on the same existing URL, e.g. /dashboard/collections/?collection=12
+    collection_key = request.GET.get('collection', '').strip()
+    selected_collection = None
+    detail_items = []
+
+    if collection_key:
+        selected_collection = next(
+            (c for c in collections if c.collection_id == collection_key), None
+        )
+        if selected_collection is None:
+            raise Http404('Collection not found')
+
+        selected_row = next(r for r in rows if r['collection'].pk == selected_collection.pk)
+        selected_garments = by_collection[selected_collection.pk]
+        summary_source = [selected_row]
+
+        for g in selected_garments:
+            sold_price = (sale_prices.get(g.pk, g.sold_price) or ZERO) if g.status == Garment.Status.SOLD else None
+            detail_items.append({
+                'garment': g,
+                'status': g.get_status_display(),
+                'cost': money(g.cost or ZERO),
+                'listed_price': money(g.listed_price) if g.listed_price is not None else None,
+                'sold_price': money(sold_price) if sold_price is not None else None,
+                'gross_profit': money(sold_price - (g.cost or ZERO)) if sold_price is not None else None,
+            })
+    else:
+        summary_source = rows
+
+    total_cost = sum((r['total_cost_value'] for r in summary_source), ZERO)
+    revenue = sum((r['revenue_value'] for r in summary_source), ZERO)
+    sold_cost = sum((r['sold_cost_value'] for r in summary_source), ZERO)
+    total_items = sum(r['total_items'] for r in summary_source)
+    sold_count = sum(r['sold_count'] for r in summary_source)
+    available_count = sum(r['available_count'] for r in summary_source)
+    profit = revenue - sold_cost
+
+    summary = {
+        'collection_count': len(summary_source),
+        'total_cost': money(total_cost),
+        'revenue': money(revenue),
+        'gross_profit': money(profit),
+        'capital_recovery': f'{revenue / total_cost * 100:.1f}' if total_cost > 0 else None,
+        'sell_through': f'{Decimal(sold_count) / Decimal(total_items) * 100:.1f}' if total_items else None,
+        'realized_roi': f'{profit / sold_cost * 100:.1f}' if sold_cost > 0 else None,
+        'available_items': available_count,
+        'sold_items': sold_count,
+        'total_items': total_items,
+    }
+
+    return render(request, 'inventory/collections_dashboard.html', {
+        'rows': rows,
+        'summary': summary,
+        'selected_collection': selected_collection,
+        'detail_items': detail_items,
     })
 
 @login_required
