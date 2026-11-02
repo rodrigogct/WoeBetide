@@ -22,65 +22,61 @@
 
     <nav class="wb-nav" aria-label="Dashboard navigation">
 
-      <a class="wb-nav-link {% block nav_dashboard_class %}{% endblock %}"
-         href="{% url 'dashboard_home' %}">
-        <span>⌂</span> Dashboard
-      </a>
-
-      <a class="wb-nav-link {% block nav_inventory_class %}{% endblock %}" href="{% url 'inventory_list' %}">
-        <span>▣</span> Inventory
+        <a class="wb-nav-link {% block nav_dashboard_class %}{% endblock %}"
+           href="{% url 'dashboard_home' %}">
+          <span>⌂</span> Dashboard
         </a>
-   
-    <a class="wb-nav-link {% block nav_sales_class %}{% endblock %}"href="{% url 'sales_dashboard' %}">
-        <span>⌁</span> Sales
+      
+        <a class="wb-nav-link {% block nav_inventory_class %}{% endblock %}"
+           href="{% url 'inventory_list' %}">
+          <span>▣</span> Inventory
         </a>
-
-      <span class="wb-nav-link wb-inactive">
-        <span>▢</span> Events
-      </span>
-
-      <a class="wb-nav-link {% block nav_finances_class %}{% endblock %}" href="{% url 'finances_dashboard' %}">
-        <span>◉</span> Finances
+      
+        <a class="wb-nav-link {% block nav_sales_class %}{% endblock %}"
+           href="{% url 'sales_dashboard' %}">
+          <span>⌁</span> Sales
         </a>
-        
-        <a class="wb-nav-link {% block nav_partners_class %}{% endblock %}" href="{% url 'partners_dashboard' %}">
-            <span>♧</span> Partners
+      
+        <span class="wb-nav-link wb-inactive">
+          <span>▢</span> Events
+        </span>
+      
+        <a class="wb-nav-link {% block nav_finances_class %}{% endblock %}"
+           href="{% url 'finances_dashboard' %}">
+          <span>◉</span> Finances
         </a>
-
-      <span class="wb-nav-link wb-inactive">
-        <span>◉</span> Finances
-      </span>
-
-      <span class="wb-nav-link wb-inactive">
-        <span>♧</span> Partners
-      </span>
-
-      <span class="wb-nav-link wb-inactive">
-        <span>☑</span> Tasks
-      </span>
-
-      <span class="wb-nav-link wb-inactive">
-        <span>▤</span> Reports
-      </span>
-
-      <div class="wb-nav-divider"></div>
-
-      <a class="wb-nav-link" href="{% url 'sell_dashboard' %}">
-        <span>＋</span> Sell
-      </a>
-
-      <a class="wb-nav-link" href="{% url 'collections_dashboard' %}">
-        <span>▦</span> Collections
-      </a>
-
-      {% if request.user.is_superuser %}
-        <a class="wb-nav-link" href="{% url 'import_inventory' %}">
-          <span>⇧</span> Import
+      
+        <a class="wb-nav-link {% block nav_partners_class %}{% endblock %}"
+           href="{% url 'partners_dashboard' %}">
+          <span>♧</span> Partners
         </a>
-      {% endif %}
-
-    </nav>
-
+      
+        <span class="wb-nav-link wb-inactive">
+          <span>☑</span> Tasks
+        </span>
+      
+        <span class="wb-nav-link wb-inactive">
+          <span>▤</span> Reports
+        </span>
+      
+        <div class="wb-nav-divider"></div>
+      
+        <a class="wb-nav-link" href="{% url 'sell_dashboard' %}">
+          <span>＋</span> Sell
+        </a>
+      
+        <a class="wb-nav-link" href="{% url 'collections_dashboard' %}">
+          <span>▦</span> Collections
+        </a>
+      
+        {% if request.user.is_superuser %}
+          <a class="wb-nav-link" href="{% url 'import_inventory' %}">
+            <span>⇧</span> Import
+          </a>
+        {% endif %}
+      
+      </nav>
+      
     <!-- SETTINGS -->
     <span class="wb-settings wb-inactive">
       <span>⚙</span> Settings
