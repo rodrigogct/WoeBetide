@@ -10,6 +10,7 @@ from django.shortcuts import render
 from django.utils import timezone
 from .models import Garment, SaleItem, PartnerCapitalSnapshot
 from Catalogue.models import Item
+from .partner_capital import capital_context
 
 ZERO = Decimal('0.00')
 
@@ -96,7 +97,11 @@ def partners_page(request):
                 'balance_kind': 'shortfall' if balance < 0 else 'excess' if balance > 0 else 'settled',
                 'progress': round(min(100, max(0, float(net / target * 100)))) if target > 0 else 100,
             })
+
+    home_capital = capital_context()
+
     return render(request, 'inventory/partners_dashboard.html', {
+        **home_capital,
         'has_snapshot': bool(snapshot),
         'partners': partners,
         'total_net': fmt(total_net),
