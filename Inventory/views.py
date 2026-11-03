@@ -15,6 +15,7 @@ from django.db import transaction
 
 from .models import Collection, Garment, Sale, SaleItem, Payment, SourceWorkbook
 from .importers import import_inventory_excel
+from .expense_import import sync_expenses
 
 @login_required
 def inventory_list(request):
@@ -230,8 +231,12 @@ def import_inventory_view(request):
                         )
                     )
 
-                # 3. Save the original workbook in PostgreSQL.
-                # Only runs after the main import succeeds.
+                # 3. Import expenses from the EXPENSES sheet.
+                excel_file.seek(0)
+                expense_count = sync_expenses(excel_file)
+
+                # 4. Save the original workbook in PostgreSQL.
+                # Only runs after the imports succeed.
                 SourceWorkbook.objects.create(
                     filename=excel_file.name,
                     file_data=raw_bytes,
@@ -247,6 +252,7 @@ def import_inventory_view(request):
                     f"Created sales: {result['created_sales']}. "
                     "Created/updated payments: "
                     f"{result['created_or_updated_payments']}. "
+                    f"Imported expenses: {expense_count}. "
                     "Source Excel saved successfully."
                 )
             )
