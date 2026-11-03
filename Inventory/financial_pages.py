@@ -8,6 +8,7 @@ from calendar import monthrange
 from django.db.models.functions import Coalesce
 from .models import Garment, SaleItem, PartnerCapitalSnapshot, ImportedExpense
 from Catalogue.models import Item
+from .partner_capital import capital_context
 
 ZERO = Decimal('0.00')
 
@@ -181,7 +182,20 @@ def partners_page(request):
                 continue
             total_net += net
             total_target += target
-            total_shortfall += max(target-net, ZERO)
+            total_shortfall += max(target - net, ZERO)
+
+            # Determine contribution progress color.
+            if target <= ZERO:
+                progress_status = 'neutral'
+            elif net > target:
+                progress_status = 'overpaid'
+            elif net == target:
+                progress_status = 'paid'
+            elif net >= target * Decimal('0.75'):
+                progress_status = 'warning'
+            else:
+                progress_status = 'danger'
+
             partners.append({
                 'name': row['name'],
                 'gross_paid': fmt(gross),
@@ -196,13 +210,15 @@ def partners_page(request):
                 'balance': f'{balance:+,.2f}',
                 'balance_kind': 'shortfall' if balance < 0 else 'excess' if balance > 0 else 'settled',
                 'progress': round(min(100, max(0, float(net / target * 100)))) if target > 0 else 100,
+                'progress_status': progress_status,
             })
-    return render(request, 'inventory/partners_dashboard.html', {
-        'has_snapshot': bool(snapshot),
-        'partners': partners,
-        'total_net': fmt(total_net),
-        'total_target': fmt(total_target),
-        'total_shortfall': fmt(total_shortfall),
-        'snapshot': snapshot,
-    })
+        return render(request, 'inventory/partners_dashboard.html', {
+            'has_snapshot': bool(snapshot),
+            'partners': partners,
+            'total_net': fmt(total_net),
+            'total_target': fmt(total_target),
+            'total_shortfall': fmt(total_shortfall),
+            'snapshot': snapshot,
+            **capital_context(),
+        })
 
