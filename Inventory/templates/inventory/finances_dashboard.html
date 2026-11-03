@@ -6,9 +6,9 @@
 {% block content %}
 
 <div class="wbm-page">
-  <!-- PAGE HEADING -->
-  <div class="wbm-heading">
 
+  <!-- 1. PAGE HEADER -->
+  <div class="wbm-heading">
     <div>
       <h1>Finances</h1>
       <p>Business financial health · WOE BETIDE</p>
@@ -17,21 +17,14 @@
     <span class="wbm-topnote">
       CURRENT POSITION · MXN
     </span>
-
   </div>
 
-  <!-- FINANCIAL POSITION -->
+  <!-- 2. FINANCIAL POSITION -->
   <div class="wbm-section-title">
-
     <h2>FINANCIAL POSITION</h2>
-
-    <small>
-      Snapshot {{ snapshot_date|date:"M j, Y" }}
-    </small>
-
+    <small>Snapshot {{ snapshot_date|date:"M j, Y" }}</small>
   </div>
 
-  <!-- FINANCIAL POSITION KPI CARDS -->
   <div class="wbm-kpis">
 
     <div class="wbm-kpi wbm-priority">
@@ -62,7 +55,7 @@
 
   </div>
 
-  <!-- MERCHANDISE POSITION -->
+  <!-- 3. MERCHANDISE POSITION -->
   <section class="wbm-panel">
 
     <div class="wbm-section-title">
@@ -95,15 +88,15 @@
     </div>
 
     <p class="wbm-muted">
-      Retail value is the sum of listed prices—not guaranteed proceeds
-      or accounting asset value. Potential profit is not realized profit.
-      Missing prices are excluded from the retail sum; review them before
-      relying on the total.
+      Retail value is the sum of listed prices—not guaranteed
+      proceeds or accounting asset value. Potential profit is
+      not realized profit. Missing prices are excluded from
+      the retail sum; review them before relying on the total.
     </p>
 
   </section>
 
-  <!-- RECORDED SALES PERFORMANCE -->
+  <!-- 4. RECORDED SALES PERFORMANCE -->
   <section class="wbm-panel">
 
     <div class="wbm-section-title">
@@ -131,244 +124,829 @@
       <div>
         <small>OPERATING PROFIT</small>
         <strong>—</strong>
-        <em>Expenses not yet integrated</em>
+        <em>Pending reconciled expense classification</em>
       </div>
 
     </div>
 
     <p class="wbm-muted">
-      Gross profit deducts recorded garment acquisition costs only.
-      Cash flow, operating expenses, liabilities, and true operating
-      profit will need reconciled financial records.
+      Gross profit deducts recorded garment acquisition costs
+      only. Cash flow, operating expenses, liabilities, and
+      true operating profit require reconciled financial records.
     </p>
 
   </section>
 
-  <!-- BACK NAVIGATION -->
-  <div class="wbm-footerlink">
+  <!-- 5. EXPENSE ANALYSIS -->
+  <section class="wbm-panel wbe-section">
 
+    <div class="wbm-section-title">
+
+      <h2>EXPENSE ANALYSIS</h2>
+
+      <form
+        method="get"
+        class="wbe-filter"
+        aria-label="Expense reporting period"
+      >
+
+        <label for="expense-period">Period</label>
+
+        <select
+          id="expense-period"
+          name="period"
+          onchange="this.form.submit()"
+        >
+
+          <option
+            value="all"
+            {% if expense_period == 'all' %}selected{% endif %}
+          >
+            All time
+          </option>
+
+          {% for p in expense_periods %}
+            <option
+              value="{{ p.value }}"
+              {% if expense_period == p.value %}selected{% endif %}
+            >
+              {{ p.label }}
+            </option>
+          {% endfor %}
+
+        </select>
+
+        <noscript>
+          <button type="submit">Apply</button>
+        </noscript>
+
+      </form>
+
+    </div>
+
+    {% if expense_data_available %}
+      <!-- 5.1 EXPENSE KPIs -->
+      <div class="wbm-data-grid wbe-summary">
+
+        <div>
+          <small>RECORDED INDIRECT SPENDING</small>
+          <strong>${{ expense_total }}</strong>
+          <span>{{ expense_count }} source expenses</span>
+        </div>
+
+        <div>
+          <small>FUNDED BY WOE</small>
+          <strong>${{ expense_woe }}</strong>
+          <span>
+            Excel column I · not necessarily cash-settled
+          </span>
+        </div>
+
+        <div>
+          <small>FUNDED BY PARTNERS</small>
+          <strong>${{ expense_partner }}</strong>
+          <span>
+            Rodrigo + Fran + Bure · columns F–H
+          </span>
+        </div>
+
+        <div>
+          <small>SPENDING / RECORDED SALES</small>
+
+          <strong>
+            {% if expense_ratio is not None %}
+              {{ expense_ratio }}%
+            {% else %}
+              —
+            {% endif %}
+          </strong>
+
+          <span>
+            Same selected reporting period
+          </span>
+        </div>
+
+      </div>
+
+      <!-- 5.2 CATEGORY BREAKDOWN + MONTHLY TREND -->
+      <div class="wbe-columns">
+
+        <!-- SPENDING BY CATEGORY -->
+        <div class="wbe-block">
+
+          <h3>Spending by category</h3>
+
+          {% for c in expense_categories %}
+
+            <div class="wbe-category">
+
+              <div class="wbe-category-row">
+
+                <div class="wbe-label">
+
+                  <i
+                    class="wbe-dot wbe-color-{{ c.name|slugify }}"
+                    aria-hidden="true"
+                  ></i>
+
+                  <span>{{ c.name }}</span>
+
+                </div>
+
+                <div class="wbe-amount">
+                  ${{ c.amount_display }}
+                  <span>{{ c.share_display }}%</span>
+                </div>
+
+              </div>
+
+              <progress
+                class="wbe-progress wbe-color-{{ c.name|slugify }}"
+                value="{{ c.width }}"
+                max="100"
+                aria-label="{{ c.name }} spending relative to largest category"
+              >
+                {{ c.width }}%
+              </progress>
+
+            </div>
+
+          {% empty %}
+
+            <p class="wbm-muted">
+              No expenses for this period.
+            </p>
+
+          {% endfor %}
+
+        </div>
+
+
+        <!-- MONTHLY SPENDING TREND -->
+        <div class="wbe-block">
+
+          <h3>
+            Monthly spending trend
+            <small>Last 12 months</small>
+          </h3>
+
+          <div
+            class="wbe-chart"
+            role="group"
+            aria-label="Monthly expense spending for twelve months"
+          >
+
+            {% for m in expense_monthly %}
+
+              <div class="wbe-bar-group">
+
+                <div class="wbe-bar-wrap">
+
+                  <progress
+                    class="wbe-month-bar"
+                    value="{{ m.height }}"
+                    max="100"
+                    title="{{ m.label }}: ${{ m.amount_display }}"
+                    aria-label="{{ m.label }}: ${{ m.amount_display }}"
+                  >
+                    {{ m.height }}%
+                  </progress>
+
+                </div>
+
+                <span>{{ m.label }}</span>
+
+              </div>
+
+            {% endfor %}
+
+          </div>
+
+          <p class="wbm-muted">
+            Based on dated expense rows only. Categories may
+            include equipment or manufacturing costs. This is
+            a spending analysis, not an accounting P&amp;L.
+          </p>
+
+        </div>
+
+      </div>
+
+      <!-- 5.3 RECENT EXPENSES -->
+      <div class="wbe-block wbe-recent">
+
+        <h3>
+          Recent expenses
+          <small>Latest 10 in selected period</small>
+        </h3>
+
+        <div class="wbe-table-scroll">
+
+          <table class="wbe-table">
+
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Description</th>
+                <th>Category</th>
+                <th>Rodrigo</th>
+                <th>Fran</th>
+                <th>Bure</th>
+                <th>WOE</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+
+            <tbody>
+
+              {% for e in recent_expenses %}
+
+                <tr>
+
+                  <td>
+                    {% if e.date %}
+                      {{ e.date|date:"M j, Y" }}
+                    {% else %}
+                      —
+                    {% endif %}
+                  </td>
+
+                  <td>{{ e.description }}</td>
+
+                  <td>
+                    <span class="wbe-category-cell">
+                      <i
+                        class="wbe-dot wbe-color-{{ e.category|slugify }}"
+                        aria-hidden="true"
+                      ></i>
+                      {{ e.category }}
+                    </span>
+                  </td>
+
+                  <td>${{ e.rodrigo }}</td>
+                  <td>${{ e.fran }}</td>
+                  <td>${{ e.bure }}</td>
+                  <td>${{ e.woe }}</td>
+
+                  <td>
+                    <strong>${{ e.total }}</strong>
+                  </td>
+
+                </tr>
+
+              {% empty %}
+
+                <tr>
+                  <td colspan="8">
+                    No expenses in this period.
+                  </td>
+                </tr>
+
+              {% endfor %}
+
+            </tbody>
+
+          </table>
+
+        </div>
+
+      </div>
+
+      <!-- 5.4 UNDATED EXPENSE NOTICE -->
+      {% if expense_undated %}
+        <p class="wbm-muted">
+          {{ expense_undated }} record(s) have no date and
+          appear only in All time totals until dates are corrected.
+        </p>
+
+      {% endif %}
+
+    {% else %}
+
+      <!-- 5.5 EMPTY STATE -->
+      <p class="wbm-muted">
+        No expense data imported yet. Upload the corrected
+        workbook using the existing inventory import.
+      </p>
+
+    {% endif %}
+
+  </section>
+
+  <!-- 6. FOOTER NAVIGATION -->
+  <div class="wbm-footerlink">
     <a href="{% url 'dashboard_home' %}">
       ← Back to Home Dashboard
     </a>
-
   </div>
+
 </div>
 
 <style>
-/* 1. PAGE BASE */
-
-.wbm-page {
-  font-family: inherit;
-  color: #28332b;
-  max-width: 1380px;
-}
-
-.wbm-page * {
-  box-sizing: border-box;
-}
-
-
-/* 2. PAGE HEADING */
-
-.wbm-heading {
-  display: flex;
-  justify-content: space-between;
-  align-items: end;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin-bottom: 25px;
-}
-
-.wbm-heading h1 {
-  font-size: 27px;
-  font-weight: 600;
-  margin: 0 0 5px;
-}
-
-.wbm-heading p {
-  color: #788078;
-  margin: 0;
-  font-size: 12px;
-}
-
-.wbm-topnote {
-  font-size: 10px;
-  color: #7d857d;
-  letter-spacing: 0.1em;
-}
-
-
-/* 3. SECTION TITLES */
-
-.wbm-section-title {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 10px;
-  margin: 0 0 14px;
-}
-
-.wbm-section-title h2 {
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.085em;
-  margin: 0;
-}
-
-.wbm-section-title small {
-  font-size: 11px;
-  color: #848b83;
-}
-
-
-/* 4. FINANCIAL POSITION KPI GRID */
-
-.wbm-kpis {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 13px;
-  margin-bottom: 23px;
-}
-
-.wbm-kpi,
-.wbm-panel {
-  background: #fff;
-  border: 1px solid #e8e7e1;
-  border-radius: 11px;
-}
-
-.wbm-kpi {
-  padding: 19px 16px;
-  min-width: 0;
-}
-
-.wbm-kpi.wbm-priority {
-  background: #f6f8f5;
-}
-
-.wbm-kpi small,
-.wbm-data-grid small {
-  display: block;
-  font-size: 10px;
-  letter-spacing: 0.055em;
-  font-weight: 700;
-  color: #737e75;
-  margin-bottom: 11px;
-}
-
-.wbm-kpi strong {
-  display: block;
-  font-size: 24px;
-  font-weight: 600;
-  letter-spacing: -0.025em;
-  font-variant-numeric: tabular-nums;
-  overflow-wrap: anywhere;
-  margin-bottom: 8px;
-}
-
-.wbm-kpi span {
-  display: block;
-  font-size: 11px;
-  color: #788078;
-  line-height: 1.4;
-}
-
-.wbm-kpi em,
-.wbm-data-grid em {
-  display: block;
-  margin-top: 9px;
-  color: #9a8b74;
-  font-style: normal;
-  font-size: 10px;
-}
-
-
-/* 5. FINANCIAL DATA PANELS */
-
-.wbm-panel {
-  padding: 21px;
-  margin-bottom: 18px;
-}
-
-.wbm-data-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
-}
-
-.wbm-data-grid > div {
-  padding: 14px;
-  background: #f8f8f5;
-  border-radius: 8px;
-  min-width: 0;
-}
-
-.wbm-data-grid strong {
-  font-size: 20px;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-  overflow-wrap: anywhere;
-}
-
-
-/* 6. EXPLANATORY TEXT */
-
-.wbm-muted {
-  font-size: 11px;
-  line-height: 1.6;
-  color: #80877f;
-  margin: 17px 0 0;
-}
-
-
-/* 7. BACK NAVIGATION */
-
-.wbm-footerlink {
-  margin: 22px 0;
-}
-
-.wbm-footerlink a {
-  font-size: 12px;
-  text-decoration: none;
-  color: #315644;
-  font-weight: 600;
-}
-
-
-/* 8. RESPONSIVE LAYOUT */
-
-@media (max-width: 1000px) {
-
-  .wbm-kpis,
-  .wbm-data-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  /* 1. PAGE FOUNDATION */
+  .wbm-page {
+    font-family: inherit;
+    color: #28332b;
+    max-width: 1380px;
   }
 
-}
+  .wbm-page * {
+    box-sizing: border-box;
+  }
 
-@media (max-width: 460px) {
+  /* 2. PAGE HEADER */
+  .wbm-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 25px;
+  }
 
   .wbm-heading h1 {
-    font-size: 23px;
+    font-size: 27px;
+    font-weight: 600;
+    margin: 0 0 5px;
+  }
+
+  .wbm-heading p {
+    color: #788078;
+    margin: 0;
+    font-size: 12px;
+  }
+
+  .wbm-topnote {
+    font-size: 10px;
+    color: #7d857d;
+    letter-spacing: 0.1em;
+  }
+
+  /* 3. SECTION HEADINGS */
+  .wbm-section-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    margin: 0 0 14px;
+  }
+
+  .wbm-section-title h2 {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.085em;
+    margin: 0;
+  }
+
+  .wbm-section-title small {
+    font-size: 11px;
+    color: #848b83;
+  }
+
+  /* 4. FINANCIAL KPI CARDS */
+  .wbm-kpis {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 13px;
+    margin-bottom: 23px;
+  }
+
+  .wbm-kpi,
+  .wbm-panel {
+    background: #fff;
+    border: 1px solid #e8e7e1;
+    border-radius: 11px;
   }
 
   .wbm-kpi {
-    padding: 15px 12px;
+    padding: 19px 16px;
+    min-width: 0;
+  }
+
+  .wbm-kpi.wbm-priority {
+    background: #f6f8f5;
+  }
+
+  .wbm-kpi small,
+  .wbm-data-grid small {
+    display: block;
+    font-size: 10px;
+    letter-spacing: 0.055em;
+    font-weight: 700;
+    color: #737e75;
+    margin-bottom: 11px;
   }
 
   .wbm-kpi strong {
-    font-size: 20px;
+    display: block;
+    font-size: 24px;
+    font-weight: 600;
+    letter-spacing: -0.025em;
+    font-variant-numeric: tabular-nums;
+    overflow-wrap: anywhere;
+    margin-bottom: 8px;
   }
 
+  .wbm-kpi span {
+    display: block;
+    font-size: 11px;
+    color: #788078;
+    line-height: 1.4;
+  }
+
+  .wbm-kpi em,
+  .wbm-data-grid em {
+    display: block;
+    margin-top: 9px;
+    color: #9a8b74;
+    font-style: normal;
+    font-size: 10px;
+  }
+
+  /* 5. CONTENT PANELS */
   .wbm-panel {
-    padding: 15px;
+    padding: 21px;
+    margin-bottom: 18px;
+  }
+
+  .wbm-data-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .wbm-data-grid > div {
+    padding: 14px;
+    background: #f8f8f5;
+    border-radius: 8px;
+    min-width: 0;
   }
 
   .wbm-data-grid strong {
-    font-size: 17px;
+    font-size: 20px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    overflow-wrap: anywhere;
   }
 
-}
+  .wbm-muted {
+    font-size: 11px;
+    line-height: 1.6;
+    color: #80877f;
+    margin: 17px 0 0;
+  }
+
+  /* 6. EXPENSE SECTION */
+  .wbe-section {
+    margin-top: 18px;
+  }
+
+  .wbe-summary span {
+    display: block;
+    font-size: 10px;
+    color: #818a81;
+    margin-top: 7px;
+    line-height: 1.4;
+  }
+
+  /* 7. REPORTING PERIOD FILTER */
+  .wbe-filter {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .wbe-filter label {
+    font-size: 11px;
+    color: #7a847b;
+  }
+
+  .wbe-filter select {
+    background: #fff;
+    border: 1px solid #e2e5df;
+    border-radius: 6px;
+    padding: 7px 10px;
+    font: inherit;
+    font-size: 12px;
+    color: #344339;
+    max-width: 185px;
+  }
+
+  /* 8. EXPENSE ANALYSIS LAYOUT */
+  .wbe-columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 22px;
+    margin-top: 23px;
+  }
+
+  .wbe-block {
+    min-width: 0;
+  }
+
+  .wbe-block h3 {
+    font-size: 13px;
+    font-weight: 600;
+    margin: 0 0 17px;
+  }
+
+  .wbe-block h3 small {
+    font-size: 10px;
+    color: #959b94;
+    font-weight: 400;
+    margin-left: 8px;
+  }
+
+
+  /* 9. CATEGORY BREAKDOWN */
+  .wbe-category {
+    margin-bottom: 12px;
+  }
+
+  .wbe-category-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 6px;
+    font-size: 11px;
+  }
+
+  .wbe-label,
+  .wbe-category-cell {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    min-width: 0;
+  }
+
+  .wbe-dot {
+    width: 9px;
+    height: 9px;
+    display: inline-block;
+    border-radius: 2px;
+    flex: none;
+    background: #a5aaa4;
+  }
+
+  .wbe-amount {
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+
+  .wbe-amount span {
+    color: #8a9189;
+    margin-left: 8px;
+  }
+
+  /* 10. CATEGORY COLORS */
+  .wbe-color-marketing-ads {
+    --wbe-category-color: #684b80;
+  }
+
+  .wbe-color-events-pop-ups {
+    --wbe-category-color: #945d40;
+  }
+
+  .wbe-color-website {
+    --wbe-category-color: #365d87;
+  }
+
+  .wbe-color-equipment {
+    --wbe-category-color: #4b6156;
+  }
+
+  .wbe-color-packaging-labels {
+    --wbe-category-color: #826a35;
+  }
+
+  .wbe-color-shipping-logistics {
+    --wbe-category-color: #39747a;
+  }
+
+  .wbe-color-manufacturing {
+    --wbe-category-color: #81554d;
+  }
+
+  .wbe-color-studio-facilities {
+    --wbe-category-color: #5b608a;
+  }
+
+  .wbe-dot[class*="wbe-color-"] {
+    background-color: var(--wbe-category-color, #a5aaa4);
+  }
+
+  /* 11. CATEGORY PROGRESS BARS */
+  .wbe-progress {
+    display: block;
+    width: 100%;
+    height: 6px;
+    appearance: none;
+    -webkit-appearance: none;
+    border: 0;
+    border-radius: 8px;
+    overflow: hidden;
+    background: #f0f1ec;
+    color: var(--wbe-category-color, #668476);
+  }
+
+  .wbe-progress::-webkit-progress-bar {
+    background: #f0f1ec;
+    border-radius: 8px;
+  }
+
+  .wbe-progress::-webkit-progress-value {
+    background: var(--wbe-category-color, #668476);
+    border-radius: 8px;
+  }
+
+  .wbe-progress::-moz-progress-bar {
+    background: var(--wbe-category-color, #668476);
+    border-radius: 8px;
+  }
+
+  /* 12. MONTHLY SPENDING CHART */
+  .wbe-chart {
+    height: 205px;
+    display: flex;
+    gap: 7px;
+    align-items: flex-end;
+    padding: 10px 0 5px;
+    border-bottom: 1px solid #ecede9;
+  }
+
+  .wbe-bar-group {
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .wbe-bar-wrap {
+    height: 155px;
+    width: 100%;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+  }
+
+  .wbe-month-bar {
+    display: block;
+    width: 65%;
+    height: 155px;
+    writing-mode: vertical-lr;
+    direction: rtl;
+    appearance: none;
+    -webkit-appearance: none;
+    border: 0;
+    border-radius: 4px 4px 0 0;
+    overflow: hidden;
+    background: #f0f1ec;
+    color: #668476;
+  }
+
+  .wbe-month-bar::-webkit-progress-bar {
+    background: #f0f1ec;
+  }
+
+  .wbe-month-bar::-webkit-progress-value {
+    background: #668476;
+    border-radius: 4px 4px 0 0;
+  }
+
+  .wbe-month-bar::-moz-progress-bar {
+    background: #668476;
+  }
+
+  .wbe-bar-group span {
+    font-size: 9px;
+    color: #878f88;
+    white-space: nowrap;
+  }
+
+  /* 13. RECENT EXPENSES */
+  .wbe-recent {
+    margin-top: 25px;
+  }
+
+  .wbe-table-scroll {
+    overflow-x: auto;
+  }
+
+  .wbe-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+    white-space: nowrap;
+  }
+
+  .wbe-table th {
+    text-align: left;
+    color: #7c877d;
+    font-size: 10px;
+    font-weight: 600;
+    border-bottom: 1px solid #e9ebe6;
+    padding: 10px 12px 10px 0;
+  }
+
+  .wbe-table td {
+    padding: 12px 12px 12px 0;
+    border-bottom: 1px solid #f0f1ed;
+    color: #34423a;
+  }
+
+  .wbe-table th:nth-child(n+4),
+  .wbe-table td:nth-child(n+4) {
+    text-align: right;
+  }
+
+  .wbe-table td strong {
+    font-weight: 600;
+  }
+
+  .wbe-section .wbm-muted {
+    margin-top: 12px;
+  }
+
+
+  /* 14. FOOTER NAVIGATION */
+  .wbm-footerlink {
+    margin: 22px 0;
+  }
+
+  .wbm-footerlink a {
+    font-size: 12px;
+    text-decoration: none;
+    color: #315644;
+    font-weight: 600;
+  }
+
+  /* 15. TABLET RESPONSIVENESS */
+  @media (max-width: 1000px) {
+
+    .wbm-kpis,
+    .wbm-data-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+  }
+
+  @media (max-width: 850px) {
+
+    .wbe-columns {
+      grid-template-columns: 1fr;
+    }
+
+  }
+
+  /* 16. MOBILE RESPONSIVENESS */
+  @media (max-width: 500px) {
+
+    .wbe-section .wbm-section-title {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+
+    .wbe-chart {
+      gap: 3px;
+    }
+
+    .wbe-bar-group span {
+      font-size: 8px;
+      transform: rotate(-42deg);
+      transform-origin: center;
+      min-height: 22px;
+    }
+
+  }
+
+  @media (max-width: 460px) {
+
+    .wbm-heading h1 {
+      font-size: 23px;
+    }
+
+    .wbm-kpi {
+      padding: 15px 12px;
+    }
+
+    .wbm-kpi strong {
+      font-size: 20px;
+    }
+
+    .wbm-panel {
+      padding: 15px;
+    }
+
+    .wbm-data-grid strong {
+      font-size: 17px;
+    }
+
+  }
 
 </style>
 {% endblock %}

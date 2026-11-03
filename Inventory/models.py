@@ -173,4 +173,27 @@ class SourceWorkbook(models.Model):
     def __str__(self):
         return f'{self.filename} ({self.imported_at:%Y-%m-%d %H:%M})'
 
+class ImportedExpense(models.Model):
+    """One source Excel EXPENSES row; partner splits are stored on the SAME record."""
+    source_id = models.PositiveIntegerField(unique=True)
+    description = models.CharField(max_length=255)
+    expense_date = models.DateField(null=True, blank=True, db_index=True)
+    category = models.CharField(max_length=100, db_index=True)
+    reference = models.CharField(max_length=255, blank=True)
+    rodrigo = models.DecimalField(max_digits=13, decimal_places=2, default=0)
+    fran = models.DecimalField(max_digits=13, decimal_places=2, default=0)
+    bure = models.DecimalField(max_digits=13, decimal_places=2, default=0)
+    woe = models.DecimalField(max_digits=13, decimal_places=2, default=0)
+    imported_at = models.DateTimeField(auto_now=True)
 
+    @property
+    def total(self):
+        return self.rodrigo + self.fran + self.bure + self.woe
+
+    @property
+    def partner_funded(self):
+        return self.rodrigo + self.fran + self.bure
+
+    class Meta:
+        ordering = ['-expense_date', '-source_id']
+        verbose_name = 'Imported expense'
