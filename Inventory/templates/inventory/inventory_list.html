@@ -1,7 +1,8 @@
 {% extends "inventory/base_dashboard.html" %}
 {% load static inventory_thumbnails %}
 
-{% block nav_inventory_class %}is-active{% endblock %}
+{% block nav_inventory_class %}is-active
+{% endblock %}
 
 {% block content %}
 <div class="wb-inventory-page">
@@ -18,9 +19,82 @@
   </div>
 
   <section class="wb-inv-section">
-    <div class="wb-inv-section-title"><h2>Website publication</h2><span>{{ publication_coverage }}% linked coverage</span></div>
-    <progress class="wb-inv-progress" value="{{ publication_coverage }}" max="100">{{ publication_coverage }}%</progress>
+    <div class="wb-inv-section-title">
+      <h2>Website publication</h2>
+    </div>
+    <div class="wb-inv-publication-track">
+      <progress id="wb-inv-publication-progress" class="wb-inv-progress" value="{{ publication_coverage }}" max="100">{{ publication_coverage }}%</progress>
+      <span id="wb-inv-publication-label" class="wb-inv-publication-label">{{ publication_coverage }}%</span>
+    </div>
     <p class="wb-inv-subtle">{{ linked_count }} sellable garments linked to active website listings. Published listings without a linked garment ID are counted separately above.</p>
+  </section>
+
+  <!-- INVENTORY AGING -->
+  <section class="wb-inv-section wbi-aging">
+
+      <div class="wb-inv-section-title wbi-aging-heading">
+        <div>
+          <h2>Inventory aging</h2>
+        </div>
+  
+        <span class="wbi-aging-count">
+          {{ aging_total }} saleable garments
+        </span>
+      </div>
+  
+      <p class="wbi-aging-description">How long available merchandise has been held</p>
+
+      <div class="wbi-aging-grid">
+  
+        {% for bucket in aging_data %}
+  
+          <a
+            href="{{ bucket.url }}"
+            class="wbi-aging-card
+                  wbi-age-{{ bucket.key }}
+                  {% if bucket.active %}is-active{% endif %}"
+          >
+  
+            <div class="wbi-aging-card-head">
+              <span>{{ bucket.label }}</span>
+              <strong>{{ bucket.count }}</strong>
+            </div>
+  
+            <progress
+              class="wbi-aging-progress"
+              value="{{ bucket.percentage }}"
+              max="100"
+              aria-label="{{ bucket.label }}: {{ bucket.percentage }}% of saleable garments"
+            >
+              {{ bucket.percentage }}%
+            </progress>
+  
+            <div class="wbi-aging-card-foot">
+              <span>${{ bucket.cost }} at cost</span>
+              <span>{{ bucket.percentage }}%</span>
+            </div>
+  
+          </a>
+  
+        {% endfor %}
+  
+      </div>
+  
+      {% if selected_age %}
+        <a
+          class="wbi-aging-clear"
+          href="{% url 'inventory_list' %}"
+        >
+          Clear aging filter
+        </a>
+      {% endif %}
+  
+      <p class="wbi-aging-note">
+        Aging is measured from the collection acquisition date.
+        Unknown includes missing or future-dated acquisitions.
+        Sold and archived garments are excluded.
+      </p>
+  
   </section>
 
   <section class="wb-inv-section">
@@ -37,75 +111,6 @@
         <p class="wb-inv-subtle">No active catalogue items have photographs yet.</p>
       {% endfor %}
     </div>
-  </section>
-
-  <!-- INVENTORY AGING -->
-  <section class="wbi-aging">
-
-    <div class="wbi-aging-heading">
-      <div>
-        <h2>INVENTORY AGING</h2>
-        <p>
-          How long available merchandise has been held
-        </p>
-      </div>
-
-      <span class="wbi-aging-count">
-        {{ aging_total }} saleable garments
-      </span>
-    </div>
-
-    <div class="wbi-aging-grid">
-
-      {% for bucket in aging_data %}
-
-        <a
-          href="{{ bucket.url }}"
-          class="wbi-aging-card
-                wbi-age-{{ bucket.key }}
-                {% if bucket.active %}is-active{% endif %}"
-        >
-
-          <div class="wbi-aging-card-head">
-            <span>{{ bucket.label }}</span>
-            <strong>{{ bucket.count }}</strong>
-          </div>
-
-          <progress
-            class="wbi-aging-progress"
-            value="{{ bucket.percentage }}"
-            max="100"
-            aria-label="{{ bucket.label }}: {{ bucket.percentage }}% of saleable garments"
-          >
-            {{ bucket.percentage }}%
-          </progress>
-
-          <div class="wbi-aging-card-foot">
-            <span>${{ bucket.cost }} at cost</span>
-            <span>{{ bucket.percentage }}%</span>
-          </div>
-
-        </a>
-
-      {% endfor %}
-
-    </div>
-
-    {% if selected_age %}
-      <a
-        class="wbi-aging-clear"
-        href="{% url 'inventory_list' %}"
-      >
-        Clear aging filter
-      </a>
-    {% endif %}
-
-    <p class="wbi-aging-note">
-      Aging is measured from the collection acquisition date.
-      Unknown includes missing or future-dated acquisitions.
-      Sold and archived garments are excluded.
-    </p>
-
   </section>
 
   <section class="wb-inv-section">
@@ -626,6 +631,96 @@
     font-size: 18px;
   }
 }
+
+/* 8. INVENTORY PRESENTATION REFINEMENTS */
+.wb-inventory-page .wb-inv-stat {
+  background: #fff;
+}
+
+/* 9. WEBSITE PUBLICATION INDICATOR */
+.wb-inv-publication-track {
+  position: relative;
+  padding-top: 23px;
+  margin-bottom: 6px;
+}
+
+.wb-inv-publication-track .wb-inv-progress {
+  display: block;
+  width: 100%;
+}
+
+.wb-inv-publication-label {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform: translateX(-50%);
+  color: #315644;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 16px;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+
+/* 10. STANDARDIZED INVENTORY AGING HEADING */
+.wb-inventory-page .wbi-aging {
+  margin: 0 0 20px;
+  padding: 20px;
+  border: 1px solid #e7e5df;
+  border-radius: 10px;
+  background: #fff;
+}
+
+.wb-inventory-page .wbi-aging .wbi-aging-heading {
+  margin-bottom: 7px;
+}
+
+.wb-inventory-page .wbi-aging .wbi-aging-heading h2 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: .045em;
+  text-transform: uppercase;
+  color: inherit;
+}
+
+.wb-inventory-page .wbi-aging-count {
+  font-size: 11px;
+  color: #66766b;
+}
+
+.wbi-aging-description {
+  margin: 0 0 20px;
+  font-size: 12px;
+  color: #68736a;
+}
+
+/* 11. AGING METRIC LEGIBILITY */
+.wb-inventory-page .wbi-aging-card-head span {
+  color: #35463a;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.wb-inventory-page .wbi-aging-card-head strong {
+  color: #25382b;
+  font-weight: 700;
+}
+
+.wb-inventory-page .wbi-aging-card-foot span {
+  color: #415247;
+  font-size: 11px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 650px) {
+  .wb-inventory-page .wbi-aging {
+    padding: 15px;
+  }
+}
+
 </style>
 
 <script>
@@ -681,4 +776,17 @@
   form.addEventListener('submit',()=>{ if(aborter) aborter.abort();close(); });
 })();
 </script>
+
+<script>
+  // Keep the coverage percentage at the end of the green progress fill.
+  (() => {
+    const progress = document.getElementById('wb-inv-publication-progress');
+    const label = document.getElementById('wb-inv-publication-label');
+    if (!progress || !label) return;
+
+    const percent = progress.max > 0 ? (progress.value / progress.max) * 100 : 0;
+    label.style.left = `${Math.max(3, Math.min(97, percent))}%`;
+  })();
+</script>
+
 {% endblock %}
