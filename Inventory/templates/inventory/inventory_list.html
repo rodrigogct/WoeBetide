@@ -39,6 +39,75 @@
     </div>
   </section>
 
+  <!-- INVENTORY AGING -->
+  <section class="wbi-aging">
+
+    <div class="wbi-aging-heading">
+      <div>
+        <h2>INVENTORY AGING</h2>
+        <p>
+          How long available merchandise has been held
+        </p>
+      </div>
+
+      <span class="wbi-aging-count">
+        {{ aging_total }} saleable garments
+      </span>
+    </div>
+
+    <div class="wbi-aging-grid">
+
+      {% for bucket in aging_data %}
+
+        <a
+          href="{{ bucket.url }}"
+          class="wbi-aging-card
+                wbi-age-{{ bucket.key }}
+                {% if bucket.active %}is-active{% endif %}"
+        >
+
+          <div class="wbi-aging-card-head">
+            <span>{{ bucket.label }}</span>
+            <strong>{{ bucket.count }}</strong>
+          </div>
+
+          <progress
+            class="wbi-aging-progress"
+            value="{{ bucket.percentage }}"
+            max="100"
+            aria-label="{{ bucket.label }}: {{ bucket.percentage }}% of saleable garments"
+          >
+            {{ bucket.percentage }}%
+          </progress>
+
+          <div class="wbi-aging-card-foot">
+            <span>${{ bucket.cost }} at cost</span>
+            <span>{{ bucket.percentage }}%</span>
+          </div>
+
+        </a>
+
+      {% endfor %}
+
+    </div>
+
+    {% if selected_age %}
+      <a
+        class="wbi-aging-clear"
+        href="{% url 'inventory_list' %}"
+      >
+        Clear aging filter
+      </a>
+    {% endif %}
+
+    <p class="wbi-aging-note">
+      Aging is measured from the collection acquisition date.
+      Unknown includes missing or future-dated acquisitions.
+      Sold and archived garments are excluded.
+    </p>
+
+  </section>
+
   <section class="wb-inv-section">
     <div class="wb-inv-section-title"><h2>Inventory list</h2><a href="{% url 'inventory_list' %}">Clear filters</a></div>
     <div class="wb-inv-search-shell">
@@ -322,6 +391,7 @@
 .wb-inv-toggle{font:inherit;font-size:11px;font-weight:650;color:#315644;background:#f4f8f4;border:1px solid #cfdbd2;padding:10px 14px;border-radius:6px;cursor:pointer}
 .wb-inv-toggle:hover{background:#eaf1ea}
 .wb-inv-mobile-list{display:none}
+
 @media(max-width:700px){
   .wb-inv-desktop-table{display:none}
   .wb-inv-mobile-list{display:block;border:1px solid #e7e5df;border-radius:8px;overflow:hidden}
@@ -361,6 +431,201 @@
 .wb-inv-suggestion-copy small{display:block;font-size:10px;color:#777;line-height:1.5}
 .wb-inv-suggestion-price{font-size:11px;white-space:nowrap}
 .wb-inv-suggestion-message{padding:12px;color:#777;font-size:12px}
+
+/* 1. INVENTORY AGING PANEL */
+.wbi-aging {
+  background: #fff;
+  border: 1px solid #e8e7e1;
+  border-radius: 11px;
+  padding: 21px;
+  margin: 20px 0;
+}
+
+/* 2. HEADING */
+.wbi-aging-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.wbi-aging-heading h2 {
+  margin: 0 0 6px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.075em;
+  color: #28332b;
+}
+
+.wbi-aging-heading p {
+  margin: 0;
+  font-size: 11px;
+  color: #808880;
+}
+
+.wbi-aging-count {
+  font-size: 11px;
+  color: #788078;
+  white-space: nowrap;
+}
+
+/* 3. AGING CARDS */
+.wbi-aging-grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 11px;
+}
+
+.wbi-aging-card {
+  display: block;
+  text-decoration: none;
+  background: #f8f8f5;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  padding: 14px;
+  min-width: 0;
+  color: #28332b;
+  transition: border-color 150ms ease;
+}
+
+.wbi-aging-card:hover {
+  border-color: #c1cdc3;
+}
+
+.wbi-aging-card.is-active {
+  border-color: #315644;
+  background: #f3f7f3;
+}
+
+.wbi-aging-card-head,
+.wbi-aging-card-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.wbi-aging-card-head {
+  margin-bottom: 17px;
+}
+
+.wbi-aging-card-head span {
+  font-size: 11px;
+  color: #747e75;
+}
+
+.wbi-aging-card-head strong {
+  font-size: 21px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.wbi-aging-card-foot {
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.wbi-aging-card-foot span {
+  font-size: 10px;
+  color: #808880;
+}
+
+/* 4. AGE COLORS */
+.wbi-age-0-30 {
+  --age-color: #48745b;
+}
+
+.wbi-age-31-90 {
+  --age-color: #8ea88d;
+}
+
+.wbi-age-91-180 {
+  --age-color: #c6a06a;
+}
+
+.wbi-age-181\+ {
+  --age-color: #b66e62;
+}
+
+.wbi-age-unknown {
+  --age-color: #929991;
+}
+
+/* 5. AGING PROGRESS */
+.wbi-aging-progress {
+  display: block;
+  width: 100%;
+  height: 7px;
+  border: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  appearance: none;
+  -webkit-appearance: none;
+  background: #e9ece6;
+  color: var(--age-color, #929991);
+}
+
+.wbi-aging-progress::-webkit-progress-bar {
+  background: #e9ece6;
+  border-radius: 8px;
+}
+
+.wbi-aging-progress::-webkit-progress-value {
+  background: var(--age-color, #929991);
+  border-radius: 8px;
+}
+
+.wbi-aging-progress::-moz-progress-bar {
+  background: var(--age-color, #929991);
+}
+
+/* 6. FILTER AND NOTES */
+.wbi-aging-clear {
+  display: inline-block;
+  margin-top: 15px;
+  font-size: 11px;
+  color: #315644;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.wbi-aging-note {
+  margin: 14px 0 0;
+  font-size: 10px;
+  line-height: 1.5;
+  color: #858d85;
+}
+
+/* 7. RESPONSIVE LAYOUT */
+@media (max-width: 1100px) {
+  .wbi-aging-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 650px) {
+  .wbi-aging {
+    padding: 15px;
+  }
+
+  .wbi-aging-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .wbi-aging-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .wbi-aging-card {
+    padding: 12px;
+  }
+
+  .wbi-aging-card-head strong {
+    font-size: 18px;
+  }
+}
 </style>
 
 <script>

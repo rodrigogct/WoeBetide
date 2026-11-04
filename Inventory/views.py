@@ -16,13 +16,101 @@ from django.db import transaction
 from .models import Collection, Garment, Sale, SaleItem, Payment, SourceWorkbook
 from .importers import import_inventory_excel
 from .expense_import import sync_expenses
+from datetime import timedelta
+from urllib.parse import urlencode
 
 @login_required
 def inventory_list(request):
+    today = timezone.localdate()
+
     query = request.GET.get("q", "").strip()
     status = request.GET.get("status", "").strip().lower()
     category = request.GET.get("category", "").strip()
     collection = request.GET.get("collection", "").strip()
+
+    saleable_statuses = [
+        Garment.Status.AVAILABLE,
+        Garment.Status.PUBLISHED,
+    ]
+
+    age_groups = [
+        ("0-30", "0–30 days", 0, 30),
+        ("31-90", "31–90 days", 31, 90),
+        ("91-180", "91–180 days", 91, 180),
+        ("181+", "181+ days", 181, None),
+        ("unknown", "Unknown date", None, None),
+    ]
+
+    selected_age = request.GET.get("age", "").strip()
+
+    age_filter = {
+        "0-30": {
+            "collection__date_bought__gte":
+                today - timedelta(days=30),
+            "collection__date_bought__lte": today,
+        },
+        "31-90": {
+            "collection__date_bought__gte":
+                today - timedelta(days=90),
+            "collection__date_bought__lt":
+                today - timedelta(days=30),
+        },
+        "91-180": {
+            "collection__date_bought__gte":
+                today - timedelta(days=180),
+            "collection__date_bought__lt":
+                today - timedelta(days=90),
+        },
+        "181+": {
+            "collection__date_bought__lt":
+                today - timedelta(days=180),
+        },
+    }
+
+    # Base population: garments currently saleable.
+    aging_base = Garment.objects.filter(
+        status__in=saleable_statuses
+    )
+
+    known_date = aging_base.filter(
+        collection__date_bought__isnull=False,
+        collection__date_bought__lte=today,
+    )
+
+    aging_total = aging_base.count()
+    aging_data = []
+
+    for key, label, minimum, maximum in age_groups:
+
+        if key == "unknown":
+            bucket = aging_base.exclude(
+                pk__in=known_date.values("pk")
+            )
+        else:
+            bucket = aging_base.filter(**age_filter[key])
+
+        bucket_count = bucket.count()
+        bucket_cost = (
+            bucket.aggregate(total=Sum("cost"))["total"]
+            or Decimal("0.00")
+        )
+
+        params = request.GET.copy()
+        params.pop("status", None)
+        params.pop("show", None)
+        params["age"] = key
+
+        aging_data.append({
+            "key": key,
+            "label": label,
+            "count": bucket_count,
+            "cost": f"{bucket_cost:,.2f}",
+            "percentage": round(
+                bucket_count * 100 / aging_total, 2
+            ) if aging_total else 0,
+            "url": "?" + params.urlencode(),
+            "active": selected_age == key,
+        })
 
     eligible = [Garment.Status.AVAILABLE, Garment.Status.PUBLISHED]
     active_website_items = Item.objects.filter(is_sold=False, is_archive=False)
@@ -63,6 +151,20 @@ def inventory_list(request):
         garments = garments.filter(category=category)
     if collection:
         garments = garments.filter(collection__collection_id=collection)
+    
+    # Apply the selected inventory aging filter.
+    if selected_age in age_filter:
+        garments = garments.filter(
+            status__in=saleable_statuses,
+            **age_filter[selected_age]
+        )
+
+    elif selected_age == "unknown":
+        garments = garments.filter(
+            status__in=saleable_statuses
+        ).exclude(
+            pk__in=known_date.values("pk")
+        )
 
     # Search and filters always run against the entire inventory before limiting display.
     matching_count = garments.count()
@@ -90,6 +192,9 @@ def inventory_list(request):
         "linked_count": linked_count,
         "publication_coverage": publication_coverage,
         "recent_items": recent_items,
+        "aging_data": aging_data,
+        "selected_age": selected_age,
+        "aging_total": aging_total,
     })
 
 @login_required
@@ -367,6 +472,64 @@ def collections_dashboard(request):
     else:
         summary_source = rows
 
+    # Inventory capital allocation for selected or all collections.
+    if selected_collection is not None:
+        allocation_garments = by_collection[selected_collection.pk]
+    else:
+        allocation_garments = garment_list
+
+    sold_cost = sum(
+        (
+            g.cost or ZERO
+            for g in allocation_garments
+            if g.status == Garment.Status.SOLD
+        ),
+        ZERO,
+    )
+
+    saleable_statuses = {
+        Garment.Status.AVAILABLE,
+        Garment.Status.PUBLISHED,
+    }
+
+    remaining_cost = sum(
+        (
+            g.cost or ZERO
+            for g in allocation_garments
+            if g.status in saleable_statuses
+        ),
+        ZERO,
+    )
+
+    # Archived, draft, and reserved items remain separately identified.
+    other_cost = sum(
+        (
+            g.cost or ZERO
+            for g in allocation_garments
+            if g.status not in saleable_statuses
+            and g.status != Garment.Status.SOLD
+        ),
+        ZERO,
+    )
+
+    allocation_total = sold_cost + remaining_cost + other_cost
+
+    def allocation_percentage(amount):
+        if allocation_total <= ZERO:
+            return 0
+        return round(float(amount / allocation_total * 100), 2)
+
+    capital_allocation = {
+        "total": money(allocation_total),
+        "sold_cost": money(sold_cost),
+        "remaining_cost": money(remaining_cost),
+        "other_cost": money(other_cost),
+        "sold_pct": allocation_percentage(sold_cost),
+        "remaining_pct": allocation_percentage(remaining_cost),
+        "other_pct": allocation_percentage(other_cost),
+        "has_other": other_cost != ZERO,
+    }
+
     total_cost = sum((r['total_cost_value'] for r in summary_source), ZERO)
     revenue = sum((r['revenue_value'] for r in summary_source), ZERO)
     sold_cost = sum((r['sold_cost_value'] for r in summary_source), ZERO)
@@ -393,6 +556,7 @@ def collections_dashboard(request):
         'summary': summary,
         'selected_collection': selected_collection,
         'detail_items': detail_items,
+        "capital_allocation": capital_allocation,
     })
 
 @login_required
