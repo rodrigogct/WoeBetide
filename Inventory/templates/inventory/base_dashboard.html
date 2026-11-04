@@ -31,6 +31,10 @@
            href="{% url 'inventory_list' %}">
           <span>▣</span> Inventory
         </a>
+
+        <a class="wb-nav-link" href="{% url 'collections_dashboard' %}">
+          <span>▦</span> Collections
+        </a>
       
         <a class="wb-nav-link {% block nav_sales_class %}{% endblock %}"
            href="{% url 'sales_dashboard' %}">
@@ -63,10 +67,6 @@
       
         <a class="wb-nav-link" href="{% url 'sell_dashboard' %}">
           <span>＋</span> Sell
-        </a>
-      
-        <a class="wb-nav-link" href="{% url 'collections_dashboard' %}">
-          <span>▦</span> Collections
         </a>
       
         {% if request.user.is_superuser %}
