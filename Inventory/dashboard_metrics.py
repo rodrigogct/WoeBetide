@@ -17,6 +17,7 @@ from .models import Garment, Sale, SaleItem, Payment
 from Catalogue.models import Item
 from .partner_capital import capital_context
 from .home_performance import performance_efficiency_context
+from .reporting_period import get_reporting_days
 
 ZERO = Decimal('0.00')
 VALID_PERIODS = {'7': 7, '30': 30, '90': 90}
@@ -55,12 +56,19 @@ def has_missing_measurements(measurements):
 def dashboard_home(request):
     period = request.GET.get('days', 'all')
     today = timezone.localdate()
+    period = get_reporting_days(request)
+    today = timezone.localdate()
+
     if period == 'all':
         days = 'all'
-        start = (Sale.objects.order_by('sale_date')
-                 .values_list('sale_date', flat=True).first() or today)
+        start = (
+            Sale.objects.order_by('sale_date')
+            .values_list('sale_date', flat=True)
+            .first()
+            or today
+        )
     else:
-        days = VALID_PERIODS.get(period, 30)
+        days = int(period)
         start = today - timedelta(days=days - 1)
 
     sale_items = SaleItem.objects.filter(
