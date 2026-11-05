@@ -1,11 +1,12 @@
 {% extends "inventory/base_dashboard.html" %}
-{% include "inventory/reporting_period_toolbar.html" %}
 
 {% block nav_finances_class %}is-active{% endblock %}
 
 {% block content %}
 
 <div class="wbm-page">
+
+  {% include "inventory/includes/reporting_period_toolbar.html" %}
 
   <!-- 1. PAGE HEADER -->
   <div class="wbm-heading">
@@ -241,102 +242,60 @@
         </div>
 
 
-        <!-- MONTHLY SPENDING TREND -->
+        <!-- MONTHLY SPENDING BY CATEGORY -->
         <div class="wbe-block">
 
-          <h3>
-            Monthly spending trend
-            <small>Last 12 months</small>
-          </h3>
+          <h3>Monthly spending by category <small>Last 12 months · MXN</small></h3>
 
-          <div
-            class="wbe-chart"
-            role="group"
-            aria-label="Monthly expense spending for twelve months"
-          >
+          <div class="wbe-monthly-stack">
+            <div class="wbe-monthly-chart" role="group" aria-label="Monthly expenses by category for twelve months">
 
-            {% for m in expense_monthly %}
+              {% for m in expense_monthly %}
+                <div class="wbe-month-column">
+                  <button
+                    type="button"
+                    class="wbe-month-hit"
+                    data-month="{{ m.label }}"
+                    data-total="{{ m.amount_display }}"
+                    data-height="{{ m.height }}"
+                    aria-label="{{ m.label }}: ${{ m.amount_display }} spent. Show category breakdown."
+                    aria-expanded="false"
+                  >
+                    <span class="wbe-month-stack">
+                      {% for segment in m.segments %}
+                        <span
+                          class="wbe-month-segment {{ segment.color_class }}"
+                          data-share="{{ segment.share }}"
+                          data-category="{{ segment.name }}"
+                          data-amount="{{ segment.amount_display }}"
+                        ></span>
+                      {% endfor %}
+                    </span>
+                  </button>
+                  <span class="wbe-month-label">{{ m.label }}</span>
+                </div>
+              {% endfor %}
 
-<!-- MONTHLY EXPENSES BY CATEGORY -->
-<div class="wbe-monthly-stack">
+            </div>
 
-  <div class="wbe-monthly-heading">
-    <h3>MONTHLY SPENDING BY CATEGORY</h3>
-    <small>Last 12 months · MXN</small>
-  </div>
+            <div class="wbe-monthly-legend">
+              {% for category in expense_category_legend %}
+                <span class="wbe-monthly-legend-item">
+                  <i class="wbe-monthly-key {{ category.color_class }}" aria-hidden="true"></i>
+                  <span>{{ category.name }}</span>
+                </span>
+              {% endfor %}
+            </div>
 
-  <div class="wbe-monthly-chart">
-
-    {% for m in expense_monthly %}
-
-      <div class="wbe-month-column">
-
-        <button
-          type="button"
-          class="wbe-month-hit"
-          data-month="{{ m.label }}"
-          data-total="{{ m.amount_display }}"
-          data-height="{{ m.height }}"
-          aria-label="{{ m.label }}: ${{ m.amount_display }} spent. Show category breakdown."
-          aria-expanded="false"
-        >
-
-          <span class="wbe-month-stack">
-
-            {% for segment in m.segments %}
-
-              <span
-                class="wbe-month-segment {{ segment.color_class }}"
-                data-share="{{ segment.share }}"
-                data-category="{{ segment.name }}"
-                data-amount="{{ segment.amount_display }}"
-              ></span>
-
-            {% endfor %}
-
-          </span>
-
-        </button>
-
-        <span class="wbe-month-label">
-          {{ m.label }}
-        </span>
-
-      </div>
-
-    {% endfor %}
-
-  </div>
-
-  <div class="wbe-monthly-legend">
-
-    {% for category in expense_category_legend %}
-
-      <div class="wbe-monthly-legend-item">
-        <i class="wbe-monthly-key {{ category.color_class }}"></i>
-        <span>{{ category.name }}</span>
-      </div>
-
-    {% endfor %}
-
-  </div>
-
-  <p class="wbe-monthly-note">
-    Hover over a bar or tap it to view monthly spending.
-    Bar height represents total spending; colors represent expense categories.
-    Undated expenses are excluded.
-  </p>
-
-</div>
-
-          {% endfor %}
-
+            <p class="wbe-monthly-note">
+              Hover over a bar or tap it to see monthly spending and category amounts.
+              Undated expenses are excluded from the chart.
+            </p>
           </div>
 
           <p class="wbm-muted">
-            Based on dated expense rows only. Categories may
-            include equipment or manufacturing costs. This is
-            a spending analysis, not an accounting P&amp;L.
+            Based on dated expense rows only. Categories may include equipment or
+            manufacturing costs. This is spending analysis, not an accounting P&amp;L.
           </p>
 
         </div>
@@ -945,37 +904,6 @@
   color: #315644;
 }
 
-  .wbe-table {
-    width: 100%;
-    border-collapse: collapse;
-    font-size: 11px;
-    white-space: nowrap;
-  }
-
-  .wbe-table th {
-    text-align: left;
-    color: #7c877d;
-    font-size: 10px;
-    font-weight: 600;
-    border-bottom: 1px solid #e9ebe6;
-    padding: 10px 12px 10px 0;
-  }
-
-  .wbe-table td {
-    padding: 12px 12px 12px 0;
-    border-bottom: 1px solid #f0f1ed;
-    color: #34423a;
-  }
-
-  .wbe-table th:nth-child(n+4),
-  .wbe-table td:nth-child(n+4) {
-    text-align: right;
-  }
-
-  .wbe-table td strong {
-    font-weight: 600;
-  }
-
   .wbe-section .wbm-muted {
     margin-top: 12px;
   }
@@ -1057,265 +985,209 @@
   }
 
 
-/* MONTHLY SPENDING CHART */
-.wbe-monthly-stack {
-  width: 100%;
-  min-width: 0;
-}
-
-.wbe-monthly-heading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-bottom: 17px;
-}
-
-.wbe-monthly-heading h3 {
-  margin: 0;
-  color: #28332b;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.075em;
-}
-
-.wbe-monthly-heading small {
-  color: #737e75;
-  font-size: 11px;
-}
-
-/* CHART COLUMNS */
-.wbe-monthly-chart {
-  display: grid;
-  grid-template-columns: repeat(12, minmax(0, 1fr));
-  gap: 8px;
-  align-items: end;
-  height: 165px;
-  padding: 8px 0 0;
-  border-bottom: 1px solid #e8e7e1;
-}
-
-.wbe-month-column {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  min-width: 0;
-  height: 100%;
-}
-
-.wbe-month-hit {
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  flex: 1;
-  min-height: 0;
-  width: 100%;
-  margin: 0;
-  padding: 0 3px;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
-  cursor: pointer;
-  appearance: none;
-}
-
-.wbe-month-hit:hover,
-.wbe-month-hit:focus,
-.wbe-month-hit:active {
-  background: transparent;
-  color: inherit;
-}
-
-.wbe-month-hit:focus-visible {
-  outline: 2px solid #315644;
-  outline-offset: 2px;
-}
-
-.wbe-month-stack {
-  display: flex;
-  flex-direction: column-reverse;
-  width: 100%;
-  max-width: 32px;
-  height: 0;
-  overflow: hidden;
-  border-radius: 3px 3px 0 0;
-  background: #eceee9;
-  transition: height 180ms ease;
-}
-
-.wbe-month-segment {
-  display: block;
-  width: 100%;
-  height: 0;
-  flex-shrink: 0;
-}
-
-.wbe-month-hit:hover .wbe-month-stack,
-.wbe-month-hit.is-active .wbe-month-stack {
-  filter: brightness(0.92);
-}
-
-.wbe-month-label {
-  display: block;
-  margin-top: 8px;
-  color: #737e75;
-  font-size: 10px;
-  text-align: center;
-  white-space: nowrap;
-}
-
-/* CATEGORY COLORS */
-.wbe-cat-events-pop-ups {
-  background: #945d40;
-}
-
-.wbe-cat-manufacturing {
-  background: #81554d;
-}
-
-.wbe-cat-equipment {
-  background: #4b6156;
-}
-
-.wbe-cat-marketing-ads {
-  background: #684b80;
-}
-
-.wbe-cat-studio-facilities {
-  background: #5b608a;
-}
-
-.wbe-cat-shipping-logistics {
-  background: #39747a;
-}
-
-.wbe-cat-packaging-labels {
-  background: #826a35;
-}
-
-.wbe-cat-website {
-  background: #365d87;
-}
-
-.wbe-cat-other {
-  background: #87918a;
-}
-
-/* CATEGORY LEGEND */
-.wbe-monthly-legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px 16px;
-  margin-top: 21px;
-}
-
-.wbe-monthly-legend-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: #58645b;
-  font-size: 10px;
-}
-
-.wbe-monthly-key {
-  display: inline-block;
-  flex: 0 0 9px;
-  width: 9px;
-  height: 9px;
-  border-radius: 2px;
-}
-
-.wbe-monthly-note {
-  margin: 15px 0 0;
-  color: #788078;
-  font-size: 10px;
-  line-height: 1.5;
-}
-
-/* INTERACTIVE TOOLTIP */
-.wbe-month-tooltip {
-  position: fixed;
-  z-index: 99999;
-  width: max-content;
-  min-width: 190px;
-  max-width: min(290px, calc(100vw - 24px));
-  padding: 13px;
-  border: 1px solid #deded7;
-  border-radius: 8px;
-  background: #ffffff;
-  color: #28332b;
-  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.13);
-  font-family: inherit;
-  font-size: 11px;
-  line-height: 1.5;
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-}
-
-.wbe-month-tooltip.is-visible {
-  opacity: 1;
-  visibility: visible;
-}
-
-.wbe-month-tooltip-title {
-  display: block;
-  padding-bottom: 9px;
-  margin-bottom: 9px;
-  border-bottom: 1px solid #eeeae6;
-  font-size: 12px;
-  font-weight: 700;
-}
-
-.wbe-month-tooltip-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-  margin-top: 6px;
-}
-
-.wbe-month-tooltip-name {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  min-width: 0;
-  color: #59665c;
-}
-
-.wbe-month-tooltip-name i {
-  width: 8px;
-  height: 8px;
-  flex: 0 0 8px;
-  border-radius: 2px;
-}
-
-.wbe-month-tooltip-row strong {
-  white-space: nowrap;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-}
-
-/* SMALL SCREENS */
-@media (max-width: 650px) {
-  .wbe-monthly-chart {
-    gap: 3px;
-    height: 145px;
+  /* 17. INTERACTIVE STACKED MONTHLY CHART */
+  .wbm-page .wbe-monthly-stack {
+    min-width: 0;
   }
 
-  .wbe-month-hit {
-    padding: 0 1px;
+  .wbm-page .wbe-monthly-chart {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    align-items: end;
+    gap: 7px;
+    height: 190px;
+    border-bottom: 1px solid #e8e7e1;
   }
 
-  .wbe-month-label {
-    font-size: 8px;
+  .wbm-page .wbe-month-column {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    height: 100%;
+    align-items: stretch;
   }
 
-  .wbe-monthly-legend {
-    gap: 9px 12px;
+  .wbm-page .wbe-month-hit {
+    display: flex;
+    flex: 1;
+    align-items: flex-end;
+    justify-content: center;
+    min-height: 0;
+    width: 100%;
+    padding: 0 2px;
+    margin: 0;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    cursor: pointer;
+    appearance: none;
   }
-}
+
+  .wbm-page .wbe-month-hit:hover,
+  .wbm-page .wbe-month-hit:active,
+  .wbm-page .wbe-month-hit:focus {
+    background: transparent;
+    color: inherit;
+  }
+
+  .wbm-page .wbe-month-hit:focus-visible {
+    outline: 2px solid #315644;
+    outline-offset: 2px;
+  }
+
+  .wbm-page .wbe-month-stack {
+    display: flex;
+    flex-direction: column-reverse;
+    width: 100%;
+    max-width: 30px;
+    height: 0;
+    border-radius: 3px 3px 0 0;
+    overflow: hidden;
+    background: #eff1ec;
+    transition: height 180ms ease;
+  }
+
+  .wbm-page .wbe-month-segment {
+    display: block;
+    width: 100%;
+    height: 0;
+    flex-shrink: 0;
+  }
+
+  .wbm-page .wbe-month-hit:hover .wbe-month-stack,
+  .wbm-page .wbe-month-hit.is-active .wbe-month-stack {
+    filter: brightness(0.9);
+  }
+
+  .wbm-page .wbe-month-label {
+    display: block;
+    min-height: 24px;
+    padding-top: 8px;
+    text-align: center;
+    color: #68756b;
+    font-size: 9px;
+    white-space: nowrap;
+  }
+
+  /* Category colors match Expense Analysis. */
+  .wbe-cat-events-pop-ups { background: #945d40; }
+  .wbe-cat-manufacturing { background: #81554d; }
+  .wbe-cat-equipment { background: #4b6156; }
+  .wbe-cat-marketing-ads { background: #684b80; }
+  .wbe-cat-studio-facilities { background: #5b608a; }
+  .wbe-cat-shipping-logistics { background: #39747a; }
+  .wbe-cat-packaging-labels { background: #826a35; }
+  .wbe-cat-website { background: #365d87; }
+  .wbe-cat-other { background: #87918a; }
+
+  .wbm-page .wbe-monthly-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 15px;
+    margin-top: 18px;
+  }
+
+  .wbm-page .wbe-monthly-legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 10px;
+    color: #526057;
+  }
+
+  .wbm-page .wbe-monthly-key {
+    display: inline-block;
+    width: 9px;
+    height: 9px;
+    flex: 0 0 9px;
+    border-radius: 2px;
+  }
+
+  .wbm-page .wbe-monthly-note {
+    margin: 13px 0 0;
+    font-size: 10px;
+    line-height: 1.5;
+    color: #737d74;
+  }
+
+  /* Tooltip floats over the chart without clipping. */
+  .wbe-month-tooltip {
+    position: fixed;
+    z-index: 99999;
+    min-width: 190px;
+    width: max-content;
+    max-width: min(300px, calc(100vw - 24px));
+    padding: 13px;
+    background: #fff;
+    border: 1px solid #deded7;
+    border-radius: 8px;
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.13);
+    color: #28332b;
+    font-family: inherit;
+    font-size: 11px;
+    line-height: 1.5;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  .wbe-month-tooltip.is-visible {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  .wbe-month-tooltip-title {
+    display: block;
+    padding-bottom: 8px;
+    margin-bottom: 8px;
+    border-bottom: 1px solid #eeeae6;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .wbe-month-tooltip-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-top: 6px;
+  }
+
+  .wbe-month-tooltip-name {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    min-width: 0;
+    color: #59665c;
+  }
+
+  .wbe-month-tooltip-name i {
+    width: 8px;
+    height: 8px;
+    flex: 0 0 8px;
+    border-radius: 2px;
+  }
+
+  .wbe-month-tooltip-row strong {
+    white-space: nowrap;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+
+  @media (max-width: 650px) {
+    .wbm-page .wbe-monthly-chart {
+      gap: 3px;
+      height: 150px;
+    }
+
+    .wbm-page .wbe-month-hit {
+      padding: 0 1px;
+    }
+
+    .wbm-page .wbe-month-label {
+      font-size: 8px;
+    }
+  }
 
 </style>
 
@@ -1324,221 +1196,113 @@
     "use strict";
   
     const chart = document.querySelector(".wbe-monthly-chart");
-  
     if (!chart) return;
   
     const bars = chart.querySelectorAll(".wbe-month-hit");
-  
     const tooltip = document.createElement("div");
     tooltip.className = "wbe-month-tooltip";
     tooltip.setAttribute("role", "tooltip");
     tooltip.setAttribute("aria-hidden", "true");
-  
     document.body.appendChild(tooltip);
   
     let activeBar = null;
     let pinnedBar = null;
   
-    // Set bar heights and category segment sizes.
     bars.forEach((bar) => {
-      const height = Number(bar.dataset.height) || 0;
       const stack = bar.querySelector(".wbe-month-stack");
-  
-      if (stack) {
-        stack.style.height = `${Math.max(0, Math.min(100, height))}%`;
-      }
+      const height = Number(bar.dataset.height) || 0;
+      if (stack) stack.style.height = `${Math.max(0, Math.min(100, height))}%`;
   
       bar.querySelectorAll(".wbe-month-segment").forEach((segment) => {
         const share = Number(segment.dataset.share) || 0;
-  
         segment.style.height = `${Math.max(0, Math.min(100, share))}%`;
       });
     });
   
-    function createElement(tag, className, content) {
-      const element = document.createElement(tag);
-      element.className = className;
-  
-      if (content !== undefined) {
-        element.textContent = content;
-      }
-  
-      return element;
+    function element(tag, className, value) {
+      const node = document.createElement(tag);
+      if (className) node.className = className;
+      if (value !== undefined) node.textContent = value;
+      return node;
     }
   
-    function positionTooltip(bar) {
+    function position(bar) {
       const rect = bar.getBoundingClientRect();
       const tip = tooltip.getBoundingClientRect();
-  
-      const halfWidth = tip.width / 2;
-  
-      const x = Math.max(
-        halfWidth + 12,
-        Math.min(
-          window.innerWidth - halfWidth - 12,
-          rect.left + rect.width / 2
-        )
-      );
-  
+      const half = tip.width / 2;
+      const x = Math.max(half + 12, Math.min(window.innerWidth - half - 12, rect.left + rect.width / 2));
       const above = rect.top - tip.height - 12;
-  
-      const y = above >= 8
-        ? above
-        : Math.min(
-            window.innerHeight - tip.height - 8,
-            rect.bottom + 12
-          );
-  
+      const y = above >= 8 ? above : Math.max(8, Math.min(window.innerHeight - tip.height - 8, rect.bottom + 12));
       tooltip.style.left = `${x}px`;
-      tooltip.style.top = `${Math.max(8, y)}px`;
+      tooltip.style.top = `${y}px`;
       tooltip.style.transform = "translateX(-50%)";
     }
   
-    function hideTooltip(force = false) {
+    function hide(force = false) {
       if (pinnedBar && !force) return;
-  
       if (activeBar) {
         activeBar.classList.remove("is-active");
         activeBar.setAttribute("aria-expanded", "false");
       }
-  
       tooltip.classList.remove("is-visible");
       tooltip.setAttribute("aria-hidden", "true");
-  
       activeBar = null;
-  
-      if (force) {
-        pinnedBar = null;
-      }
+      if (force) pinnedBar = null;
     }
   
-    function showTooltip(bar) {
+    function show(bar) {
       if (activeBar && activeBar !== bar) {
         activeBar.classList.remove("is-active");
         activeBar.setAttribute("aria-expanded", "false");
       }
-  
       activeBar = bar;
-  
       tooltip.replaceChildren();
-  
-      const heading = createElement(
-        "strong",
-        "wbe-month-tooltip-title",
-        `${bar.dataset.month} · $${bar.dataset.total}`
-      );
-  
-      tooltip.appendChild(heading);
-  
-      const segments = bar.querySelectorAll(
-        ".wbe-month-segment"
-      );
+      tooltip.appendChild(element("strong", "wbe-month-tooltip-title", `${bar.dataset.month} · $${bar.dataset.total}`));
+      const segments = bar.querySelectorAll(".wbe-month-segment");
   
       if (!segments.length) {
-        tooltip.appendChild(
-          createElement(
-            "div",
-            "wbe-month-tooltip-row",
-            "No dated expenses recorded."
-          )
-        );
+        tooltip.appendChild(element("div", "wbe-month-tooltip-row", "No dated expenses recorded."));
       }
   
       segments.forEach((segment) => {
-        const row = createElement(
-          "div",
-          "wbe-month-tooltip-row"
-        );
-  
-        const name = createElement(
-          "span",
-          "wbe-month-tooltip-name"
-        );
-  
-        const dot = createElement("i", segment.className);
-  
-        const label = createElement(
-          "span",
-          "",
-          segment.dataset.category
-        );
-  
-        const amount = createElement(
-          "strong",
-          "",
-          `$${segment.dataset.amount}`
-        );
-  
-        name.append(dot, label);
-        row.append(name, amount);
+        const row = element("div", "wbe-month-tooltip-row");
+        const name = element("span", "wbe-month-tooltip-name");
+        const dot = element("i", segment.className);
+        dot.setAttribute("aria-hidden", "true");
+        name.append(dot, element("span", "", segment.dataset.category));
+        row.append(name, element("strong", "", `$${segment.dataset.amount}`));
         tooltip.appendChild(row);
       });
   
       bar.classList.add("is-active");
       bar.setAttribute("aria-expanded", "true");
-  
       tooltip.classList.add("is-visible");
       tooltip.setAttribute("aria-hidden", "false");
-  
-      positionTooltip(bar);
+      position(bar);
     }
   
     bars.forEach((bar) => {
       bar.addEventListener("pointerenter", (event) => {
-        if (
-          (event.pointerType === "mouse" ||
-           event.pointerType === "pen") &&
-          !pinnedBar
-        ) {
-          showTooltip(bar);
-        }
+        if ((event.pointerType === "mouse" || event.pointerType === "pen") && !pinnedBar) show(bar);
       });
-  
-      bar.addEventListener("pointerleave", () => {
-        if (!pinnedBar) hideTooltip();
-      });
-  
-      bar.addEventListener("focus", () => {
-        if (!pinnedBar) showTooltip(bar);
-      });
-  
-      bar.addEventListener("blur", () => {
-        if (!pinnedBar) hideTooltip();
-      });
-  
-      // A tap pins the tooltip until the user taps elsewhere.
+      bar.addEventListener("pointerleave", () => { if (!pinnedBar) hide(); });
+      bar.addEventListener("focus", () => { if (!pinnedBar) show(bar); });
+      bar.addEventListener("blur", () => { if (!pinnedBar) hide(); });
       bar.addEventListener("click", (event) => {
         event.stopPropagation();
-  
-        if (pinnedBar === bar) {
-          hideTooltip(true);
-        } else {
-          pinnedBar = bar;
-          showTooltip(bar);
-        }
+        if (pinnedBar === bar) hide(true);
+        else { pinnedBar = bar; show(bar); }
       });
-  
       bar.addEventListener("keydown", (event) => {
-        if (event.key === "Escape") {
-          hideTooltip(true);
-          bar.blur();
-        }
+        if (event.key === "Escape") { hide(true); bar.blur(); }
       });
     });
   
     document.addEventListener("click", (event) => {
-      if (!event.target.closest(".wbe-monthly-chart")) {
-        hideTooltip(true);
-      }
+      if (!event.target.closest(".wbe-monthly-chart")) hide(true);
     });
-  
-    window.addEventListener("resize", () => {
-      if (activeBar) positionTooltip(activeBar);
-    });
-  
-    window.addEventListener("scroll", () => {
-      if (activeBar) positionTooltip(activeBar);
-    }, true);
+    window.addEventListener("resize", () => { if (activeBar) position(activeBar); });
+    window.addEventListener("scroll", () => { if (activeBar) position(activeBar); }, true);
   })();
 </script>
   
