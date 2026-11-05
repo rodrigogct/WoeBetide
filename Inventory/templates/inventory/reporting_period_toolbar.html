@@ -5,7 +5,7 @@
     <form method="get" class="wb-reporting-form">
   
       {% for key, value in request.GET.items %}
-        {% if key != "days" %}
+        {% if key != "days" and key != "period" %}
           <input
             type="hidden"
             name="{{ key }}"

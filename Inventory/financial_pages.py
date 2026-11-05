@@ -1,6 +1,6 @@
 from decimal import Decimal, InvalidOperation
 from django.contrib.auth.decorators import login_required
-from django.db.models import Sum, F, ExpressionWrapper, DecimalField
+from django.db.models import Sum, F, ExpressionWrapper, DecimalField, Q
 from django.shortcuts import render
 from django.utils import timezone
 from datetime import date
@@ -9,6 +9,7 @@ from django.db.models.functions import Coalesce
 from .models import Garment, SaleItem, PartnerCapitalSnapshot, ImportedExpense
 from Catalogue.models import Item
 from .partner_capital import capital_context
+from .reporting_period import get_reporting_window
 
 ZERO = Decimal('0.00')
 
@@ -46,9 +47,18 @@ def finances_page(request):
     profit = revenue - cogs
     # Expenses represent the original Excel's indirect expense records; do NOT
     # label them full operating expenses until equipment/production treatment is reviewed.
+    # Global reporting period is remembered across Home, Sales, and Finances.
+    reporting = get_reporting_window(request)
     requested_period = request.GET.get('period', 'all')
     selected_period = 'all'
-    period_start = period_end = None
+    period_start = reporting['start_date']
+    period_end = reporting['end_date']
+    expense_window_label = (
+        'All time' if reporting['days'] == 'all'
+        else f"Last {reporting['days']} days"
+    )
+
+    # Existing monthly expense filter remains an explicit override.
     if requested_period != 'all':
         try:
             year_text, month_text = requested_period.split('-')
@@ -58,15 +68,23 @@ def finances_page(request):
             period_start = date(year, month, 1)
             period_end = date(year, month, monthrange(year, month)[1])
             selected_period = f'{year:04d}-{month:02d}'
+            expense_window_label = date(year, month, 1).strftime('%B %Y')
         except (ValueError, TypeError):
             pass
 
     expenses = ImportedExpense.objects.all()
     matching_sales = SaleItem.objects.all()
-    if period_start:
-        # Null expense dates are retained for All Time but omitted from monthly views.
+    if period_start is not None:
+        # Undated expenses appear only in the All Time expense view.
         expenses = expenses.filter(expense_date__range=(period_start, period_end))
         matching_sales = matching_sales.filter(sale__sale_date__range=(period_start, period_end))
+    else:
+        # Exclude future-dated records, matching the shared window's end date.
+        expenses = expenses.filter(
+            Q(expense_date__lte=period_end) |
+            Q(expense_date__isnull=True)
+        )
+        matching_sales = matching_sales.filter(sale__sale_date__lte=period_end)
 
     totals = expenses.aggregate(rodrigo=Sum('rodrigo'), fran=Sum('fran'),
                                 bure=Sum('bure'), woe=Sum('woe'))
@@ -146,6 +164,8 @@ def finances_page(request):
         'sales_margin': f'{profit * 100 / revenue:.1f}' if revenue else '0.0',
         'snapshot_date': timezone.localdate(),
         'expense_data_available': ImportedExpense.objects.exists(),
+        **reporting,
+        'expense_window_label': expense_window_label,
         'expense_period': selected_period,
         'expense_periods': available_periods,
         'expense_total': fmt(expense_total),
@@ -212,13 +232,13 @@ def partners_page(request):
                 'progress': round(min(100, max(0, float(net / target * 100)))) if target > 0 else 100,
                 'progress_status': progress_status,
             })
-        return render(request, 'inventory/partners_dashboard.html', {
-            'has_snapshot': bool(snapshot),
-            'partners': partners,
-            'total_net': fmt(total_net),
-            'total_target': fmt(total_target),
-            'total_shortfall': fmt(total_shortfall),
-            'snapshot': snapshot,
-            **capital_context(),
-        })
+    return render(request, 'inventory/partners_dashboard.html', {
+        'has_snapshot': bool(snapshot),
+        'partners': partners,
+        'total_net': fmt(total_net),
+        'total_target': fmt(total_target),
+        'total_shortfall': fmt(total_shortfall),
+        'snapshot': snapshot,
+        **capital_context(),
+    })
 
