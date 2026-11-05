@@ -792,9 +792,106 @@
     margin-top: 25px;
   }
 
-  .wbe-table-scroll {
-    overflow-x: auto;
-  }
+
+/* RECENT EXPENSES — STANDARDIZED TABLE */
+.wbm-page .wbe-recent .wbe-table-scroll {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid #e7e5df;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+/* TABLE STRUCTURE */
+.wbm-page .wbe-recent .wbe-table {
+  width: 100%;
+  min-width: 850px;
+  margin: 0;
+  border: 0;
+  border-collapse: collapse;
+  border-spacing: 0;
+  background: transparent;
+  color: inherit;
+  font-family: inherit;
+  font-size: 12px;
+  box-shadow: none;
+}
+
+/* TABLE HEADER BACKGROUND */
+.wbm-page .wbe-recent .wbe-table thead,
+.wbm-page .wbe-recent .wbe-table thead tr {
+  background: #f7f6f2;
+}
+
+/* COLUMN HEADERS */
+.wbm-page .wbe-recent .wbe-table th {
+  padding: 13px 12px;
+  border: 0 !important;
+  border-bottom: 1px solid #e7e5df !important;
+  background: transparent;
+  color: #70776f;
+  text-align: left;
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: 0.065em;
+  line-height: 1.35;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* TABLE VALUES */
+.wbm-page .wbe-recent .wbe-table td {
+  padding: 11px 12px;
+  border: 0 !important;
+  border-bottom: 1px solid #eeece7 !important;
+  background: transparent;
+  color: #303a33;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.45;
+  vertical-align: middle;
+}
+
+/* ROW BACKGROUNDS */
+.wbm-page .wbe-recent .wbe-table tbody tr {
+  background: #ffffff;
+  transition: background-color 150ms ease;
+}
+
+/* ROW HOVER */
+.wbm-page .wbe-recent .wbe-table tbody tr:hover {
+  background: #faf9f6;
+}
+
+/* REMOVE FINAL ROW DIVIDER */
+.wbm-page .wbe-recent .wbe-table tbody tr:last-child td {
+  border-bottom: 0 !important;
+}
+
+/* DESCRIPTION COLUMN */
+.wbm-page .wbe-recent .wbe-table th:nth-child(2),
+.wbm-page .wbe-recent .wbe-table td:nth-child(2) {
+  min-width: 150px;
+  max-width: 250px;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+/* FINANCIAL COLUMNS */
+.wbm-page .wbe-recent .wbe-table th:nth-child(n+4),
+.wbm-page .wbe-recent .wbe-table td:nth-child(n+4) {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* TOTAL COLUMN */
+.wbm-page .wbe-recent .wbe-table td:last-child strong {
+  font-weight: 650;
+  color: #315644;
+}
 
   .wbe-table {
     width: 100%;
