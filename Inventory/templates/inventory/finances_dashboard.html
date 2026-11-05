@@ -1318,4 +1318,228 @@
 }
 
 </style>
+
+<script>
+  (function () {
+    "use strict";
+  
+    const chart = document.querySelector(".wbe-monthly-chart");
+  
+    if (!chart) return;
+  
+    const bars = chart.querySelectorAll(".wbe-month-hit");
+  
+    const tooltip = document.createElement("div");
+    tooltip.className = "wbe-month-tooltip";
+    tooltip.setAttribute("role", "tooltip");
+    tooltip.setAttribute("aria-hidden", "true");
+  
+    document.body.appendChild(tooltip);
+  
+    let activeBar = null;
+    let pinnedBar = null;
+  
+    // Set bar heights and category segment sizes.
+    bars.forEach((bar) => {
+      const height = Number(bar.dataset.height) || 0;
+      const stack = bar.querySelector(".wbe-month-stack");
+  
+      if (stack) {
+        stack.style.height = `${Math.max(0, Math.min(100, height))}%`;
+      }
+  
+      bar.querySelectorAll(".wbe-month-segment").forEach((segment) => {
+        const share = Number(segment.dataset.share) || 0;
+  
+        segment.style.height = `${Math.max(0, Math.min(100, share))}%`;
+      });
+    });
+  
+    function createElement(tag, className, content) {
+      const element = document.createElement(tag);
+      element.className = className;
+  
+      if (content !== undefined) {
+        element.textContent = content;
+      }
+  
+      return element;
+    }
+  
+    function positionTooltip(bar) {
+      const rect = bar.getBoundingClientRect();
+      const tip = tooltip.getBoundingClientRect();
+  
+      const halfWidth = tip.width / 2;
+  
+      const x = Math.max(
+        halfWidth + 12,
+        Math.min(
+          window.innerWidth - halfWidth - 12,
+          rect.left + rect.width / 2
+        )
+      );
+  
+      const above = rect.top - tip.height - 12;
+  
+      const y = above >= 8
+        ? above
+        : Math.min(
+            window.innerHeight - tip.height - 8,
+            rect.bottom + 12
+          );
+  
+      tooltip.style.left = `${x}px`;
+      tooltip.style.top = `${Math.max(8, y)}px`;
+      tooltip.style.transform = "translateX(-50%)";
+    }
+  
+    function hideTooltip(force = false) {
+      if (pinnedBar && !force) return;
+  
+      if (activeBar) {
+        activeBar.classList.remove("is-active");
+        activeBar.setAttribute("aria-expanded", "false");
+      }
+  
+      tooltip.classList.remove("is-visible");
+      tooltip.setAttribute("aria-hidden", "true");
+  
+      activeBar = null;
+  
+      if (force) {
+        pinnedBar = null;
+      }
+    }
+  
+    function showTooltip(bar) {
+      if (activeBar && activeBar !== bar) {
+        activeBar.classList.remove("is-active");
+        activeBar.setAttribute("aria-expanded", "false");
+      }
+  
+      activeBar = bar;
+  
+      tooltip.replaceChildren();
+  
+      const heading = createElement(
+        "strong",
+        "wbe-month-tooltip-title",
+        `${bar.dataset.month} · $${bar.dataset.total}`
+      );
+  
+      tooltip.appendChild(heading);
+  
+      const segments = bar.querySelectorAll(
+        ".wbe-month-segment"
+      );
+  
+      if (!segments.length) {
+        tooltip.appendChild(
+          createElement(
+            "div",
+            "wbe-month-tooltip-row",
+            "No dated expenses recorded."
+          )
+        );
+      }
+  
+      segments.forEach((segment) => {
+        const row = createElement(
+          "div",
+          "wbe-month-tooltip-row"
+        );
+  
+        const name = createElement(
+          "span",
+          "wbe-month-tooltip-name"
+        );
+  
+        const dot = createElement("i", segment.className);
+  
+        const label = createElement(
+          "span",
+          "",
+          segment.dataset.category
+        );
+  
+        const amount = createElement(
+          "strong",
+          "",
+          `$${segment.dataset.amount}`
+        );
+  
+        name.append(dot, label);
+        row.append(name, amount);
+        tooltip.appendChild(row);
+      });
+  
+      bar.classList.add("is-active");
+      bar.setAttribute("aria-expanded", "true");
+  
+      tooltip.classList.add("is-visible");
+      tooltip.setAttribute("aria-hidden", "false");
+  
+      positionTooltip(bar);
+    }
+  
+    bars.forEach((bar) => {
+      bar.addEventListener("pointerenter", (event) => {
+        if (
+          (event.pointerType === "mouse" ||
+           event.pointerType === "pen") &&
+          !pinnedBar
+        ) {
+          showTooltip(bar);
+        }
+      });
+  
+      bar.addEventListener("pointerleave", () => {
+        if (!pinnedBar) hideTooltip();
+      });
+  
+      bar.addEventListener("focus", () => {
+        if (!pinnedBar) showTooltip(bar);
+      });
+  
+      bar.addEventListener("blur", () => {
+        if (!pinnedBar) hideTooltip();
+      });
+  
+      // A tap pins the tooltip until the user taps elsewhere.
+      bar.addEventListener("click", (event) => {
+        event.stopPropagation();
+  
+        if (pinnedBar === bar) {
+          hideTooltip(true);
+        } else {
+          pinnedBar = bar;
+          showTooltip(bar);
+        }
+      });
+  
+      bar.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") {
+          hideTooltip(true);
+          bar.blur();
+        }
+      });
+    });
+  
+    document.addEventListener("click", (event) => {
+      if (!event.target.closest(".wbe-monthly-chart")) {
+        hideTooltip(true);
+      }
+    });
+  
+    window.addEventListener("resize", () => {
+      if (activeBar) positionTooltip(activeBar);
+    });
+  
+    window.addEventListener("scroll", () => {
+      if (activeBar) positionTooltip(activeBar);
+    }, true);
+  })();
+</script>
+  
 {% endblock %}
