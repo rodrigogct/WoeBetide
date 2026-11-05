@@ -10,6 +10,8 @@ from .models import Garment, SaleItem, PartnerCapitalSnapshot, ImportedExpense
 from Catalogue.models import Item
 from .partner_capital import capital_context
 from .reporting_period import get_reporting_window
+from django.db.models.functions import TruncMonth
+from django.utils.text import slugify
 
 ZERO = Decimal('0.00')
 
@@ -101,6 +103,15 @@ def finances_page(request):
         'Studio & Facilities': '#5B608A', 'Shipping & Logistics': '#39747A',
         'Packaging & Labels': '#826A35', 'Website': '#365D87',
     }
+
+    expense_category_legend = [
+        {
+            "name": name,
+            "color_class": f"wbe-cat-{slugify(name)}",
+        }
+        for name in category_colors
+    ]
+
     categories_raw = expenses.values('category').annotate(
         r=Sum('rodrigo'), f=Sum('fran'), b=Sum('bure'), w=Sum('woe'))
     categories = []
@@ -115,22 +126,119 @@ def finances_page(request):
         row['share_display'] = f"{row['share']:.1f}"
         row['width'] = f"{min(100, float(row['share'])):.3f}"
 
-    # Twelve monthly points, ending at the selected month (or current month).
+    # Monthly expenses, stacked by category.
+    # Include all funding sources: Rodrigo, Fran, Bure, and WOE.
+    # Undated expenses are excluded from this historical chart.
+
     anchor = period_start or timezone.localdate().replace(day=1)
-    month_start = lambda offset: date((anchor.year * 12 + anchor.month - 1 + offset) // 12,
-                                      (anchor.year * 12 + anchor.month - 1 + offset) % 12 + 1, 1)
+
+    def month_start(offset):
+        index = anchor.year * 12 + anchor.month - 1 + offset
+        year, month_index = divmod(index, 12)
+        return date(year, month_index + 1, 1)
+
+    first_month = month_start(-11)
+    last_month = month_start(0)
+    last_day = date(
+        last_month.year,
+        last_month.month,
+        monthrange(last_month.year, last_month.month)[1],
+    )
+
+    grouped = (
+        ImportedExpense.objects
+        .filter(expense_date__range=(first_month, last_day))
+        .annotate(month=TruncMonth("expense_date"))
+        .values("month", "category")
+        .annotate(
+            r=Sum("rodrigo"),
+            f=Sum("fran"),
+            b=Sum("bure"),
+            w=Sum("woe"),
+        )
+        .order_by("month", "category")
+    )
+
+    # Actual expenses by month and category.
+    month_categories = {}
+
+    for row in grouped:
+        month_key = (
+            row["month"].year,
+            row["month"].month,
+        )
+
+        amount = sum(
+            (row[k] or ZERO for k in ("r", "f", "b", "w")),
+            ZERO,
+        )
+
+        category = row["category"] or "Other"
+
+        bucket = month_categories.setdefault(month_key, {})
+
+        bucket[category] = bucket.get(category, ZERO) + amount
+
     monthly = []
+
     for offset in range(-11, 1):
-        start = month_start(offset)
-        end = date(start.year, start.month, monthrange(start.year, start.month)[1])
-        this = ImportedExpense.objects.filter(expense_date__range=(start, end)).aggregate(
-            r=Sum('rodrigo'), f=Sum('fran'), b=Sum('bure'), w=Sum('woe'))
-        value = sum((this[k] or ZERO for k in ('r','f','b','w')), ZERO)
-        monthly.append({'label': start.strftime('%b %y'), 'amount': value,
-                        'amount_display': fmt(value)})
-    monthly_max = max((v['amount'] for v in monthly), default=ZERO)
+        current = month_start(offset)
+        key = (current.year, current.month)
+
+        amounts = month_categories.get(key, {})
+        total = sum(amounts.values(), ZERO)
+
+        segments = []
+
+        for name, amount in sorted(
+            amounts.items(),
+            key=lambda item: item[1],
+            reverse=True,
+        ):
+            if amount <= ZERO:
+                continue
+
+            share = (
+                float(amount / total * 100)
+                if total > ZERO
+                else 0
+            )
+
+            category_key = slugify(name)
+
+            if name not in category_colors:
+                category_key = "other"
+
+            segments.append({
+                "name": name,
+                "amount_display": fmt(amount),
+                "share": round(share, 4),
+                "color_class": f"wbe-cat-{category_key}",
+            })
+
+        monthly.append({
+            "label": current.strftime("%b %y"),
+            "amount": total,
+            "amount_display": fmt(total),
+            "segments": segments,
+        })
+
+    monthly_max = max(
+        (row["amount"] for row in monthly),
+        default=ZERO,
+    )
+
     for row in monthly:
-        row['height'] = f"{max(2, float(row['amount']/monthly_max*100)):.2f}" if monthly_max else '2'
+        if monthly_max > ZERO and row["amount"] > ZERO:
+            row["height"] = round(
+                max(
+                    4,
+                    float(row["amount"] / monthly_max * 100),
+                ),
+                4,
+            )
+        else:
+            row["height"] = 0
 
     recent = []
     for e in expenses.order_by('-expense_date', '-source_id')[:10]:
@@ -177,6 +285,7 @@ def finances_page(request):
         'recent_expenses': recent,
         'expense_count': expenses.count(),
         'expense_undated': ImportedExpense.objects.filter(expense_date__isnull=True).count(),
+        "expense_category_legend": expense_category_legend,
 
     })
 
