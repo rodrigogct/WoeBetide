@@ -18,6 +18,7 @@ from .importers import import_inventory_excel
 from .expense_import import sync_expenses
 from datetime import timedelta
 from urllib.parse import urlencode
+from .reporting_period import get_reporting_days
 
 @login_required
 def inventory_list(request):
@@ -570,13 +571,12 @@ def sales_dashboard(request):
     ZERO = Decimal('0.00')
     query = request.GET.get('q', '').strip()[:120]
     channel = request.GET.get('channel', 'all')
-    period = request.GET.get('days', 'all')
+    # Shared selection persists when navigating between dashboard pages.
+    period = get_reporting_days(request)
     show_all = request.GET.get('full') == '1'
     valid_channels = {c.value for c in Sale.Channel}
     if channel not in valid_channels and channel not in ('all', 'physical', 'online'):
         channel = 'all'
-    if period not in ('all', '7', '30', '90'):
-        period = 'all'
 
     sales = Sale.objects.all().order_by('-sale_date', '-created_at', '-pk')
     if query:
@@ -594,9 +594,12 @@ def sales_dashboard(request):
         sales = sales.filter(channel=Sale.Channel.WEBSITE)
     elif channel != 'all':
         sales = sales.filter(channel=channel)
-    if period != 'all':
-        today = timezone.localdate()
-        sales = sales.filter(sale_date__gte=today - timedelta(days=int(period) - 1), sale_date__lte=today)
+    end_date = timezone.localdate()
+    start_date = None if period == 'all' else end_date - timedelta(days=int(period) - 1)
+    if start_date is not None:
+        sales = sales.filter(sale_date__range=(start_date, end_date))
+    else:
+        sales = sales.filter(sale_date__lte=end_date)
 
     CLIP_RATE = Decimal('0.034')
     IVA_RATE = Decimal('0.16')
@@ -650,6 +653,7 @@ def sales_dashboard(request):
         'rows': visible_rows, 'query': query, 'channel': channel, 'days': period,
         'show_all': show_all or bool(query), 'total_count': total_count,
         'visible_count': len(visible_rows), 'totals': totals,
+        'start_date': start_date, 'end_date': end_date,
     })
 
 @login_required

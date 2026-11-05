@@ -1,0 +1,52 @@
+
+<!-- SHARED REPORTING PERIOD -->
+<div class="wb-reporting-toolbar">
+
+    <form method="get" class="wb-reporting-form">
+  
+      {% for key, value in request.GET.items %}
+        {% if key != "days" %}
+          <input
+            type="hidden"
+            name="{{ key }}"
+            value="{{ value }}"
+          >
+        {% endif %}
+      {% endfor %}
+  
+      <select
+        name="days"
+        class="wb-reporting-select"
+        aria-label="Reporting period"
+        onchange="this.form.submit()"
+      >
+        <option value="7" {% if days == 7 %}selected{% endif %}>
+          7 Days
+        </option>
+  
+        <option value="30" {% if days == 30 %}selected{% endif %}>
+          30 Days
+        </option>
+  
+        <option value="90" {% if days == 90 %}selected{% endif %}>
+          90 Days
+        </option>
+  
+        <option value="all" {% if days == "all" %}selected{% endif %}>
+          All Time
+        </option>
+      </select>
+  
+    </form>
+  
+    <span class="wb-reporting-range">
+      {% if start_date and end_date %}
+        {% if days == "all" %}All available history · {% endif %}
+        {{ start_date|date:"M j, Y" }}
+        –
+        {{ end_date|date:"M j, Y" }}
+      {% endif %}
+    </span>
+  
+  </div>
+  

@@ -420,6 +420,35 @@ body {
     display: flex;
     gap: 14px;
   }
+
+  /* HOME DASHBOARD — REPORTING PERIOD ALIGNMENT */
+  .wb-dashboard .wb-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+  }
+
+  .wb-dashboard .wb-toolbar form {
+    display: flex;
+    align-items: center;
+    margin: 0;
+  }
+
+  .wb-dashboard .wb-toolbar .wb-select {
+    margin: 0;
+  }
+
+  .wb-dashboard .wb-toolbar > small {
+    display: inline-flex;
+    align-items: center;
+    align-self: center;
+    margin: 0;
+    line-height: 1.4;
+    white-space: nowrap;
+    font-size: 11px;
+    color: #667168;
+  }
   
   /* ==========================================
      ACTION BUTTONS
@@ -1343,221 +1372,224 @@ body {
     text-transform: uppercase;
   }
 
-/* Partner Capital — Balance */
+  /* Partner Capital — Balance */
 
-.wb-balance {
-    font-weight: 600;
-    font-variant-numeric: tabular-nums;
-    white-space: nowrap;
-}
+  .wb-balance {
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+      white-space: nowrap;
+  }
 
-.wb-balance.positive {
-    color: #4B7961;
-}
+  .wb-balance.positive {
+      color: #4B7961;
+  }
 
-.wb-balance.negative {
-    color: #B36C61;
-}
+  .wb-balance.negative {
+      color: #B36C61;
+  }
 
-.wb-balance.neutral {
-    color: #888888;
-}
+  .wb-balance.neutral {
+      color: #888888;
+  }
 
-/* PARTNER CAPITAL — Consistent Dashboard Styling */
+  /* PARTNER CAPITAL — Consistent Dashboard Styling */
 
-.wb-capital table {
-    width: 100%;
-    border-collapse: collapse;
-    font-family: inherit !important;
-    font-size: 13px;
-    border: none !important;
-}
+  .wb-capital table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: inherit !important;
+      font-size: 13px;
+      border: none !important;
+  }
 
-.wb-capital th,
-.wb-capital td {
-    font-family: inherit !important;
-    border-left: none !important;
-    border-right: none !important;
-    border-bottom: 1px solid #e8e5e0 !important;
-}
+  .wb-capital th,
+  .wb-capital td {
+      font-family: inherit !important;
+      border-left: none !important;
+      border-right: none !important;
+      border-bottom: 1px solid #e8e5e0 !important;
+  }
 
-.wb-capital th {
+  .wb-capital th {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      color: #77736e;
+      background: transparent;
+  }
+
+  .wb-capital td {
+      font-size: 13px;
+      font-weight: 400;
+      color: #252525;
+  }
+
+  .wb-capital .wb-balance {
+      font-weight: 600;
+  }
+
+  .wb-capital .wb-balance.positive {
+      color: #4B7961;
+  }
+
+  .wb-capital .wb-balance.negative {
+      color: #B36C61;
+  }
+
+  .wb-capital .wb-balance.neutral {
+      color: #888888;
+  }
+
+  /* WOE BETIDE â€” Home / Financial Position (scoped; design only) */
+  .wb-position { min-width: 0; }
+  .wb-position-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+    margin-top: 18px;
+  }
+
+  .wb-position-tile {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    background: #f6f5f1;
+    border: 1px solid #ebe9e3;
+    border-radius: 9px;
+    padding: 16px 15px;
+  }
+
+  .wb-position-tile-primary { background: #f1f4f0; border-color: #dde6de; }
+  .wb-position-tile small {
+    color: #6f756e; font-size: 10px; font-weight: 650;
+    line-height: 1.4; letter-spacing: .055em;
+  }
+
+  .wb-position-tile strong {
+    display: block; margin-top: 13px; color: #2a322d;
+    font-size: clamp(24px, 2.5vw, 31px); font-weight: 600;
+    line-height: 1.12; font-variant-numeric: tabular-nums;
+  }
+
+  .wb-position-tile-primary strong { color: #315644; }
+  .wb-position-tile span { margin-top: 10px; font-size: 11px; line-height: 1.5; color: #646c65; }
+  .wb-position-tile em { margin-top: auto; padding-top: 12px; font-size: 10px; font-style: normal; color: #949992; }
+  .wb-position-footnote { margin: 15px 0 0; color: #858a83; font-size: 11px; line-height: 1.55; }
+  @media (max-width: 1000px) { .wb-position-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 500px) {
+    .wb-position-grid { gap: 9px; }
+    .wb-position-tile { padding: 13px 11px; }
+    .wb-position-tile strong { font-size: 25px; }
+  }
+
+  /* 15. HOME DASHBOARD SECTION HEADINGS */
+  .wb-dashboard .wb-section-heading,
+  .wb-dashboard .wb-card h2,
+  .wb-dashboard .wb-card-header h2,
+  .wb-dashboard .wb-panel > h2,
+  .wb-dashboard .wb-financial h2,
+  .wb-dashboard .wb-position h2 {
+    font-family: var(--wb-font-primary, "Helvetica Neue", Helvetica, Arial, sans-serif);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    line-height: 1.4;
+    text-transform: uppercase;
+  }
+
+
+  /* 16. HOME DASHBOARD SECTION DIVIDERS */
+  .wb-dashboard .wb-panel > h2,
+  .wb-dashboard .wb-panel > .wb-card-header,
+  .wb-dashboard .wb-financial > .wb-card-header,
+  .wb-dashboard .wb-position > .wb-card-header {
+    border-bottom: 1px solid #eeeae6;
+    padding-bottom: 10px;
+    margin-bottom: 12px;
+  }
+
+  /* 17. FINANCIAL POSITION SPACING */
+  .wb-dashboard .wb-financial-grid,
+  .wb-dashboard .wb-position-grid {
+    margin-top: 0;
+  }
+
+
+  /* 18. HOME DASHBOARD — UNIFIED SECTION HEADINGS */
+  .wb-dashboard .wb-section-heading,
+  .wb-dashboard .wb-card h2,
+  .wb-dashboard .wb-card-header h2,
+  .wb-dashboard .wb-panel > h2 {
+    font-family: var(
+      --wb-font-primary,
+      "Helvetica Neue",
+      Helvetica,
+      Arial,
+      sans-serif
+    );
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    line-height: 1.4;
+    text-transform: uppercase;
+  }
+
+  /* 19. HOME DASHBOARD — UNIFIED SECTION DIVIDERS */
+  .wb-dashboard .wb-panel > h2,
+  .wb-dashboard .wb-panel > .wb-card-header,
+  .wb-dashboard .wb-sales-chart > .wb-card-header {
+    border-bottom: 1px solid #eeeae6;
+    padding-bottom: 10px;
+    margin-bottom: 12px;
+  }
+
+  /* 20. FINANCIAL POSITION — SPACING */
+  .wb-dashboard .wb-position-grid {
+    margin-top: 0;
+  }
+
+  /* 21. SALES CHANNEL — SPACING */
+  .wb-dashboard .wb-channel-body {
+    padding-top: 8px;
+  }
+
+
+  /* SHARED REPORTING PERIOD */
+  .wb-reporting-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 15px;
+  }
+
+  .wb-reporting-form {
+    display: flex;
+    align-items: center;
+    margin: 0;
+  }
+
+  .wb-reporting-select {
+    width: auto;
+    min-width: 110px;
+    margin: 0;
+    padding: 9px 13px;
+    border: 1px solid #e1ddd8;
+    border-radius: 5px;
+    background: #fbfaf8;
+    color: #28332b;
+    font-family: inherit;
     font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    color: #77736e;
-    background: transparent;
-}
+  }
 
-.wb-capital td {
-    font-size: 13px;
-    font-weight: 400;
-    color: #252525;
-}
+  .wb-reporting-range {
+    display: inline-flex;
+    align-items: center;
+    font-size: 11px;
+    line-height: 1.4;
+    color: #667168;
+    white-space: nowrap;
+  }
 
-.wb-capital .wb-balance {
-    font-weight: 600;
-}
-
-.wb-capital .wb-balance.positive {
-    color: #4B7961;
-}
-
-.wb-capital .wb-balance.negative {
-    color: #B36C61;
-}
-
-.wb-capital .wb-balance.neutral {
-    color: #888888;
-}
-
-/* WOE BETIDE â€” Home / Financial Position (scoped; design only) */
-.wb-position { min-width: 0; }
-.wb-position-grid {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 12px;
-  margin-top: 18px;
-}
-
-.wb-position-tile {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  background: #f6f5f1;
-  border: 1px solid #ebe9e3;
-  border-radius: 9px;
-  padding: 16px 15px;
-}
-
-.wb-position-tile-primary { background: #f1f4f0; border-color: #dde6de; }
-.wb-position-tile small {
-  color: #6f756e; font-size: 10px; font-weight: 650;
-  line-height: 1.4; letter-spacing: .055em;
-}
-
-.wb-position-tile strong {
-  display: block; margin-top: 13px; color: #2a322d;
-  font-size: clamp(24px, 2.5vw, 31px); font-weight: 600;
-  line-height: 1.12; font-variant-numeric: tabular-nums;
-}
-
-.wb-position-tile-primary strong { color: #315644; }
-.wb-position-tile span { margin-top: 10px; font-size: 11px; line-height: 1.5; color: #646c65; }
-.wb-position-tile em { margin-top: auto; padding-top: 12px; font-size: 10px; font-style: normal; color: #949992; }
-.wb-position-footnote { margin: 15px 0 0; color: #858a83; font-size: 11px; line-height: 1.55; }
-@media (max-width: 1000px) { .wb-position-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (max-width: 500px) {
-  .wb-position-grid { gap: 9px; }
-  .wb-position-tile { padding: 13px 11px; }
-  .wb-position-tile strong { font-size: 25px; }
-}
-
-/* 15. HOME DASHBOARD SECTION HEADINGS */
-.wb-dashboard .wb-section-heading,
-.wb-dashboard .wb-card h2,
-.wb-dashboard .wb-card-header h2,
-.wb-dashboard .wb-panel > h2,
-.wb-dashboard .wb-financial h2,
-.wb-dashboard .wb-position h2 {
-  font-family: var(--wb-font-primary, "Helvetica Neue", Helvetica, Arial, sans-serif);
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  line-height: 1.4;
-  text-transform: uppercase;
-}
-
-
-/* 16. HOME DASHBOARD SECTION DIVIDERS */
-.wb-dashboard .wb-panel > h2,
-.wb-dashboard .wb-panel > .wb-card-header,
-.wb-dashboard .wb-financial > .wb-card-header,
-.wb-dashboard .wb-position > .wb-card-header {
-  border-bottom: 1px solid #eeeae6;
-  padding-bottom: 10px;
-  margin-bottom: 12px;
-}
-
-/* 17. FINANCIAL POSITION SPACING */
-.wb-dashboard .wb-financial-grid,
-.wb-dashboard .wb-position-grid {
-  margin-top: 0;
-}
-
-
-/* 18. HOME DASHBOARD — UNIFIED SECTION HEADINGS */
-.wb-dashboard .wb-section-heading,
-.wb-dashboard .wb-card h2,
-.wb-dashboard .wb-card-header h2,
-.wb-dashboard .wb-panel > h2 {
-  font-family: var(
-    --wb-font-primary,
-    "Helvetica Neue",
-    Helvetica,
-    Arial,
-    sans-serif
-  );
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  line-height: 1.4;
-  text-transform: uppercase;
-}
-
-/* 19. HOME DASHBOARD — UNIFIED SECTION DIVIDERS */
-.wb-dashboard .wb-panel > h2,
-.wb-dashboard .wb-panel > .wb-card-header,
-.wb-dashboard .wb-sales-chart > .wb-card-header {
-  border-bottom: 1px solid #eeeae6;
-  padding-bottom: 10px;
-  margin-bottom: 12px;
-}
-
-/* 20. FINANCIAL POSITION — SPACING */
-.wb-dashboard .wb-position-grid {
-  margin-top: 0;
-}
-
-/* 21. SALES CHANNEL — SPACING */
-.wb-dashboard .wb-channel-body {
-  padding-top: 8px;
-}
-
-
-/* HOME DASHBOARD — SHARED SECTION DIVIDER */
-.wb-dashboard .wb-home-divider {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  padding-bottom: 10px;
-  margin-bottom: 12px;
-  border-bottom: 1px solid #eeeae6;
-}
-
-/* CONSISTENT DIVIDER HEADING */
-.wb-dashboard .wb-home-divider h2 {
-  margin: 0;
-  padding: 0;
-  border: 0;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  line-height: 1.4;
-  text-transform: uppercase;
-}
-
-/* FINANCIAL POSITION — REMOVE EXTRA SPACING */
-.wb-dashboard .wb-position-grid {
-  margin-top: 0;
-}
-
-/* SALES CHANNEL — ALIGN CONTENT */
-.wb-dashboard .wb-channel-body {
-  padding-top: 0;
-}
-
-  
-  
+    
