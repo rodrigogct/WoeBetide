@@ -1,6 +1,33 @@
 {% extends "inventory/base_dashboard.html" %}
 
-{% block nav_collections_class %}is-active{% endblock %}
+{% block nav_collections_class %}is-active
+<script>
+  /* Limit only the overview table to 10 rows; never limit collection detail. */
+  (function () {
+    const button = document.getElementById("wbc-collections-toggle");
+    if (!button) return;
+
+    const extraRows = document.querySelectorAll(
+      "#wbc-collections-table .wbc-overview-extra"
+    );
+    const total = button.dataset.total;
+
+    button.addEventListener("click", function () {
+      const expanding = button.getAttribute("aria-expanded") !== "true";
+
+      extraRows.forEach(function (row) {
+        row.hidden = !expanding;
+      });
+
+      button.setAttribute("aria-expanded", String(expanding));
+      button.textContent = expanding
+        ? "SHOW RECENT 10 ↑"
+        : "VIEW FULL COLLECTION HISTORY (" + total + ") ↓";
+    });
+  })();
+</script>
+
+{% endblock %}
 
 {% block content %}
 <div class="wbc-page">
@@ -244,7 +271,7 @@
       </div>
 
       <div class="wbc-table-wrap">
-        <table class="wbc-table">
+        <table class="wbc-table" id="wbc-collections-table">
           <thead>
             <tr>
               <th>COLLECTION</th>
@@ -262,7 +289,7 @@
           </thead>
           <tbody>
             {% for row in rows %}
-              <tr>
+              <tr{% if forloop.counter > 10 %} class="wbc-overview-extra" hidden{% endif %}>
                 <td class="wbc-collection-id">
                   <a href="{% url 'collections_dashboard' %}?collection={{ row.collection.collection_id|urlencode }}">
                     {{ row.collection.collection_id }} <span aria-hidden="true">↗</span>
@@ -285,6 +312,16 @@
           </tbody>
         </table>
       </div>
+      {% if rows|length > 10 %}
+        <button
+          type="button"
+          class="wbc-expand"
+          id="wbc-collections-toggle"
+          aria-expanded="false"
+          aria-controls="wbc-collections-table"
+          data-total="{{ rows|length }}"
+        >VIEW FULL COLLECTION HISTORY ({{ rows|length }}) ↓</button>
+      {% endif %}
     </section>
   {% endif %}
 
@@ -716,6 +753,103 @@ a.wbc-breadcrumb:hover {
   .wbc-panel {
     padding: 15px;
   }
+}
+
+/* Standard table appearance — aligned with Inventory / Recent Expenses. */
+.wbc-page .wbc-table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid #e7e5df;
+  border-radius: 8px;
+  background: #ffffff;
+}
+.wbc-page .wbc-table-wrap table {
+  width: 100%;
+  margin: 0;
+  border: 0 !important;
+  border-collapse: collapse !important;
+  border-spacing: 0 !important;
+  background: #ffffff;
+  font-family: inherit;
+  box-shadow: none !important;
+}
+.wbc-page .wbc-table-wrap thead,
+.wbc-page .wbc-table-wrap thead tr {
+  background: #f7f6f2;
+}
+.wbc-page .wbc-table-wrap th {
+  padding: 13px 12px !important;
+  border: 0 !important;
+  border-bottom: 1px solid #e7e5df !important;
+  background: #f7f6f2 !important;
+  color: #70776f !important;
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: 0.065em;
+  line-height: 1.35;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.wbc-page .wbc-table-wrap td {
+  padding: 11px 12px !important;
+  border: 0 !important;
+  border-bottom: 1px solid #eeece7 !important;
+  background: transparent !important;
+  color: #303a33;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.45;
+  vertical-align: middle;
+}
+.wbc-page .wbc-table-wrap tbody tr {
+  background: #ffffff;
+  transition: background-color 150ms ease;
+}
+.wbc-page .wbc-table-wrap tbody tr:hover {
+  background: #faf9f6;
+}
+.wbc-page .wbc-table-wrap tbody tr:last-child td {
+  border-bottom: 0 !important;
+}
+
+.wbc-page .wbc-table-wrap .wbc-table th:first-child,
+.wbc-page .wbc-table-wrap .wbc-table td:first-child,
+.wbc-page .wbc-table-wrap .wbc-table th:nth-child(2),
+.wbc-page .wbc-table-wrap .wbc-table td:nth-child(2) {
+  text-align: left;
+}
+.wbc-page .wbc-table-wrap .wbc-table th:nth-child(n+3),
+.wbc-page .wbc-table-wrap .wbc-table td:nth-child(n+3) {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.wbc-page .wbc-table-wrap .wbc-table td.wbc-collection-id {
+  color: #315644;
+  font-weight: 600;
+}
+.wbc-page .wbc-table-wrap .wbc-table tr[hidden] {
+  display: none !important;
+}
+.wbc-expand {
+  display: block;
+  width: 100%;
+  margin: 16px auto 0;
+  padding: 12px;
+  border: 1px solid #cbd8cd;
+  border-radius: 7px;
+  background: #ffffff;
+  color: #315644;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.045em;
+  text-align: center;
+  cursor: pointer;
+}
+.wbc-expand:hover {
+  background: #f4f7f3;
 }
 </style>
 

@@ -85,6 +85,79 @@
 .ws-sales .ws-desktop-table th { background: #f7f7f3 !important; }
 .ws-sales .ws-desktop-table tbody tr:last-child td { border-bottom: 0 !important; }
 .ws-sales .ws-stats strong { font-family: inherit; font-variant-numeric: tabular-nums; letter-spacing: -.025em; }
+
+/* Standard table appearance — aligned with Inventory / Recent Expenses. */
+.ws-sales .ws-desktop-table {
+  width: 100%;
+  overflow-x: auto;
+  border: 1px solid #e7e5df;
+  border-radius: 8px;
+  background: #ffffff;
+}
+.ws-sales .ws-desktop-table table {
+  width: 100%;
+  margin: 0;
+  border: 0 !important;
+  border-collapse: collapse !important;
+  border-spacing: 0 !important;
+  background: #ffffff;
+  font-family: inherit;
+  box-shadow: none !important;
+}
+.ws-sales .ws-desktop-table thead,
+.ws-sales .ws-desktop-table thead tr {
+  background: #f7f6f2;
+}
+.ws-sales .ws-desktop-table th {
+  padding: 13px 12px !important;
+  border: 0 !important;
+  border-bottom: 1px solid #e7e5df !important;
+  background: #f7f6f2 !important;
+  color: #70776f !important;
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: 0.065em;
+  line-height: 1.35;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.ws-sales .ws-desktop-table td {
+  padding: 11px 12px !important;
+  border: 0 !important;
+  border-bottom: 1px solid #eeece7 !important;
+  background: transparent !important;
+  color: #303a33;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.45;
+  vertical-align: middle;
+}
+.ws-sales .ws-desktop-table tbody tr {
+  background: #ffffff;
+  transition: background-color 150ms ease;
+}
+.ws-sales .ws-desktop-table tbody tr:hover {
+  background: #faf9f6;
+}
+.ws-sales .ws-desktop-table tbody tr:last-child td {
+  border-bottom: 0 !important;
+}
+
+.ws-sales .ws-desktop-table th:nth-child(4),
+.ws-sales .ws-desktop-table td:nth-child(4),
+.ws-sales .ws-desktop-table th:nth-child(5),
+.ws-sales .ws-desktop-table td:nth-child(5),
+.ws-sales .ws-desktop-table th:nth-child(6),
+.ws-sales .ws-desktop-table td:nth-child(6) {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.ws-sales .ws-desktop-table td.ws-id {
+  font-weight: 700;
+  color: #315644 !important;
+}
 </style>
 
 <script>

@@ -552,12 +552,20 @@ def collections_dashboard(request):
         'total_items': total_items,
     }
 
+    show_all = request.GET.get("full") == "1"
+    total_count = len(rows)
+    visible_rows = rows if show_all else rows[:10]
+
     return render(request, 'inventory/collections_dashboard.html', {
         'rows': rows,
         'summary': summary,
         'selected_collection': selected_collection,
         'detail_items': detail_items,
         "capital_allocation": capital_allocation,
+        "visible_rows": visible_rows,
+        "show_all": show_all,
+        "total_count": total_count,
+        "visible_count": len(visible_rows),
     })
 
 @login_required
