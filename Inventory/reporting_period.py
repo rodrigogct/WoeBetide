@@ -1,5 +1,3 @@
-
-
 from datetime import timedelta
 from django.utils import timezone
 # Shared reporting-period preference for WOE BETIDE.
