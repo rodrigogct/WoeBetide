@@ -1452,5 +1452,78 @@ body {
   .wb-position-tile { padding: 13px 11px; }
   .wb-position-tile strong { font-size: 25px; }
 }
+
+/* 15. HOME DASHBOARD SECTION HEADINGS */
+.wb-dashboard .wb-section-heading,
+.wb-dashboard .wb-card h2,
+.wb-dashboard .wb-card-header h2,
+.wb-dashboard .wb-panel > h2,
+.wb-dashboard .wb-financial h2,
+.wb-dashboard .wb-position h2 {
+  font-family: var(--wb-font-primary, "Helvetica Neue", Helvetica, Arial, sans-serif);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+
+
+/* 16. HOME DASHBOARD SECTION DIVIDERS */
+.wb-dashboard .wb-panel > h2,
+.wb-dashboard .wb-panel > .wb-card-header,
+.wb-dashboard .wb-financial > .wb-card-header,
+.wb-dashboard .wb-position > .wb-card-header {
+  border-bottom: 1px solid #eeeae6;
+  padding-bottom: 10px;
+  margin-bottom: 12px;
+}
+
+/* 17. FINANCIAL POSITION SPACING */
+.wb-dashboard .wb-financial-grid,
+.wb-dashboard .wb-position-grid {
+  margin-top: 0;
+}
+
+
+/* 18. HOME DASHBOARD — UNIFIED SECTION HEADINGS */
+.wb-dashboard .wb-section-heading,
+.wb-dashboard .wb-card h2,
+.wb-dashboard .wb-card-header h2,
+.wb-dashboard .wb-panel > h2 {
+  font-family: var(
+    --wb-font-primary,
+    "Helvetica Neue",
+    Helvetica,
+    Arial,
+    sans-serif
+  );
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1.4;
+  text-transform: uppercase;
+}
+
+/* 19. HOME DASHBOARD — UNIFIED SECTION DIVIDERS */
+.wb-dashboard .wb-panel > h2,
+.wb-dashboard .wb-panel > .wb-card-header,
+.wb-dashboard .wb-sales-chart > .wb-card-header {
+  border-bottom: 1px solid #eeeae6;
+  padding-bottom: 10px;
+  margin-bottom: 12px;
+}
+
+/* 20. FINANCIAL POSITION — SPACING */
+.wb-dashboard .wb-position-grid {
+  margin-top: 0;
+}
+
+/* 21. SALES CHANNEL — SPACING */
+.wb-dashboard .wb-channel-body {
+  padding-top: 8px;
+}
+
+
   
   
