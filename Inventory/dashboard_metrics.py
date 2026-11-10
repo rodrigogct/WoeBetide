@@ -146,17 +146,61 @@ def dashboard_home(request):
                 'other': float(values['other']),
             })
             cursor = (cursor.replace(day=28) + timedelta(days=4)).replace(day=1)
-    else:
+
+    elif days == 90:
         chart = []
         cursor = start
+
+        while cursor <= today:
+            week_end = min(
+                cursor + timedelta(days=6),
+                today,
+            )
+
+            values = {
+                'online': ZERO,
+                'physical': ZERO,
+                'other': ZERO,
+            }
+
+            day = cursor
+
+            while day <= week_end:
+                bucket = daily.get(day)
+
+                if bucket:
+                    for channel in values:
+                        values[channel] += bucket[channel]
+
+                day += timedelta(days=1)
+
+            chart.append({
+                'date': (
+                    f'{cursor:%b %d} – '
+                    f'{week_end:%b %d}'
+                ),
+                'online': float(values['online']),
+                'physical': float(values['physical']),
+                'other': float(values['other']),
+            })
+
+            cursor = week_end + timedelta(days=1)
+
+    else:
+        # Keep daily bars for 7-day and 30-day periods.
+        chart = []
+        cursor = start
+
         while cursor <= today:
             values = daily[cursor]
+
             chart.append({
                 'date': cursor.isoformat(),
                 'online': float(values['online']),
                 'physical': float(values['physical']),
                 'other': float(values['other']),
             })
+
             cursor += timedelta(days=1)
 
     max_day = max((x['online'] + x['physical'] + x['other'] for x in chart), default=0)
