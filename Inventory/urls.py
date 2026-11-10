@@ -5,6 +5,7 @@ from .inventory_suggest import inventory_suggest
 from .sales_suggest import sales_suggest
 from .financial_pages import finances_page, partners_page
 from .source_workbook import download_source_excel
+from django.contrib.auth import views as auth_views
 
 urlpatterns = [
     path("dashboard/", views.dashboard_home, name="dashboard_home"),
@@ -27,4 +28,7 @@ urlpatterns = [
     path("dashboard/finances/",finances_page,name="finances_dashboard",),
     path("dashboard/partners/",partners_page,name="partners_dashboard",),
     path("source-excel/download/",download_source_excel, name="download_source_excel",),
+
+    path("dashboard/login/",auth_views.LoginView.as_view(template_name="inventory/dashboard_login.html",redirect_authenticated_user=True,),name="dashboard_login",),
+
 ]

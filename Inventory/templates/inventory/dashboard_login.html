@@ -1,0 +1,152 @@
+
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login | WOE BETIDE</title>
+  <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+
+  <style>
+    .wb-login-page {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: #f3f0eb;
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      text-transform: none;
+    }
+
+    .wb-login-card {
+      width: 100%;
+      max-width: 390px;
+      padding: 36px;
+      border: 1px solid #e6e3df;
+      border-radius: 11px;
+      background: #ffffff;
+    }
+
+    .wb-login-title {
+      margin: 0 0 8px;
+      color: #28332b;
+      font-size: 25px;
+      font-weight: 700;
+      letter-spacing: -0.045em;
+    }
+
+    .wb-login-subtitle {
+      margin: 0 0 30px;
+      color: #788078;
+      font-size: 12px;
+    }
+
+    .wb-login-field {
+      margin-bottom: 18px;
+    }
+
+    .wb-login-field label {
+      display: block;
+      margin-bottom: 8px;
+      color: #58645b;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .wb-login-field input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #e1ddd8;
+      border-radius: 6px;
+      background: #fbfaf8;
+      color: #28332b;
+      font: inherit;
+      font-size: 13px;
+      text-transform: none;
+    }
+
+    .wb-login-button {
+      width: 100%;
+      margin-top: 8px;
+      padding: 13px;
+      border: 0;
+      border-radius: 6px;
+      background: #315644;
+      color: #ffffff;
+      font: inherit;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .wb-login-button:hover {
+      background: #263f32;
+    }
+
+    .wb-login-error {
+      margin-bottom: 18px;
+      color: #b36c61;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+
+<body class="wb-login-page">
+
+  <main class="wb-login-card">
+
+    <h1 class="wb-login-title">WOE BETIDE</h1>
+    <p class="wb-login-subtitle">
+      Business Dashboard · Sign in
+    </p>
+
+    {% if form.errors %}
+      <p class="wb-login-error">
+        Incorrect username or password.
+      </p>
+    {% endif %}
+
+    <form method="post" action="{% url 'dashboard_login' %}">
+      {% csrf_token %}
+
+      <div class="wb-login-field">
+        <label for="id_username">USERNAME</label>
+        <input
+          type="text"
+          id="id_username"
+          name="username"
+          autocomplete="username"
+          required
+          autofocus
+        >
+      </div>
+
+      <div class="wb-login-field">
+        <label for="id_password">PASSWORD</label>
+        <input
+          type="password"
+          id="id_password"
+          name="password"
+          autocomplete="current-password"
+          required
+        >
+      </div>
+
+      <input
+        type="hidden"
+        name="next"
+        value="{{ next|default:'/dashboard/' }}"
+      >
+
+      <button class="wb-login-button" type="submit">
+        SIGN IN
+      </button>
+    </form>
+
+  </main>
+
+</body>
+</html>
