@@ -18,6 +18,24 @@
     <small>{{ start_date|date:"M j" }} – {{ end_date|date:"M j, Y" }}</small>
   </div>
 
+  <!-- LAST EXCEL IMPORT -->
+  {% load tz %}
+  <div class="wb-import-status">
+    <span class="wb-import-status-label">
+      LAST EXCEL IMPORT
+    </span>
+
+    <strong class="wb-import-status-value">
+      {% if last_import_at %}
+        {% timezone "America/Mexico_City" %}
+          {{ last_import_at|date:"M j, Y · g:i A" }}
+        {% endtimezone %}
+      {% else %}
+        Not available
+      {% endif %}
+    </strong>
+  </div>
+
   <!-- PRIMARY ACTIONS -->
   <div class="wb-actions">
 

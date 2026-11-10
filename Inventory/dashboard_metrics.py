@@ -13,7 +13,7 @@ from django.shortcuts import render
 from django.urls import reverse
 from django.utils import timezone
 
-from .models import Garment, Sale, SaleItem, Payment
+from .models import Garment, Sale, SaleItem, Payment, SourceWorkbook
 from Catalogue.models import Item
 from .partner_capital import capital_context
 from .home_performance import performance_efficiency_context
@@ -230,6 +230,24 @@ def dashboard_home(request):
         '-sale__sale_date', '-sale__created_at', '-pk'
     )[:5])
     total_channels = sum(totals.values(), ZERO)
+
+    # Latest successfully saved Excel workbook.
+    # Independent of the reporting-period filter.
+    latest_import = SourceWorkbook.objects.order_by("-pk").first()
+
+    last_import_at = None
+
+    if latest_import:
+        for field_name in (
+            "imported_at",
+            "uploaded_at",
+            "created_at",
+            "saved_at",
+        ):
+            if hasattr(latest_import, field_name):
+                last_import_at = getattr(latest_import, field_name)
+                break
+
     context = {
         'days': days, 'start_date': start, 'end_date': today,
         'revenue': money(revenue), 'gross_profit': money(revenue - cogs),
@@ -250,8 +268,8 @@ def dashboard_home(request):
         'last_popup': latest_popup, 'best_popup': best_popup,
         'popup_average': money(popup_average) if popup_average is not None else None,
         'recent_activity': latest_items,
-        'add_garment_url': reverse('admin:%s_%s_add' % (Item._meta.app_label,Item._meta.model_name)
-),
+        'add_garment_url': reverse('admin:%s_%s_add' % (Item._meta.app_label,Item._meta.model_name)),
+        'last_import_at': last_import_at,
     }
     context.update(performance_efficiency_context(days, start, today))
     context.update(capital_context())
