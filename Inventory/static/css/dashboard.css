@@ -1592,4 +1592,42 @@ body {
     white-space: nowrap;
   }
 
+  /* STICKY DESKTOP NAVIGATION */
+  @media (min-width: 769px) {
+    .wb-sidebar {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      min-height: 0;
+      align-self: flex-start;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      z-index: 100;
+    }
+  }
+
+/* STICKY MOBILE NAVIGATION */
+@media (max-width: 768px) {
+  .wb-mobile-header {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    background: #faf9f6;
+    border-bottom: 1px solid #e7e3df;
+  }
+
+  .wb-sidebar.wb-sidebar-open {
+    position: fixed;
+    top: 60px;
+    left: 0;
+    bottom: 0;
+    height: auto;
+    max-height: calc(100dvh - 60px);
+    overflow-y: auto;
+    z-index: 1001;
+  }
+}
+
+
+
     
