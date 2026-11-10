@@ -1630,4 +1630,43 @@ body {
 
 
 
+
+/* HOME — COMPACT PARTNER CAPITAL TABLE */
+@media (min-width: 769px) {
+  .wb-dashboard .wb-capital .table-wrap {
+    width: 100%;
+    overflow-x: visible;
+  }
+
+  .wb-dashboard .wb-capital table {
+    width: 100%;
+    min-width: 0;
+    table-layout: fixed;
+    white-space: normal !important;
+    font-size: 11px !important;
+  }
+
+  .wb-dashboard .wb-capital th,
+  .wb-dashboard .wb-capital td {
+    padding: 10px 6px !important;
+    font-size: 11px !important;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    vertical-align: middle;
+  }
+
+  .wb-dashboard .wb-capital th:first-child,
+  .wb-dashboard .wb-capital td:first-child {
+    width: 15%;
+    text-align: left;
+  }
+
+  .wb-dashboard .wb-capital th:last-child,
+  .wb-dashboard .wb-capital td:last-child {
+    width: 25%;
+  }
+}
+
+
+
     
