@@ -1693,6 +1693,40 @@ body {
 }
 
 
+/* COLLECTIONS — COMPACT MOBILE KPI LAYOUT */
+@media (max-width: 520px) {
+  .wbc-page .wbc-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 9px;
+    margin-bottom: 18px;
+  }
+
+  .wbc-page .wbc-kpi {
+    min-width: 0;
+    min-height: 116px;
+    padding: 13px 11px;
+  }
+
+  .wbc-page .wbc-kpi small {
+    font-size: 9px;
+    line-height: 1.35;
+    letter-spacing: 0.035em;
+    margin-bottom: 9px;
+  }
+
+  .wbc-page .wbc-kpi strong {
+    font-size: 19px;
+    line-height: 1.2;
+    margin-bottom: 7px;
+    overflow-wrap: anywhere;
+  }
+
+  .wbc-page .wbc-kpi span {
+    font-size: 10px;
+    line-height: 1.4;
+  }
+}
+
 
 
     
