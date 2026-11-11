@@ -914,6 +914,7 @@ body {
     display: flex;
     align-items: flex-start;
     gap: 8px;
+    font-size: 12px;
     border-right: 1px solid #eae6e2;
     padding: 0 8px;
     min-width: 0;
