@@ -97,7 +97,32 @@ def dashboard_home(request):
     published = Item.objects.filter(is_sold=False, is_archive=False).count()
     stock = available + Garment.objects.filter(status=Garment.Status.PUBLISHED).count()
     sold_all_time = Garment.objects.filter(status=Garment.Status.SOLD).count()
-    missing_photo = Garment.objects.filter(status__in=['available', 'published']).filter(Q(img1__isnull=True) | Q(img1='')).count()
+    
+    # Missing photos across Inventory and linked Catalogue records.
+    saleable_garments = Garment.objects.filter(
+        status__in=[
+            Garment.Status.AVAILABLE,
+            Garment.Status.PUBLISHED,
+        ]
+    )
+
+    garments_with_inventory_photo = saleable_garments.exclude(
+        Q(img1__isnull=True) | Q(img1="")
+    ).values_list("pk", flat=True)
+
+    garments_with_catalogue_photo = Item.objects.filter(
+        garment__isnull=False,
+        is_archive=False,
+        is_sold=False,
+    ).exclude(
+        Q(img1__isnull=True) | Q(img1="")
+    ).values_list("garment_id", flat=True)
+
+    missing_photo = saleable_garments.exclude(
+        Q(pk__in=garments_with_inventory_photo) |
+        Q(pk__in=garments_with_catalogue_photo)
+    ).count()
+
 
     missing_measurements = sum(
         1
