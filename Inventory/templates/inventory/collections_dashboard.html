@@ -188,8 +188,20 @@
         <span class="wbc-capital-label">
           INVENTORY TURNOVER
         </span>
-        <strong>—</strong>
-        <small>Requires historical inventory balances</small>
+        <strong>
+          {% if inventory_efficiency.average_days_to_sell is not None %}
+            {{ inventory_efficiency.average_days_to_sell }} days
+          {% else %}
+            —
+          {% endif %}
+        </strong>
+        
+        <small>
+          Based on {{ inventory_efficiency.verified_sales }}
+          of {{ inventory_efficiency.total_sold }}
+          sold garments with verified dates
+        </small>
+        
       </div>
 
       <div>

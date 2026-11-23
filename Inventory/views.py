@@ -531,6 +531,51 @@ def collections_dashboard(request):
         "has_other": other_cost != ZERO,
     }
 
+    sold_garments = [
+        g for g in allocation_garments
+        if g.status == Garment.Status.SOLD
+    ]
+
+    sale_dates = dict(
+        SaleItem.objects.filter(
+            garment_id__in=[g.pk for g in sold_garments]
+        ).values_list(
+            "garment_id",
+            "sale__sale_date",
+        )
+    )
+
+    days_to_sell = []
+    invalid_dates = 0
+
+    for garment in sold_garments:
+        purchase_date = garment.collection.date_bought
+        sale_date = sale_dates.get(garment.pk)
+
+        if not purchase_date or not sale_date:
+            continue
+
+        days = (sale_date - purchase_date).days
+
+        if days < 0:
+            invalid_dates += 1
+            continue
+
+        days_to_sell.append(days)
+
+    average_days_to_sell = (
+        round(sum(days_to_sell) / len(days_to_sell), 1)
+        if days_to_sell
+        else None
+    )
+
+    inventory_efficiency = {
+        "average_days_to_sell": average_days_to_sell,
+        "verified_sales": len(days_to_sell),
+        "total_sold": len(sold_garments),
+        "invalid_dates": invalid_dates,
+    }
+
     total_cost = sum((r['total_cost_value'] for r in summary_source), ZERO)
     revenue = sum((r['revenue_value'] for r in summary_source), ZERO)
     sold_cost = sum((r['sold_cost_value'] for r in summary_source), ZERO)
@@ -561,12 +606,14 @@ def collections_dashboard(request):
         'summary': summary,
         'selected_collection': selected_collection,
         'detail_items': detail_items,
-        "capital_allocation": capital_allocation,
-        "visible_rows": visible_rows,
-        "show_all": show_all,
-        "total_count": total_count,
-        "visible_count": len(visible_rows),
+        'capital_allocation': capital_allocation,
+        'inventory_efficiency': inventory_efficiency,
+        'visible_rows': visible_rows,
+        'show_all': show_all,
+        'total_count': total_count,
+        'visible_count': len(visible_rows),
     })
+
 
 @login_required
 def sales_dashboard(request):
