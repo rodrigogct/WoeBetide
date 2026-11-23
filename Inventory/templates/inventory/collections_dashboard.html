@@ -188,6 +188,15 @@
         <span class="wbc-capital-label">
           INVENTORY TURNOVER
         </span>
+        <strong>—</strong>
+        <small>Requires historical inventory balances</small>
+      </div>
+
+      <div>
+        <span class="wbc-capital-label">
+          AVERAGE DAYS TO SELL
+        </span>
+
         <strong>
           {% if inventory_efficiency.average_days_to_sell is not None %}
             {{ inventory_efficiency.average_days_to_sell }} days
@@ -202,14 +211,6 @@
           sold garments with verified dates
         </small>
         
-      </div>
-
-      <div>
-        <span class="wbc-capital-label">
-          AVERAGE DAYS TO SELL
-        </span>
-        <strong>—</strong>
-        <small>Requires verified acquisition and sale dates</small>
       </div>
 
     </div>
