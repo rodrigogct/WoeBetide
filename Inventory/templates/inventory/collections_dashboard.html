@@ -48,7 +48,53 @@
         <p>Acquisition performance · inventory recovery</p>
       {% endif %}
     </div>
-    <span class="wbc-topnote">{% if selected_collection %}SELECTED COLLECTION{% else %}ALL COLLECTIONS{% endif %} · MXN</span>
+      <div class="wbc-reporting">
+
+        <form method="get" class="wbc-reporting-form">
+      
+          {% if selected_collection %}
+            <input
+              type="hidden"
+              name="collection"
+              value="{{ selected_collection.collection_id }}"
+            >
+          {% endif %}
+      
+          <select
+            name="days"
+            class="wb-reporting-select"
+            aria-label="Collections reporting period"
+            onchange="this.form.submit()"
+          >
+            <option value="7" {% if days == 7 %}selected{% endif %}>
+              7 Days
+            </option>
+      
+            <option value="30" {% if days == 30 %}selected{% endif %}>
+              30 Days
+            </option>
+      
+            <option value="90" {% if days == 90 %}selected{% endif %}>
+              90 Days
+            </option>
+      
+            <option value="all" {% if days == "all" %}selected{% endif %}>
+              All Time
+            </option>
+          </select>
+      
+        </form>
+      
+        <small class="wbc-reporting-range">
+          {% if start_date %}
+            {{ start_date|date:"M j" }} –
+            {{ end_date|date:"M j, Y" }}
+          {% else %}
+            All available history
+          {% endif %}
+        </small>
+      
+      </div>    
   </div>
 
   <!-- 2. CONTEXT-SENSITIVE SUMMARY -->
@@ -194,22 +240,22 @@
 
       <div>
         <span class="wbc-capital-label">
-          AVERAGE DAYS TO SELL
+          MEDIAN DAYS TO SELL
         </span>
-
+        
         <strong>
-          {% if inventory_efficiency.average_days_to_sell is not None %}
-            {{ inventory_efficiency.average_days_to_sell }} days
+          {% if inventory_efficiency.median_days_to_sell is not None %}
+            {{ inventory_efficiency.median_days_to_sell }} days
           {% else %}
             —
           {% endif %}
         </strong>
         
         <small>
-          Based on {{ inventory_efficiency.verified_sales }}
-          of {{ inventory_efficiency.total_sold }}
-          sold garments with verified dates
-        </small>
+          {{ inventory_efficiency.verified_sales }}
+          of {{ inventory_efficiency.period_sold_count }}
+          dated sales with valid acquisition dates
+        </small> 
         
       </div>
 
@@ -864,6 +910,31 @@ a.wbc-breadcrumb:hover {
 .wbc-expand:hover {
   background: #f4f7f3;
 }
+
+/* COLLECTIONS — REPORTING PERIOD */
+.wbc-reporting {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.wbc-reporting-form {
+  margin: 0;
+}
+
+.wbc-reporting-range {
+  color: #7d857d;
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+@media (max-width: 520px) {
+  .wbc-reporting {
+    align-items: flex-start;
+  }
+}
+
 </style>
 
 <script>

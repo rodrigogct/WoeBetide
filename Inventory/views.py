@@ -390,39 +390,131 @@ def shop_all(request):
 @login_required
 def collections_dashboard(request):
     from django.http import Http404
+    from django.utils import timezone
     from decimal import Decimal
+    from datetime import timedelta
+    from statistics import median
+
+    from .reporting_period import get_reporting_days
 
     ZERO = Decimal('0.00')
 
     def money(amount):
         return f'{amount:,.2f}'
 
-    # SaleItem is the authoritative transaction price when present. For legacy
-    # imported sold garments without SaleItem, use Garment.sold_price instead.
-    garment_list = list(Garment.objects.select_related('collection').filter(
-        collection__isnull=False
-    ).order_by('garment_id'))
-    sale_prices = dict(SaleItem.objects.filter(
-        garment_id__in=[g.pk for g in garment_list]
-    ).values_list('garment_id', 'sold_price'))
+    # 1. SHARED REPORTING PERIOD
 
-    collections = list(Collection.objects.all().order_by('-date_bought', '-pk'))
-    by_collection = {c.pk: [] for c in collections}
+    period = get_reporting_days(request)
+    today = timezone.localdate()
+
+    period_start = (
+        None
+        if period == "all"
+        else today - timedelta(days=int(period) - 1)
+    )
+
+    reporting_days = (
+        "all"
+        if period == "all"
+        else int(period)
+    )
+
+    # 2. COLLECTION AND GARMENT DATA
+
+    # SaleItem is the authoritative transaction price when present.
+    # For legacy imported sold garments without SaleItem,
+    # use Garment.sold_price instead.
+
+    garment_list = list(
+        Garment.objects
+        .select_related('collection')
+        .filter(collection__isnull=False)
+        .order_by('garment_id')
+    )
+
+    garment_ids = [g.pk for g in garment_list]
+
+    sale_prices = dict(
+        SaleItem.objects.filter(
+            garment_id__in=garment_ids
+        ).values_list(
+            'garment_id',
+            'sold_price'
+        )
+    )
+
+    collections = list(
+        Collection.objects.all()
+        .order_by('-date_bought', '-pk')
+    )
+
+    by_collection = {
+        c.pk: []
+        for c in collections
+    }
+
     for garment in garment_list:
         by_collection[garment.collection_id].append(garment)
 
-    def calculate(collection, garments):
-        sold = [g for g in garments if g.status == Garment.Status.SOLD]
-        unsold = [g for g in garments if g.status not in (Garment.Status.SOLD, Garment.Status.ARCHIVE)]
-        archived = [g for g in garments if g.status == Garment.Status.ARCHIVE]
+    # 3. COLLECTION FINANCIAL CALCULATIONS
 
-        total_cost = sum((g.cost or ZERO for g in garments), ZERO)
-        sold_cost = sum((g.cost or ZERO for g in sold), ZERO)
-        revenue = sum((sale_prices.get(g.pk, g.sold_price) or ZERO for g in sold), ZERO)
+    # These remain cumulative and independent
+    # of the reporting-period selector.
+
+    def calculate(collection, garments):
+
+        sold = [
+            g for g in garments
+            if g.status == Garment.Status.SOLD
+        ]
+
+        unsold = [
+            g for g in garments
+            if g.status not in (
+                Garment.Status.SOLD,
+                Garment.Status.ARCHIVE
+            )
+        ]
+
+        archived = [
+            g for g in garments
+            if g.status == Garment.Status.ARCHIVE
+        ]
+
+        total_cost = sum(
+            (g.cost or ZERO for g in garments),
+            ZERO
+        )
+
+        sold_cost = sum(
+            (g.cost or ZERO for g in sold),
+            ZERO
+        )
+
+        revenue = sum(
+            (
+                sale_prices.get(g.pk, g.sold_price)
+                or ZERO
+                for g in sold
+            ),
+            ZERO
+        )
+
         gross_profit = revenue - sold_cost
-        sell_through = (Decimal(len(sold)) / Decimal(len(garments)) * 100) if garments else ZERO
-        recovery = (revenue / total_cost * 100) if total_cost > 0 else None
-        realized_roi = (gross_profit / sold_cost * 100) if sold_cost > 0 else None
+
+        sell_through = (
+            Decimal(len(sold))
+            / Decimal(len(garments))
+            * 100
+        ) if garments else ZERO
+
+        recovery = (
+            revenue / total_cost * 100
+        ) if total_cost > 0 else None
+
+        realized_roi = (
+            gross_profit / sold_cost * 100
+        ) if sold_cost > 0 else None
 
         return {
             'collection': collection,
@@ -430,52 +522,116 @@ def collections_dashboard(request):
             'sold_count': len(sold),
             'available_count': len(unsold),
             'archived_count': len(archived),
+
             'total_cost_value': total_cost,
             'sold_cost_value': sold_cost,
             'revenue_value': revenue,
             'gross_profit_value': gross_profit,
+
             'total_cost': money(total_cost),
             'revenue': money(revenue),
             'gross_profit': money(gross_profit),
+
             'sell_through': f'{sell_through:.1f}',
-            'capital_recovery': f'{recovery:.1f}' if recovery is not None else None,
-            'realized_roi': f'{realized_roi:.1f}' if realized_roi is not None else None,
+
+            'capital_recovery': (
+                f'{recovery:.1f}'
+                if recovery is not None
+                else None
+            ),
+
+            'realized_roi': (
+                f'{realized_roi:.1f}'
+                if realized_roi is not None
+                else None
+            ),
         }
 
-    rows = [calculate(c, by_collection[c.pk]) for c in collections]
+    rows = [
+        calculate(c, by_collection[c.pk])
+        for c in collections
+    ]
 
-    # Drill-down is on the same existing URL, e.g. /dashboard/collections/?collection=12
-    collection_key = request.GET.get('collection', '').strip()
+    # 4. COLLECTION DRILL-DOWN
+
+    # Example:
+    # /dashboard/collections/?collection=12
+
+    collection_key = request.GET.get(
+        'collection', ''
+    ).strip()
+
     selected_collection = None
     detail_items = []
 
     if collection_key:
+
         selected_collection = next(
-            (c for c in collections if c.collection_id == collection_key), None
+            (
+                c for c in collections
+                if c.collection_id == collection_key
+            ),
+            None
         )
+
         if selected_collection is None:
             raise Http404('Collection not found')
 
-        selected_row = next(r for r in rows if r['collection'].pk == selected_collection.pk)
-        selected_garments = by_collection[selected_collection.pk]
+        selected_row = next(
+            r for r in rows
+            if r['collection'].pk == selected_collection.pk
+        )
+
+        selected_garments = by_collection[
+            selected_collection.pk
+        ]
+
         summary_source = [selected_row]
 
         for g in selected_garments:
-            sold_price = (sale_prices.get(g.pk, g.sold_price) or ZERO) if g.status == Garment.Status.SOLD else None
+
+            sold_price = (
+                sale_prices.get(g.pk, g.sold_price)
+                or ZERO
+            ) if g.status == Garment.Status.SOLD else None
+
             detail_items.append({
                 'garment': g,
                 'status': g.get_status_display(),
+
                 'cost': money(g.cost or ZERO),
-                'listed_price': money(g.listed_price) if g.listed_price is not None else None,
-                'sold_price': money(sold_price) if sold_price is not None else None,
-                'gross_profit': money(sold_price - (g.cost or ZERO)) if sold_price is not None else None,
+
+                'listed_price': (
+                    money(g.listed_price)
+                    if g.listed_price is not None
+                    else None
+                ),
+
+                'sold_price': (
+                    money(sold_price)
+                    if sold_price is not None
+                    else None
+                ),
+
+                'gross_profit': (
+                    money(sold_price - (g.cost or ZERO))
+                    if sold_price is not None
+                    else None
+                ),
             })
+
     else:
         summary_source = rows
 
-    # Inventory capital allocation for selected or all collections.
+    # 5. INVENTORY CAPITAL ALLOCATION
+
+    # This is a cumulative inventory position.
+    # It does not change with the reporting period.
+        
     if selected_collection is not None:
-        allocation_garments = by_collection[selected_collection.pk]
+        allocation_garments = by_collection[
+            selected_collection.pk
+        ]
     else:
         allocation_garments = garment_list
 
@@ -485,7 +641,7 @@ def collections_dashboard(request):
             for g in allocation_garments
             if g.status == Garment.Status.SOLD
         ),
-        ZERO,
+        ZERO
     )
 
     saleable_statuses = {
@@ -499,10 +655,12 @@ def collections_dashboard(request):
             for g in allocation_garments
             if g.status in saleable_statuses
         ),
-        ZERO,
+        ZERO
     )
 
-    # Archived, draft, and reserved items remain separately identified.
+    # Archived, draft, and reserved items
+    # remain separately identified.
+
     other_cost = sum(
         (
             g.cost or ZERO
@@ -510,15 +668,23 @@ def collections_dashboard(request):
             if g.status not in saleable_statuses
             and g.status != Garment.Status.SOLD
         ),
-        ZERO,
+        ZERO
     )
 
-    allocation_total = sold_cost + remaining_cost + other_cost
+    allocation_total = (
+        sold_cost
+        + remaining_cost
+        + other_cost
+    )
 
     def allocation_percentage(amount):
         if allocation_total <= ZERO:
             return 0
-        return round(float(amount / allocation_total * 100), 2)
+
+        return round(
+            float(amount / allocation_total * 100),
+            2
+        )
 
     capital_allocation = {
         "total": money(allocation_total),
@@ -526,10 +692,20 @@ def collections_dashboard(request):
         "remaining_cost": money(remaining_cost),
         "other_cost": money(other_cost),
         "sold_pct": allocation_percentage(sold_cost),
-        "remaining_pct": allocation_percentage(remaining_cost),
+        "remaining_pct": allocation_percentage(
+            remaining_cost
+        ),
+
         "other_pct": allocation_percentage(other_cost),
         "has_other": other_cost != ZERO,
     }
+
+    # 6. INVENTORY EFFICIENCY — MEDIAN DAYS TO SELL
+
+    # Uses actual sale dates.
+    # The reporting period filters by the date the garment was sold.
+    # Legacy sold garments without a SaleItem are excluded.
+    # Negative durations are excluded.
 
     sold_garments = [
         g for g in allocation_garments
@@ -538,21 +714,47 @@ def collections_dashboard(request):
 
     sale_dates = dict(
         SaleItem.objects.filter(
-            garment_id__in=[g.pk for g in sold_garments]
+            garment_id__in=[
+                g.pk for g in sold_garments
+            ]
         ).values_list(
             "garment_id",
-            "sale__sale_date",
+            "sale__sale_date"
         )
     )
 
     days_to_sell = []
+
+    period_sold_count = 0
     invalid_dates = 0
+    missing_acquisition_dates = 0
 
     for garment in sold_garments:
-        purchase_date = garment.collection.date_bought
+
+        purchase_date = (
+            garment.collection.date_bought
+            if garment.collection
+            else None
+        )
+
         sale_date = sale_dates.get(garment.pk)
 
-        if not purchase_date or not sale_date:
+        if not sale_date:
+            continue
+
+        if sale_date > today:
+            continue
+
+        if (
+            period_start is not None
+            and sale_date < period_start
+        ):
+            continue
+
+        period_sold_count += 1
+
+        if not purchase_date:
+            missing_acquisition_dates += 1
             continue
 
         days = (sale_date - purchase_date).days
@@ -563,25 +765,56 @@ def collections_dashboard(request):
 
         days_to_sell.append(days)
 
-    average_days_to_sell = (
-        round(sum(days_to_sell) / len(days_to_sell), 1)
+    median_days_to_sell = (
+        round(float(median(days_to_sell)), 1)
         if days_to_sell
         else None
     )
 
     inventory_efficiency = {
-        "average_days_to_sell": average_days_to_sell,
+        "median_days_to_sell": median_days_to_sell,
         "verified_sales": len(days_to_sell),
+        "period_sold_count": period_sold_count,
         "total_sold": len(sold_garments),
         "invalid_dates": invalid_dates,
+        "missing_acquisition_dates": (
+            missing_acquisition_dates
+        ),
+        "period": reporting_days,
     }
 
-    total_cost = sum((r['total_cost_value'] for r in summary_source), ZERO)
-    revenue = sum((r['revenue_value'] for r in summary_source), ZERO)
-    sold_cost = sum((r['sold_cost_value'] for r in summary_source), ZERO)
-    total_items = sum(r['total_items'] for r in summary_source)
-    sold_count = sum(r['sold_count'] for r in summary_source)
-    available_count = sum(r['available_count'] for r in summary_source)
+    # 7. COLLECTION SUMMARY
+
+    total_cost = sum(
+        (r['total_cost_value'] for r in summary_source),
+        ZERO
+    )
+
+    revenue = sum(
+        (r['revenue_value'] for r in summary_source),
+        ZERO
+    )
+
+    sold_cost = sum(
+        (r['sold_cost_value'] for r in summary_source),
+        ZERO
+    )
+
+    total_items = sum(
+        r['total_items']
+        for r in summary_source
+    )
+
+    sold_count = sum(
+        r['sold_count']
+        for r in summary_source
+    )
+
+    available_count = sum(
+        r['available_count']
+        for r in summary_source
+    )
+
     profit = revenue - sold_cost
 
     summary = {
@@ -589,31 +822,62 @@ def collections_dashboard(request):
         'total_cost': money(total_cost),
         'revenue': money(revenue),
         'gross_profit': money(profit),
-        'capital_recovery': f'{revenue / total_cost * 100:.1f}' if total_cost > 0 else None,
-        'sell_through': f'{Decimal(sold_count) / Decimal(total_items) * 100:.1f}' if total_items else None,
-        'realized_roi': f'{profit / sold_cost * 100:.1f}' if sold_cost > 0 else None,
+        'capital_recovery': (
+            f'{revenue / total_cost * 100:.1f}'
+            if total_cost > 0
+            else None
+        ),
+        'sell_through': (
+            f'{Decimal(sold_count) / Decimal(total_items) * 100:.1f}'
+            if total_items
+            else None
+        ),
+        'realized_roi': (
+            f'{profit / sold_cost * 100:.1f}'
+            if sold_cost > 0
+            else None
+        ),
+
         'available_items': available_count,
+
         'sold_items': sold_count,
+
         'total_items': total_items,
     }
 
+    # 8. COLLECTION TABLE — 10-ROW PREVIEW
+
     show_all = request.GET.get("full") == "1"
+
     total_count = len(rows)
-    visible_rows = rows if show_all else rows[:10]
 
-    return render(request, 'inventory/collections_dashboard.html', {
-        'rows': rows,
-        'summary': summary,
-        'selected_collection': selected_collection,
-        'detail_items': detail_items,
-        'capital_allocation': capital_allocation,
-        'inventory_efficiency': inventory_efficiency,
-        'visible_rows': visible_rows,
-        'show_all': show_all,
-        'total_count': total_count,
-        'visible_count': len(visible_rows),
-    })
+    visible_rows = (
+        rows
+        if show_all
+        else rows[:10]
+    )
 
+    # 9. TEMPLATE CONTEXT
+
+    return render(
+        request,
+        'inventory/collections_dashboard.html',
+        {
+            'rows': rows,
+            'summary': summary,
+            'selected_collection': selected_collection,
+            'detail_items': detail_items,
+            'capital_allocation': capital_allocation,
+            'inventory_efficiency': inventory_efficiency,
+            'visible_rows': visible_rows,
+            'show_all': show_all,
+            'total_count': total_count,
+            'visible_count': len(visible_rows),
+            'days': reporting_days,
+            'start_date': period_start,
+            'end_date': today,
+        }
+    )
 
 @login_required
 def sales_dashboard(request):
