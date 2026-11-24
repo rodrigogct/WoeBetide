@@ -783,6 +783,155 @@ def collections_dashboard(request):
         "period": reporting_days,
     }
 
+    # 6A. INVENTORY TURNOVER
+
+    # Reconstruct historical inventory value using acquisition - dates, costs, and actual sale dates.
+    # Archived garments are excluded because their exit dates are not recorded.
+
+    turnover_garments = [
+        g for g in allocation_garments
+        if g.status != Garment.Status.ARCHIVE
+    ]
+
+    valid_turnover_garments = []
+    excluded_turnover_garments = 0
+
+    for garment in turnover_garments:
+        purchase_date = (
+            garment.collection.date_bought
+            if garment.collection
+            else None
+        )
+
+        sale_date = (
+            sale_dates.get(garment.pk)
+            if garment.status == Garment.Status.SOLD
+            else None
+        )
+
+        if not purchase_date or purchase_date > today:
+            excluded_turnover_garments += 1
+            continue
+
+        if garment.status == Garment.Status.SOLD:
+            if (
+                not sale_date
+                or sale_date < purchase_date
+                or sale_date > today
+            ):
+                excluded_turnover_garments += 1
+                continue
+
+        valid_turnover_garments.append({
+            "purchase_date": purchase_date,
+            "sale_date": sale_date,
+            "cost": garment.cost or ZERO,
+        })
+
+    # Determine the turnover calculation window.
+
+    if period_start is not None:
+        turnover_start = period_start
+    else:
+        turnover_start = min(
+            (
+                g["purchase_date"]
+                for g in valid_turnover_garments
+            ),
+            default=None,
+        )
+
+    turnover_cogs = ZERO
+    average_inventory_cost = None
+    inventory_turnover = None
+    turnover_days = 0
+
+    if turnover_start is not None:
+
+        # COGS for garments sold during the reporting period.
+
+        turnover_cogs = sum(
+            (
+                g["cost"]
+                for g in valid_turnover_garments
+                if (
+                    g["sale_date"] is not None
+                    and turnover_start <= g["sale_date"] <= today
+                )
+            ),
+            ZERO,
+        )
+
+        # Reconstruct inventory at cost at the end of each day.
+
+        daily_balances = []
+
+        current_date = turnover_start
+
+        while current_date <= today:
+
+            daily_inventory_cost = sum(
+                (
+                    g["cost"]
+                    for g in valid_turnover_garments
+                    if (
+                        g["purchase_date"] <= current_date
+                        and (
+                            g["sale_date"] is None
+                            or g["sale_date"] > current_date
+                        )
+                    )
+                ),
+                ZERO,
+            )
+
+            daily_balances.append(daily_inventory_cost)
+            current_date += timedelta(days=1)
+
+        turnover_days = len(daily_balances)
+
+        if daily_balances:
+            average_inventory_cost = (
+                sum(daily_balances, ZERO)
+                / Decimal(turnover_days)
+            )
+
+            if average_inventory_cost > ZERO:
+                inventory_turnover = (
+                    turnover_cogs / average_inventory_cost
+                )
+
+    turnover_coverage = (
+        round(
+            len(valid_turnover_garments)
+            / len(turnover_garments) * 100,
+            1,
+        )
+        if turnover_garments
+        else 0
+    )
+
+    inventory_efficiency.update({
+        "turnover": (
+            round(float(inventory_turnover), 2)
+            if inventory_turnover is not None
+            else None
+        ),
+        "turnover_cogs": money(turnover_cogs),
+        "average_inventory_cost": (
+            money(average_inventory_cost)
+            if average_inventory_cost is not None
+            else None
+        ),
+        "turnover_coverage": turnover_coverage,
+        "turnover_included": len(valid_turnover_garments),
+        "turnover_excluded": excluded_turnover_garments,
+        "turnover_archived_excluded": (
+            len(allocation_garments) - len(turnover_garments)
+        ),
+        "turnover_days": turnover_days,
+    })
+
     # 7. COLLECTION SUMMARY
 
     total_cost = sum(
