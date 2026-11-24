@@ -114,11 +114,30 @@
   </section>
 
   <section class="wb-inv-section">
-    <div class="wb-inv-section-title"><h2>Inventory list</h2><a href="{% url 'inventory_list' %}">Clear filters</a></div>
+    
+  <section class="wb-inv-section" id="inventory-results">
+    <div class="wb-inv-section-title">
+      <div>
+        <h2>
+          {% if selected_age %}
+            Inventory list —
+            {% for bucket in aging_data %}
+              {% if bucket.active %}{{ bucket.label }}{% endif %}
+            {% endfor %}
+          {% else %}
+            Inventory list
+          {% endif %}
+        </h2>
+      </div>
+      <a href="{% url 'inventory_list' %}#inventory-results">
+        Clear filters
+      </a>
+    </div>
     <div class="wb-inv-search-shell">
     <form method="GET" action="{% url 'inventory_list' %}" class="wb-inv-search" id="wb-inv-search-form" role="search" autocomplete="off">
       <input type="search" name="q" id="wb-inv-search-input" value="{{ query }}" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="wb-inv-suggestions" placeholder="Search garment name, ID, brand, collection…" aria-label="Search inventory">
       {% if show_all %}<input type="hidden" name="show" value="all">{% endif %}
+      {% if selected_age %}<input type="hidden" name="age" value="{{ selected_age }}">{% endif %}
       {% if status_filter %}<input type="hidden" name="status" value="{{ status_filter }}">{% endif %}
       {% if category_filter %}<input type="hidden" name="category" value="{{ category_filter }}">{% endif %}
       {% if collection_filter %}<input type="hidden" name="collection" value="{{ collection_filter }}">{% endif %}
@@ -209,14 +228,18 @@
 
     <div class="wb-inv-list-footer">
       <span>Showing {{ garments|length }} of {{ matching_count }} matching garments</span>
+    
       {% if show_all %}
         <form method="get" action="{% url 'inventory_list' %}">
           {% if query %}<input type="hidden" name="q" value="{{ query }}">{% endif %}
           {% if status_filter %}<input type="hidden" name="status" value="{{ status_filter }}">{% endif %}
           {% if category_filter %}<input type="hidden" name="category" value="{{ category_filter }}">{% endif %}
           {% if collection_filter %}<input type="hidden" name="collection" value="{{ collection_filter }}">{% endif %}
+          {% if selected_age %}<input type="hidden" name="age" value="{{ selected_age }}">{% endif %}
+    
           <button type="submit" class="wb-inv-toggle">Show only 10 items ↑</button>
         </form>
+    
       {% elif matching_count > 10 %}
         <form method="get" action="{% url 'inventory_list' %}">
           <input type="hidden" name="show" value="all">
@@ -224,10 +247,12 @@
           {% if status_filter %}<input type="hidden" name="status" value="{{ status_filter }}">{% endif %}
           {% if category_filter %}<input type="hidden" name="category" value="{{ category_filter }}">{% endif %}
           {% if collection_filter %}<input type="hidden" name="collection" value="{{ collection_filter }}">{% endif %}
+          {% if selected_age %}<input type="hidden" name="age" value="{{ selected_age }}">{% endif %}
+    
           <button type="submit" class="wb-inv-toggle">View full inventory ({{ matching_count }}) ↓</button>
-        </form>
+      </form>
       {% endif %}
-    </div>
+    </div>  
   </section>
 </div>
 
@@ -719,6 +744,11 @@
   .wb-inventory-page .wbi-aging {
     padding: 15px;
   }
+}
+
+/* INVENTORY LIST — AGING FILTER NAVIGATION */
+#inventory-results {
+  scroll-margin-top: 85px;
 }
 
 </style>

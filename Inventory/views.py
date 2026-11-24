@@ -96,10 +96,11 @@ def inventory_list(request):
             or Decimal("0.00")
         )
 
+        # Open the complete filtered inventory list.
         params = request.GET.copy()
-        params.pop("status", None)
-        params.pop("show", None)
+        params.clear()
         params["age"] = key
+        params["show"] = "all"
 
         aging_data.append({
             "key": key,
@@ -109,7 +110,7 @@ def inventory_list(request):
             "percentage": round(
                 bucket_count * 100 / aging_total, 2
             ) if aging_total else 0,
-            "url": "?" + params.urlencode(),
+            "url": "?" + params.urlencode() + "#inventory-results",
             "active": selected_age == key,
         })
 
