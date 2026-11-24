@@ -100,7 +100,6 @@ def inventory_list(request):
         params = request.GET.copy()
         params.clear()
         params["age"] = key
-        params["show"] = "all"
 
         aging_data.append({
             "key": key,
