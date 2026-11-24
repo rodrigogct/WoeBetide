@@ -18,6 +18,7 @@ from Catalogue.models import Item
 from .partner_capital import capital_context
 from .home_performance import performance_efficiency_context
 from .reporting_period import get_reporting_days
+from .financial_pages import inventory_valuation_context
 
 ZERO = Decimal('0.00')
 VALID_PERIODS = {'7': 7, '30': 30, '90': 90}
@@ -298,5 +299,6 @@ def dashboard_home(request):
     }
     context.update(performance_efficiency_context(days, start, today))
     context.update(capital_context())
+    context.update(inventory_valuation_context())
 
     return render(request, 'inventory/dashboard_home.html', context)
