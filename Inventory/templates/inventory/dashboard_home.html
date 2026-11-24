@@ -401,6 +401,16 @@
 .wb-tooltip-line b { font-weight: 600; white-space: nowrap; }
 .wb-bars .wb-bar { cursor: pointer; }
 .wb-bars .wb-bar:focus-visible { outline: 2px solid #315644; outline-offset: 2px; }
+
+/* HOME DASHBOARD — CONSISTENT SECTION SPACING */
+.wb-dashboard > .wb-financial-position {
+    margin-bottom: 20px;
+}
+
+.wb-dashboard > .wb-two-col {
+    margin-bottom: 20px;
+}
+
 </style>
 
 {{ chart_data|json_script:"wb-chart-json" }}
