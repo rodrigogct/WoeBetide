@@ -110,10 +110,10 @@
       <span>Realized garment sales</span>
     </div>
     <div class="wbc-kpi">
-      <small>TOTAL ACQUISITION COST</small>
-      <strong>${{ summary.total_cost }}</strong>
-      <span>Total cost of acquired garments</span>
-    </div>
+      <small>COST OF GOODS SOLD (COGS)</small>
+      <strong>${{ summary.cogs }}</strong>
+      <span>Acquisition cost of sold garments</span>
+    </div>    
     <div class="wbc-kpi wbc-priority">
       <small>CAPITAL RECOVERY</small>
       <strong>{% if summary.capital_recovery != None %}{{ summary.capital_recovery }}%{% else %}—{% endif %}</strong>

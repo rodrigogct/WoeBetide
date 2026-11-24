@@ -1025,6 +1025,7 @@ def collections_dashboard(request):
             'days': reporting_days,
             'start_date': period_start,
             'end_date': today,
+            'cogs': money(sold_cost),
         }
     )
 
