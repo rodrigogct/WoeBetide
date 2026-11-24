@@ -234,15 +234,43 @@
         <span class="wbc-capital-label">
           INVENTORY TURNOVER
         </span>
-        <strong>—</strong>
-        <small>Requires historical inventory balances</small>
+
+        <strong>
+          {% if inventory_efficiency.turnover is not None %}
+            {{ inventory_efficiency.turnover|floatformat:2 }}×
+          {% else %}
+            —
+          {% endif %}
+        </strong>
+
+        <small>
+          Estimated turnover ·
+          {% if days == "all" %}
+            All Time
+          {% else %}
+            Last {{ days }} days
+          {% endif %}
+        </small>
+
+        <small>
+          {{ inventory_efficiency.turnover_coverage }}% date coverage ·
+          {{ inventory_efficiency.turnover_excluded }}
+          records excluded
+        </small>
+
+        {% if inventory_efficiency.turnover_archived_excluded %}
+          <small>
+            {{ inventory_efficiency.turnover_archived_excluded }}
+            archived garments excluded
+          </small>
+        {% endif %}
       </div>
 
       <div>
         <span class="wbc-capital-label">
           MEDIAN DAYS TO SELL
         </span>
-        
+
         <strong>
           {% if inventory_efficiency.median_days_to_sell is not None %}
             {{ inventory_efficiency.median_days_to_sell }} days
@@ -250,13 +278,12 @@
             —
           {% endif %}
         </strong>
-        
+
         <small>
           {{ inventory_efficiency.verified_sales }}
           of {{ inventory_efficiency.period_sold_count }}
           dated sales with valid acquisition dates
-        </small> 
-        
+        </small>
       </div>
 
     </div>
