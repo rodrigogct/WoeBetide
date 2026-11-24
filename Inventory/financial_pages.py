@@ -18,29 +18,52 @@ ZERO = Decimal('0.00')
 def fmt(value):
     return f'{(value or ZERO):,.2f}'
 
-@login_required
-def finances_page(request):
-    eligible = Garment.objects.filter(status__in=[Garment.Status.AVAILABLE, Garment.Status.PUBLISHED])
-    inventory_cost = eligible.aggregate(total=Sum('cost'))['total'] or ZERO
-    # A connected active website price supersedes an old Excel listed price.
-    # OneToOne ensures each garment contributes to valuation exactly once.
+def inventory_valuation_context():
+    eligible = Garment.objects.filter(
+        status__in=[
+            Garment.Status.AVAILABLE,
+            Garment.Status.PUBLISHED,
+        ]
+    )
+
+    inventory_cost = (
+        eligible.aggregate(total=Sum('cost'))['total']
+        or ZERO
+    )
+
     retail_total = ZERO
     unpriced = 0
     linked_count = 0
+
     for garment in eligible.select_related('website_item').iterator():
         try:
             item = garment.website_item
         except Item.DoesNotExist:
             item = None
+
         if item is not None and not item.is_sold and not item.is_archive:
             linked_count += 1
             price = item.price
         else:
             price = garment.listed_price
+
         if price is None or price <= 0:
             unpriced += 1
         else:
             retail_total += price
+
+    return {
+        'stock_units': eligible.count(),
+        'inventory_cost': fmt(inventory_cost),
+        'inventory_retail': fmt(retail_total),
+        'potential_gross_profit': fmt(retail_total - inventory_cost),
+        'missing_prices': unpriced,
+        'linked_count': linked_count,
+    }
+
+@login_required
+def finances_page(request):
+    valuation = inventory_valuation_context()
 
     # Historical recorded sales only; never count a sold garment without a SaleItem.
     sale_totals = SaleItem.objects.aggregate(sales=Sum('sold_price'), cogs=Sum('garment__cost'))
@@ -261,12 +284,7 @@ def finances_page(request):
         available_periods.reverse()
 
     return render(request, 'inventory/finances_dashboard.html', {
-        'stock_units': eligible.count(),
-        'inventory_cost': fmt(inventory_cost),
-        'inventory_retail': fmt(retail_total),
-        'potential_gross_profit': fmt(retail_total - inventory_cost),
-        'missing_prices': unpriced,
-        'linked_count': linked_count,
+        **valuation,
         'sales_revenue': fmt(revenue),
         'sales_profit': fmt(profit),
         'sales_margin': f'{profit * 100 / revenue:.1f}' if revenue else '0.0',
