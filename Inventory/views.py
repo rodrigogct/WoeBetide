@@ -932,9 +932,8 @@ def collections_dashboard(request):
         "turnover_days": turnover_days,
     })
 
-
     # 7. COLLECTION SUMMARY
-    
+
     total_cost = sum(
         (r['total_cost_value'] for r in summary_source),
         ZERO
@@ -986,6 +985,60 @@ def collections_dashboard(request):
 
     profit = revenue - sold_cost
 
+    # 7A. PERIOD SELL-THROUGH
+
+    if period_start is None:
+        # All Time: retain the existing cumulative calculation.
+        sell_through_sold = sold_count
+        sell_through_total = total_items
+
+    else:
+        # Period: count inventory available during the window.
+        # Includes opening stock and acquisitions during the period.
+
+        sell_through_sold = 0
+        sell_through_total = 0
+
+        for garment in allocation_garments:
+            purchase_date = garment.collection.date_bought
+
+            if not purchase_date or purchase_date > today:
+                continue
+
+            if garment.status in (
+                Garment.Status.AVAILABLE,
+                Garment.Status.PUBLISHED,
+            ):
+                # Currently saleable inventory that was acquired
+                # before the reporting window ended.
+                sell_through_total += 1
+
+            elif garment.status == Garment.Status.SOLD:
+                sale_date = sale_dates.get(garment.pk)
+
+                # Undated sales cannot be assigned to a period.
+                if not sale_date or sale_date > today:
+                    continue
+
+                if sale_date < purchase_date:
+                    continue
+
+                # Garments sold before the period were no longer
+                # available to sell during the selected window.
+                if sale_date < period_start:
+                    continue
+
+                sell_through_total += 1
+                sell_through_sold += 1
+
+    period_sell_through = (
+        Decimal(sell_through_sold)
+        / Decimal(sell_through_total)
+        * 100
+        if sell_through_total
+        else None
+    )
+
     summary = {
         'collection_count': len(summary_source),
 
@@ -1002,10 +1055,13 @@ def collections_dashboard(request):
         ),
 
         'sell_through': (
-            f'{Decimal(sold_count) / Decimal(total_items) * 100:.1f}'
-            if total_items
+            f'{period_sell_through:.1f}'
+            if period_sell_through is not None
             else None
         ),
+
+        'sell_through_sold': sell_through_sold,
+        'sell_through_total': sell_through_total,
 
         'realized_roi': (
             f'{(lifetime_revenue - lifetime_cogs) / lifetime_cogs * 100:.1f}'

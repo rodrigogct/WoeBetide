@@ -126,8 +126,24 @@
     </div>
     <div class="wbc-kpi">
       <small>SELL-THROUGH</small>
-      <strong>{% if summary.sell_through != None %}{{ summary.sell_through }}%{% else %}—{% endif %}</strong>
-      <span>{{ summary.sold_items }} sold of {{ summary.total_items }} acquired</span>
+    
+      <strong>
+        {% if summary.sell_through is not None %}
+          {{ summary.sell_through }}%
+        {% else %}
+          —
+        {% endif %}
+      </strong>
+    
+      <span>
+        {{ summary.sell_through_sold }}
+        sold of {{ summary.sell_through_total }}
+        {% if days == "all" %}
+          acquired garments · All Time
+        {% else %}
+          eligible garments · Last {{ days }} days
+        {% endif %}
+      </span>
     </div>
     <div class="wbc-kpi">
       <small>UNSOLD ACTIVE INVENTORY</small>
