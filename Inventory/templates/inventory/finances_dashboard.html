@@ -1237,6 +1237,164 @@
     }
   }
 
+/* 18. PROFITABILITY SECTION */
+
+.wbm-profitability {
+  margin-top: 0;
+  margin-bottom: 10px;
+}
+
+.wbm-profit-kpis {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.wbm-profit-kpi {
+  min-width: 0;
+  padding: 19px 16px;
+  border-radius: 8px;
+  background: #f8f8f5;
+}
+
+.wbm-profit-highlight {
+  background: #f1f5f0;
+}
+
+.wbm-profit-kpi small {
+  display: block;
+  margin-bottom: 11px;
+  color: #737e75;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.055em;
+}
+
+.wbm-profit-kpi strong {
+  display: block;
+  margin-bottom: 8px;
+  color: #28332b;
+  font-size: 24px;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.wbm-profit-kpi span {
+  display: block;
+  color: #788078;
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+/* 19. PROFIT & LOSS BREAKDOWN */
+
+.wbm-profit-breakdown {
+  padding: 18px;
+  border: 1px solid #e8e7e1;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.wbm-profit-breakdown h3 {
+  margin: 0 0 15px;
+  color: #28332b;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.wbm-profit-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 11px 0;
+  color: #606b62;
+  font-size: 12px;
+}
+
+.wbm-profit-row strong {
+  color: #28332b;
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.wbm-profit-subtotal {
+  margin-top: 4px;
+  border-top: 1px solid #e8e7e1;
+  color: #28332b;
+  font-weight: 600;
+}
+
+.wbm-profit-total {
+  margin-top: 5px;
+  padding: 14px 0 4px;
+  border-top: 1px solid #d8ded6;
+  color: #28332b;
+  font-weight: 700;
+}
+
+.wbm-profit-row.wbm-profit-total strong {
+  font-size: 17px;
+}
+
+.wbm-profit-negative,
+.wbm-profit-kpi strong.wbm-profit-negative,
+.wbm-profit-row strong.wbm-profit-negative {
+  color: #b36c61;
+}
+
+.wbm-profit-note {
+  margin: 14px 0 0;
+  color: #808880;
+  font-size: 10px;
+  line-height: 1.6;
+}
+
+/* 20. PROFITABILITY RESPONSIVE */
+
+@media (max-width: 850px) {
+  .wbm-profit-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .wbm-profit-highlight {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 520px) {
+  .wbm-profit-kpis {
+    grid-template-columns: 1fr;
+  }
+
+  .wbm-profit-highlight {
+    grid-column: auto;
+  }
+
+  .wbm-profit-kpi {
+    padding: 15px 12px;
+  }
+
+  .wbm-profit-kpi strong {
+    font-size: 21px;
+  }
+
+  .wbm-profit-breakdown {
+    padding: 14px;
+  }
+
+  .wbm-profit-row {
+    font-size: 11px;
+  }
+}
+
 </style>
 
 <script>
