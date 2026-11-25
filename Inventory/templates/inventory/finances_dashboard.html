@@ -53,48 +53,7 @@
 
   </div>
 
-  <!-- 3. MERCHANDISE POSITION -->
-  <section class="wbm-panel">
-
-    <div class="wbm-section-title">
-      <h2>MERCHANDISE POSITION</h2>
-      <small>Live inventory</small>
-    </div>
-
-    <div class="wbm-data-grid">
-
-      <div>
-        <small>SALEABLE GARMENTS</small>
-        <strong>{{ stock_units }}</strong>
-      </div>
-
-      <div>
-        <small>POTENTIAL GROSS PROFIT</small>
-        <strong>${{ potential_gross_profit }}</strong>
-      </div>
-
-      <div>
-        <small>WEBSITE-LINKED GARMENTS</small>
-        <strong>{{ linked_count }}</strong>
-      </div>
-
-      <div>
-        <small>GARMENTS MISSING VALID PRICE</small>
-        <strong>{{ missing_prices }}</strong>
-      </div>
-
-    </div>
-
-    <p class="wbm-muted">
-      Retail value is the sum of listed prices—not guaranteed
-      proceeds or accounting asset value. Potential profit is
-      not realized profit. Missing prices are excluded from
-      the retail sum; review them before relying on the total.
-    </p>
-
-  </section>
-
-  <!-- 4. EXPENSE ANALYSIS -->
+  <!-- 3. EXPENSE ANALYSIS -->
   <section class="wbm-panel wbe-section">
 
     <div class="wbm-section-title">
@@ -289,12 +248,6 @@
               Undated expenses are excluded from the chart.
             </p>
           </div>
-
-          <p class="wbm-muted">
-            Based on dated expense rows only. Categories may include equipment or
-            manufacturing costs. This is spending analysis, not an accounting P&amp;L.
-          </p>
-
         </div>
 
       </div>
@@ -400,7 +353,7 @@
 
   </section>
 
-  <!-- 5. FOOTER NAVIGATION -->
+  <!-- 4. FOOTER NAVIGATION -->
   <div class="wbm-footerlink">
     <a href="{% url 'dashboard_home' %}">
       ← Back to Home Dashboard
