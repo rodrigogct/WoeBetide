@@ -38,17 +38,14 @@
 
   <!-- PRIMARY ACTIONS -->
   <div class="wb-actions">
-
     <a
       class="wb-action wb-action-primary"
       href="{% url 'sell_dashboard' %}">
       <span>＋</span> SELL
     </a>
-
     <a class="wb-action wb-action-neutral" href="{% url 'admin:Catalogue_item_add' %}">
       <span>◇</span> ADD GARMENT
     </a>
-
     {% if request.user.is_superuser %}
       <a
         class="wb-action wb-action-neutral"
@@ -60,7 +57,6 @@
         <span>▤</span> IMPORT EXCEL
       </span>
     {% endif %}
-
   </div>
 
   <!-- PERFORMANCE: selected reporting period -->
@@ -91,16 +87,12 @@
 
   <!-- SALES OVER TIME -->
   <section class="wb-card wb-sales-chart">
-
     <div class="wb-card-header">
-
       <h2>SALES OVER TIME</h2>
-
       <div class="wb-legend">
         <span>
           <i class="wb-dot wb-green"></i> Online
         </span>
-
         <span>
           <i class="wb-dot wb-beige"></i> Physical + other
         </span>
@@ -109,19 +101,14 @@
     </div>
 
     <div class="wb-chart-area">
-
       <div class="wb-y-axis">
         {% for tick in chart_y_labels %}<span>{{ tick }}</span>{% endfor %}
       </div>
 
       <div class="wb-chart-plot">
-
         <div class="wb-gridlines"></div>
-
         <div class="wb-bars" id="wb-bars"></div>
-
       </div>
-
     </div>
 
     <div class="wb-chart-dates">
@@ -146,13 +133,13 @@
       </div>
       <div class="wb-position-tile">
         <small>INVENTORY AT COST</small>
-        <div>${{ inventory_cost }}</div>
+        <div class="wb-kpi-value">${{ inventory_cost }}</div>
         <span>Acquisition cost of saleable stock</span>
         <em>Awaiting inventory valuation</em>
       </div>
       <div class="wb-position-tile">
         <small>INVENTORY AT RETAIL</small>
-        <strong>${{ inventory_retail }}</strong>
+        <div class="wb-kpi-value">${{ inventory_retail }}</div>
         <span>Potential selling value · not realized revenue</span>
         <em>Awaiting inventory valuation</em>
       </div>
