@@ -53,7 +53,105 @@
 
   </div>
 
-  <!-- 3. EXPENSE ANALYSIS -->
+  <!-- 3. PROFITABILITY -->
+  <section class="wbm-panel wbm-profitability">
+
+    <div class="wbm-section-title">
+      <h2>PROFITABILITY</h2>
+      <small>{{ pnl_period_label }} · MXN</small>
+    </div>
+
+    {% if pnl_data_available %}
+
+      <div class="wbm-profit-kpis">
+
+        <div class="wbm-profit-kpi">
+          <small>GROSS PROFIT</small>
+          <strong>${{ pnl_gross_profit }}</strong>
+          <span>Revenue less cost of goods sold</span>
+        </div>
+
+        <div class="wbm-profit-kpi">
+          <small>OPERATING EXPENSES</small>
+          <strong>${{ pnl_operating_expenses }}</strong>
+          <span>{{ pnl_expense_count }} classified expense records</span>
+        </div>
+
+        <div class="wbm-profit-kpi wbm-profit-highlight">
+          <small>ESTIMATED OPERATING RESULT</small>
+
+          <strong class="{% if pnl_is_negative %}wbm-profit-negative{% endif %}">
+            ${{ pnl_operating_result }}
+          </strong>
+
+          <span>
+            {% if pnl_operating_margin is not None %}
+              {{ pnl_operating_margin }}% estimated operating margin
+            {% else %}
+              No recorded revenue for this period
+            {% endif %}
+          </span>
+        </div>
+
+      </div>
+
+      <div class="wbm-profit-breakdown">
+
+        <h3>Profit & Loss Breakdown</h3>
+
+        <div class="wbm-profit-row">
+          <span>Sales Revenue</span>
+          <strong>${{ pnl_revenue }}</strong>
+        </div>
+
+        <div class="wbm-profit-row">
+          <span>Cost of Goods Sold (COGS)</span>
+          <strong>− ${{ pnl_cogs }}</strong>
+        </div>
+
+        <div class="wbm-profit-row wbm-profit-subtotal">
+          <span>Gross Profit</span>
+          <strong>${{ pnl_gross_profit }}</strong>
+        </div>
+
+        <div class="wbm-profit-row">
+          <span>Operating Expenses</span>
+          <strong>− ${{ pnl_operating_expenses }}</strong>
+        </div>
+
+        <div class="wbm-profit-row wbm-profit-total">
+          <span>Estimated Operating Result</span>
+
+          <strong class="{% if pnl_is_negative %}wbm-profit-negative{% endif %}">
+            ${{ pnl_operating_result }}
+          </strong>
+        </div>
+
+      </div>
+
+      <p class="wbm-profit-note">
+        Provisional operating result, not finalized net profit.
+        Excludes equipment, manufacturing, and unclassified expenses
+        pending accounting review.
+        {{ pnl_excluded_count }} excluded expense records
+        totaling ${{ pnl_excluded_spend }}.
+        Inventory still available for sale is not deducted.
+        Review expense completeness, payment fees, and cost
+        classifications before treating this as a formal P&L.
+      </p>
+
+    {% else %}
+
+      <p class="wbm-muted">
+        Profitability is unavailable until expense data has been
+        imported and classified.
+      </p>
+
+    {% endif %}
+
+  </section>
+
+  <!-- 4. EXPENSE ANALYSIS -->
   <section class="wbm-panel wbe-section">
 
     <div class="wbm-section-title">
@@ -353,7 +451,7 @@
 
   </section>
 
-  <!-- 4. FOOTER NAVIGATION -->
+  <!-- 5. FOOTER NAVIGATION -->
   <div class="wbm-footerlink">
     <a href="{% url 'dashboard_home' %}">
       ← Back to Home Dashboard

@@ -119,6 +119,85 @@ def finances_page(request):
     period_revenue = matching_sales.aggregate(total=Sum('sold_price'))['total'] or ZERO
     ratio = (expense_total * 100 / period_revenue) if period_revenue else None
 
+    # PROFITABILITY CALCULATIONS
+
+    # Sales and COGS use the same reporting period as expenses.
+    period_cogs = (
+        matching_sales.aggregate(
+            total=Sum('garment__cost')
+        )['total']
+        or ZERO
+    )
+
+    period_gross_profit = period_revenue - period_cogs
+
+    # Only clearly identified operating categories are included.
+    # Equipment and Manufacturing require accounting review.
+    operating_categories = [
+        'Events & Pop-ups',
+        'Marketing & Ads',
+        'Studio & Facilities',
+        'Shipping & Logistics',
+        'Packaging & Labels',
+        'Website',
+    ]
+
+    operating_expenses = expenses.filter(
+        category__in=operating_categories
+    )
+
+    excluded_expenses = expenses.exclude(
+        category__in=operating_categories
+    )
+
+    def expense_amount(queryset):
+        amounts = queryset.aggregate(
+            rodrigo=Sum('rodrigo'),
+            fran=Sum('fran'),
+            bure=Sum('bure'),
+            woe=Sum('woe'),
+        )
+
+        return sum(
+            (
+                amounts[key] or ZERO
+                for key in ('rodrigo', 'fran', 'bure', 'woe')
+            ),
+            ZERO,
+        )
+
+    operating_spend = expense_amount(operating_expenses)
+    excluded_spend = expense_amount(excluded_expenses)
+
+    estimated_operating_result = (
+        period_gross_profit - operating_spend
+    )
+
+    operating_margin = (
+        estimated_operating_result * 100 / period_revenue
+        if period_revenue
+        else None
+    )
+
+    profitability = {
+        'pnl_revenue': fmt(period_revenue),
+        'pnl_cogs': fmt(period_cogs),
+        'pnl_gross_profit': fmt(period_gross_profit),
+        'pnl_operating_expenses': fmt(operating_spend),
+        'pnl_operating_result': fmt(estimated_operating_result),
+        'pnl_operating_margin': (
+            f'{operating_margin:.1f}'
+            if operating_margin is not None
+            else None
+        ),
+        'pnl_is_negative': estimated_operating_result < ZERO,
+        'pnl_excluded_spend': fmt(excluded_spend),
+        'pnl_excluded_count': excluded_expenses.count(),
+        'pnl_expense_count': operating_expenses.count(),
+        'pnl_data_available': ImportedExpense.objects.exists(),
+        'pnl_period_label': expense_window_label,
+    }
+
     # Bar chart: show literal Excel category names; use consistent muted colors.
     category_colors = {
         'Events & Pop-ups': '#945D40', 'Manufacturing': '#81554D',
@@ -304,6 +383,7 @@ def finances_page(request):
         'expense_count': expenses.count(),
         'expense_undated': ImportedExpense.objects.filter(expense_date__isnull=True).count(),
         "expense_category_legend": expense_category_legend,
+        **profitability,
 
     })
 
