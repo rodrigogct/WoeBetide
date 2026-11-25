@@ -932,65 +932,89 @@ def collections_dashboard(request):
         "turnover_days": turnover_days,
     })
 
-    # 7. COLLECTION SUMMARY
 
+    # 7. COLLECTION SUMMARY
+    
     total_cost = sum(
         (r['total_cost_value'] for r in summary_source),
         ZERO
     )
 
-    revenue = sum(
+    total_items = sum(
+        r['total_items'] for r in summary_source
+    )
+
+    sold_count = sum(
+        r['sold_count'] for r in summary_source
+    )
+
+    available_count = sum(
+        r['available_count'] for r in summary_source
+    )
+
+    # Lifetime values are retained for capital recovery.
+    lifetime_revenue = sum(
         (r['revenue_value'] for r in summary_source),
         ZERO
     )
 
-    sold_cost = sum(
+    lifetime_cogs = sum(
         (r['sold_cost_value'] for r in summary_source),
         ZERO
     )
 
-    total_items = sum(
-        r['total_items']
-        for r in summary_source
-    )
+    # Reporting-period sales performance.
+    if period_start is None:
+        revenue = lifetime_revenue
+        sold_cost = lifetime_cogs
+    else:
+        period_sales = SaleItem.objects.filter(
+            garment_id__in=[
+                g.pk for g in allocation_garments
+            ],
+            garment__status=Garment.Status.SOLD,
+            sale__sale_date__range=(period_start, today),
+        )
 
-    sold_count = sum(
-        r['sold_count']
-        for r in summary_source
-    )
+        period_totals = period_sales.aggregate(
+            revenue=Sum('sold_price'),
+            cogs=Sum('garment__cost'),
+        )
 
-    available_count = sum(
-        r['available_count']
-        for r in summary_source
-    )
+        revenue = period_totals['revenue'] or ZERO
+        sold_cost = period_totals['cogs'] or ZERO
 
     profit = revenue - sold_cost
 
     summary = {
         'collection_count': len(summary_source),
+
         'total_cost': money(total_cost),
+
         'revenue': money(revenue),
+        'cogs': money(sold_cost),
         'gross_profit': money(profit),
+
         'capital_recovery': (
-            f'{revenue / total_cost * 100:.1f}'
+            f'{lifetime_revenue / total_cost * 100:.1f}'
             if total_cost > 0
             else None
         ),
+
         'sell_through': (
             f'{Decimal(sold_count) / Decimal(total_items) * 100:.1f}'
             if total_items
             else None
         ),
+
         'realized_roi': (
-            f'{profit / sold_cost * 100:.1f}'
-            if sold_cost > 0
+            f'{(lifetime_revenue - lifetime_cogs) / lifetime_cogs * 100:.1f}'
+            if lifetime_cogs > 0
             else None
         ),
 
         'available_items': available_count,
-
         'sold_items': sold_count,
-
         'total_items': total_items,
     }
 
