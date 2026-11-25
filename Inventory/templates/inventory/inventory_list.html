@@ -257,501 +257,969 @@
 </div>
 
 <style>
-/* 1. PAGE HEADING */
-.wb-inv-heading .page-title {
-  font-size: 27px;
-  font-weight: 600;
-  line-height: 1.25;
-  margin: 0 0 5px;
-}
-
-@media (max-width: 520px) {
+  /* 1. PAGE BASE */
+  
+  .wb-inventory-page {
+    max-width: 1500px;
+    margin: 0 auto;
+    color: inherit;
+  }
+  
+  /* 2. PAGE HEADING */
+  
+  .wb-inv-heading,
+  .wb-inv-section-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+  
+  .wb-inv-heading {
+    margin-bottom: 10px;
+  }
+  
   .wb-inv-heading .page-title {
-    font-size: 23px;
+    margin: 0 0 4px;
+    font-size: 27px;
+    font-weight: 600;
+    line-height: 1.25;
   }
-}
-
-.wb-inventory-page{max-width:1500px;margin:0 auto;color:inherit}
-.wb-inv-heading,.wb-inv-section-title{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
-.wb-inv-heading{margin-bottom:10px}.wb-inv-heading .page-title{margin-bottom:4px}.wb-inv-heading p,.wb-inv-subtle{font-size:12px;color:#777b74;margin:5px 0 0}
-.wb-inv-view{padding:10px 14px;background:#315644;color:#fff;text-decoration:none;border-radius:6px;font-size:12px;font-weight:600}
-.wb-inv-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:22px}
-.wb-inv-stat{display:flex;flex-direction:column;gap:7px;padding:17px;border:1px solid #e6e5dd;border-radius:9px;background:#faf9f5;color:inherit;text-decoration:none}
-.wb-inv-stat small{color:#797c75;font-size:10px;letter-spacing:.055em}.wb-inv-stat strong{font-size:27px;font-variant-numeric:tabular-nums;font-weight:600}
-.wb-inv-section{margin:0 0 20px;padding:20px;border:1px solid #e7e5df;border-radius:10px;background:#fff;min-width:0}
-.wb-inv-section-title{margin-bottom:15px}.wb-inv-section-title h2{margin:0;font-size:13px;font-weight:700;letter-spacing:.045em;text-transform:uppercase}.wb-inv-section-title span,.wb-inv-section-title a{font-size:11px;color:#66766b}
-.wb-inv-progress{width:100%;height:9px;appearance:none;border:none;border-radius:15px;overflow:hidden;background:#e9e9e4}
-.wb-inv-progress::-webkit-progress-bar{background:#e9e9e4}.wb-inv-progress::-webkit-progress-value{background:#315644}.wb-inv-progress::-moz-progress-bar{background:#315644}
-.wb-inv-gallery{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px}
-.wb-inv-gallery-item{min-width:0;text-decoration:none;color:inherit}.wb-inv-photo{background:#f1f0eb;border-radius:6px;overflow:hidden;aspect-ratio:3/4}.wb-inv-photo img{width:100%;height:100%;object-fit:cover;display:block}
-.wb-inv-gallery-item strong,.wb-inv-gallery-item small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.wb-inv-gallery-item strong{font-size:12px;margin-top:8px}.wb-inv-gallery-item small{font-size:10px;color:#7c7c77;margin-top:4px}
-.wb-inv-search{display:flex;gap:8px;margin:0 0 12px}.wb-inv-search input{flex:1;min-width:0;border:1px solid #deded7;border-radius:6px;padding:10px 12px;font:inherit;background:white;color:inherit}.wb-inv-search button{border:0;background:#315644;color:#fff;padding:10px 17px;border-radius:6px;cursor:pointer}
-.wb-inv-filter-row{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px}.wb-inv-filter-row a{padding:7px 12px;border:1px solid #e4e4de;border-radius:5px;color:#5c655f;text-decoration:none;font-size:11px}.wb-inv-filter-row a.is-active{background:#315644;border-color:#315644;color:white}
-.wb-inv-table-wrap{overflow-x:auto}.wb-inv-table-wrap table{min-width:1050px;width:100%}.wb-inv-table-wrap th,.wb-inv-table-wrap td{font-family:inherit;font-size:12px}.wb-inv-table-wrap td a{color:#315644}.wb-inv-table-wrap .item-image{width:46px;height:58px;object-fit:cover;border-radius:4px}.wb-inv-no-photo{display:flex;align-items:center;justify-content:center;background:#f0efec;color:#a4a49f}
-@media(max-width:850px){.wb-inv-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.wb-inv-gallery{grid-template-columns:repeat(3,minmax(0,1fr))}}
-@media(max-width:450px){.wb-inv-section{padding:14px}.wb-inv-gallery{gap:7px}.wb-inv-heading{align-items:flex-start}.wb-inv-stat{padding:12px}.wb-inv-stat strong{font-size:23px}}
-
-/* Full Inventory table — consistent with WOE BETIDE dashboard cards */
-.wb-inventory-page .wb-inv-table-wrap {
-  overflow-x: auto;
-  border: 1px solid #e7e5df;
-  border-radius: 8px;
-  background: #fff;
-}
-.wb-inventory-page .wb-inv-table-wrap table {
-  width: 100%;
-  min-width: 1050px;
-  border-collapse: collapse;
-  border-spacing: 0;
-  margin: 0;
-  background: transparent;
-  color: inherit;
-  font-family: inherit;
-  box-shadow: none;
-}
-.wb-inventory-page .wb-inv-table-wrap thead,
-.wb-inventory-page .wb-inv-table-wrap thead tr {
-  background: #f7f6f2;
-}
-.wb-inventory-page .wb-inv-table-wrap th {
-  padding: 13px 12px;
-  border: 0;
-  border-bottom: 1px solid #e7e5df;
-  background: transparent;
-  color: #70776f;
-  text-align: left;
-  font-family: inherit;
-  font-size: 10px;
-  font-weight: 650;
-  letter-spacing: .065em;
-  line-height: 1.35;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-.wb-inventory-page .wb-inv-table-wrap td {
-  padding: 11px 12px;
-  border: 0;
-  border-bottom: 1px solid #eeece7;
-  background: transparent;
-  color: #303a33;
-  font-family: inherit;
-  font-size: 12px;
-  font-weight: 400;
-  line-height: 1.45;
-  vertical-align: middle;
-}
-.wb-inventory-page .wb-inv-table-wrap tbody tr {
-  background: #fff;
-  transition: background-color .15s ease;
-}
-.wb-inventory-page .wb-inv-table-wrap tbody tr:hover { background: #faf9f6; }
-.wb-inventory-page .wb-inv-table-wrap tbody tr:last-child td { border-bottom: 0; }
-.wb-inventory-page .wb-inv-table-wrap td:nth-child(2) {
-  font-weight: 650;
-  white-space: nowrap;
-}
-.wb-inventory-page .wb-inv-table-wrap th:nth-child(3),
-.wb-inventory-page .wb-inv-table-wrap td:nth-child(3) {
-  width: 132px; min-width: 110px; max-width: 150px;
-  white-space: normal; overflow-wrap: anywhere; word-break: normal;
-}
-.wb-inventory-page .wb-inv-table-wrap td:nth-child(7),
-.wb-inventory-page .wb-inv-table-wrap td:nth-child(8),
-.wb-inventory-page .wb-inv-table-wrap td:nth-child(9) {
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-}
-.wb-inventory-page .wb-inv-table-wrap .item-image {
-  display: block;
-  width: 45px;
-  height: 57px;
-  border: 1px solid #efede8;
-  border-radius: 4px;
-  object-fit: cover;
-}
-.wb-inventory-page .wb-inv-table-wrap .wb-inv-no-photo {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #f3f2ee;
-  color: #9c9f99;
-}
-.wb-inventory-page .wb-inv-table-wrap .status-pill {
-  display: inline-flex;
-  align-items: center;
-  padding: 5px 9px;
-  border: 1px solid #e1e5df;
-  border-radius: 5px;
-  background: #f3f5f1;
-  color: #42604c;
-  font-family: inherit;
-  font-size: 10px;
-  font-weight: 600;
-  line-height: 1.3;
-  text-transform: capitalize;
-  white-space: nowrap;
-  box-shadow: none;
-}
-.wb-inventory-page .wb-inv-table-wrap a {
-  color: #315644;
-  font-family: inherit;
-  font-size: 11px;
-  font-weight: 600;
-  text-decoration: none;
-}
-.wb-inventory-page .wb-inv-table-wrap a:hover { text-decoration: underline; }
-.wb-inventory-page .wb-inv-table-wrap .sell-link {
-  display: inline-block;
-  padding: 6px 9px;
-  border: 1px solid #cfdbd2;
-  border-radius: 5px;
-  background: #f4f8f4;
-  color: #315644;
-  text-align: center;
-  white-space: nowrap;
-}
-.wb-inventory-page .wb-inv-table-wrap .sell-link:hover {
-  background: #eaf1ea;
-  text-decoration: none;
-}
-
-/* Inventory list preview and mobile details */
-.wb-inv-list-footer{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;padding-top:16px;color:#777b74;font-size:11px}
-.wb-inv-list-footer form{margin:0}
-.wb-inv-toggle{font:inherit;font-size:11px;font-weight:650;color:#315644;background:#f4f8f4;border:1px solid #cfdbd2;padding:10px 14px;border-radius:6px;cursor:pointer}
-.wb-inv-toggle:hover{background:#eaf1ea}
-.wb-inv-mobile-list{display:none}
-
-@media(max-width:700px){
-  .wb-inv-desktop-table{display:none}
-  .wb-inv-mobile-list{display:block;border:1px solid #e7e5df;border-radius:8px;overflow:hidden}
-  .wb-inv-mobile-item{padding:13px 12px;background:#fff;border-bottom:1px solid #eeece7}
-  .wb-inv-mobile-item:last-child{border-bottom:0}
-  .wb-inv-mobile-main{display:flex;gap:11px;align-items:center;min-width:0}
-  .wb-inv-mobile-image{width:53px;height:68px;flex:0 0 53px;background:#f3f2ee;border-radius:5px;overflow:hidden;display:flex;justify-content:center;align-items:center;color:#999}
-  .wb-inv-mobile-image img{width:100%;height:100%;object-fit:cover}
-  .wb-inv-mobile-info{flex:1;min-width:0;display:flex;align-items:flex-start;flex-direction:column;gap:5px}
-  .wb-inv-mobile-info strong{font-size:12px;font-weight:650;line-height:1.35;overflow-wrap:anywhere;white-space:normal}
-  .wb-inv-mobile-info small{font-size:10px;color:#7b807a}
-  .wb-inv-mobile-info .status-pill{padding:3px 7px;background:#f3f5f1;border:1px solid #e1e5df;color:#42604c;border-radius:4px;font-size:9px;text-transform:capitalize}
-  .wb-inv-mobile-price{font-size:12px;font-weight:650;white-space:nowrap;align-self:center;color:#303a33}
-  .wb-inv-mobile-details{margin:10px 0 0 64px;font-size:11px}
-  .wb-inv-mobile-details summary{cursor:pointer;color:#315644;font-weight:650;list-style:none;display:flex;gap:8px;align-items:center}
-  .wb-inv-mobile-details summary::-webkit-details-marker{display:none}
-  .wb-inv-mobile-details[open] summary span{transform:rotate(180deg)}
-  .wb-inv-mobile-details dl{margin:12px 0;display:grid;gap:8px}
-  .wb-inv-mobile-details dl div{display:flex;justify-content:space-between;gap:12px}
-  .wb-inv-mobile-details dt{color:#7b807a}
-  .wb-inv-mobile-details dd{margin:0;text-align:right;overflow-wrap:anywhere}
-  .wb-inv-mobile-details a{color:#315644}
-  .wb-inv-mobile-sell{display:inline-block;background:#f4f8f4;border:1px solid #cfdbd2;border-radius:5px;padding:8px 12px;text-decoration:none;font-weight:650}
-  .wb-inv-list-footer{align-items:flex-start;flex-direction:column}
-}
-
-/* Typeahead search, matching the Sell page interaction timing. */
-.wb-inv-search-shell{position:relative;z-index:5}
-.wb-inv-suggestions{position:absolute;top:calc(100% - 8px);left:0;right:0;z-index:15;background:#fff;border:1px solid #deded7;border-radius:7px;box-shadow:0 10px 24px rgba(0,0,0,.11);max-height:330px;overflow-y:auto}
-.wb-inv-suggestions[hidden]{display:none}
-.wb-inv-suggestion{width:100%;border:0;border-bottom:1px solid #f0efea;background:#fff;color:#28352c;display:flex;align-items:center;gap:12px;text-align:left;padding:10px 12px;cursor:pointer;font:inherit}
-.wb-inv-suggestion:hover,.wb-inv-suggestion:focus-visible{background:#f4f7f3;outline:none}
-.wb-inv-suggestion-image{width:36px;height:45px;flex:none;object-fit:cover;border-radius:4px;background:#efeee9}
-.wb-inv-suggestion-placeholder{width:36px;height:45px;flex:none;border-radius:4px;background:#efeee9;display:grid;place-items:center;color:#999}
-.wb-inv-suggestion-copy{min-width:0;flex:1}
-.wb-inv-suggestion-copy strong{font-size:12px;font-weight:600;display:block;white-space:normal}
-.wb-inv-suggestion-copy small{display:block;font-size:10px;color:#777;line-height:1.5}
-.wb-inv-suggestion-price{font-size:11px;white-space:nowrap}
-.wb-inv-suggestion-message{padding:12px;color:#777;font-size:12px}
-
-/* 1. INVENTORY AGING PANEL */
-.wbi-aging {
-  background: #fff;
-  border: 1px solid #e8e7e1;
-  border-radius: 11px;
-  padding: 21px;
-  margin: 20px 0;
-}
-
-/* 2. HEADING */
-.wbi-aging-heading {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 20px;
-}
-
-.wbi-aging-heading h2 {
-  margin: 0 0 6px;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.075em;
-  color: #28332b;
-}
-
-.wbi-aging-heading p {
-  margin: 0;
-  font-size: 11px;
-  color: #808880;
-}
-
-.wbi-aging-count {
-  font-size: 11px;
-  color: #788078;
-  white-space: nowrap;
-}
-
-/* 3. AGING CARDS */
-.wbi-aging-grid {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 11px;
-}
-
-.wbi-aging-card {
-  display: block;
-  text-decoration: none;
-  background: #f8f8f5;
-  border: 1px solid transparent;
-  border-radius: 8px;
-  padding: 14px;
-  min-width: 0;
-  color: #28332b;
-  transition: border-color 150ms ease;
-}
-
-.wbi-aging-card:hover {
-  border-color: #c1cdc3;
-}
-
-.wbi-aging-card.is-active {
-  border-color: #315644;
-  background: #f3f7f3;
-}
-
-.wbi-aging-card-head,
-.wbi-aging-card-foot {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px;
-}
-
-.wbi-aging-card-head {
-  margin-bottom: 17px;
-}
-
-.wbi-aging-card-head span {
-  font-size: 11px;
-  color: #747e75;
-}
-
-.wbi-aging-card-head strong {
-  font-size: 21px;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-}
-
-.wbi-aging-card-foot {
-  margin-top: 12px;
-  flex-wrap: wrap;
-}
-
-.wbi-aging-card-foot span {
-  font-size: 10px;
-  color: #808880;
-}
-
-/* 4. AGE COLORS */
-.wbi-age-0-30 {
-  --age-color: #48745b;
-}
-
-.wbi-age-31-90 {
-  --age-color: #8ea88d;
-}
-
-.wbi-age-91-180 {
-  --age-color: #c6a06a;
-}
-
-.wbi-age-181\+ {
-  --age-color: #b66e62;
-}
-
-.wbi-age-unknown {
-  --age-color: #929991;
-}
-
-/* 5. AGING PROGRESS */
-.wbi-aging-progress {
-  display: block;
-  width: 100%;
-  height: 7px;
-  border: 0;
-  border-radius: 8px;
-  overflow: hidden;
-  appearance: none;
-  -webkit-appearance: none;
-  background: #e9ece6;
-  color: var(--age-color, #929991);
-}
-
-.wbi-aging-progress::-webkit-progress-bar {
-  background: #e9ece6;
-  border-radius: 8px;
-}
-
-.wbi-aging-progress::-webkit-progress-value {
-  background: var(--age-color, #929991);
-  border-radius: 8px;
-}
-
-.wbi-aging-progress::-moz-progress-bar {
-  background: var(--age-color, #929991);
-}
-
-/* 6. FILTER AND NOTES */
-.wbi-aging-clear {
-  display: inline-block;
-  margin-top: 15px;
-  font-size: 11px;
-  color: #315644;
-  text-decoration: none;
-  font-weight: 600;
-}
-
-.wbi-aging-note {
-  margin: 14px 0 0;
-  font-size: 10px;
-  line-height: 1.5;
-  color: #858d85;
-}
-
-/* 7. RESPONSIVE LAYOUT */
-@media (max-width: 1100px) {
-  .wbi-aging-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+  
+  .wb-inv-heading p,
+  .wb-inv-subtle {
+    margin: 5px 0 0;
+    color: #777b74;
+    font-size: 12px;
   }
-}
-
-@media (max-width: 650px) {
-  .wbi-aging {
-    padding: 15px;
+  
+  .wb-inv-view {
+    padding: 10px 14px;
+    border-radius: 6px;
+    background: #315644;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    text-decoration: none;
   }
-
-  .wbi-aging-heading {
+  
+  /* 3. INVENTORY KPI CARDS */
+  
+  .wb-inv-metrics {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  
+  .wb-inv-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    padding: 17px;
+    border: 1px solid #e6e5dd;
+    border-radius: 9px;
+    background: #fff;
+    color: inherit;
+    text-decoration: none;
+  }
+  
+  .wb-inv-stat small {
+    color: #797c75;
+    font-size: 10px;
+    letter-spacing: 0.055em;
+  }
+  
+  .wb-inv-stat strong {
+    font-size: 27px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+  
+  /* 4. INVENTORY SECTIONS */
+  
+  .wb-inv-section {
+    min-width: 0;
+    margin: 0 0 10px;
+    padding: 20px;
+    border: 1px solid #e7e5df;
+    border-radius: 10px;
+    background: #fff;
+  }
+  
+  .wb-inv-section-title {
+    margin-bottom: 15px;
+  }
+  
+  .wb-inv-section-title h2 {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.045em;
+    text-transform: uppercase;
+  }
+  
+  .wb-inv-section-title span,
+  .wb-inv-section-title a {
+    color: #66766b;
+    font-size: 11px;
+  }
+  
+  /* 5. WEBSITE PUBLICATION PROGRESS */
+  
+  .wb-inv-progress {
+    width: 100%;
+    height: 9px;
+    appearance: none;
+    border: none;
+    border-radius: 15px;
+    overflow: hidden;
+    background: #e9e9e4;
+  }
+  
+  .wb-inv-progress::-webkit-progress-bar {
+    background: #e9e9e4;
+  }
+  
+  .wb-inv-progress::-webkit-progress-value {
+    background: #315644;
+  }
+  
+  .wb-inv-progress::-moz-progress-bar {
+    background: #315644;
+  }
+  
+  .wb-inv-publication-track {
+    position: relative;
+    padding-top: 23px;
+    margin-bottom: 6px;
+  }
+  
+  .wb-inv-publication-track .wb-inv-progress {
+    display: block;
+    width: 100%;
+  }
+  
+  .wb-inv-publication-label {
+    position: absolute;
+    top: 0;
+    left: 0;
+    transform: translateX(-50%);
+    color: #315644;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 16px;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+    pointer-events: none;
+  }
+  
+  /* 6. INVENTORY GALLERY */
+  
+  .wb-inv-gallery {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 12px;
+  }
+  
+  .wb-inv-gallery-item {
+    min-width: 0;
+    color: inherit;
+    text-decoration: none;
+  }
+  
+  .wb-inv-photo {
+    overflow: hidden;
+    aspect-ratio: 3 / 4;
+    border-radius: 6px;
+    background: #f1f0eb;
+  }
+  
+  .wb-inv-photo img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .wb-inv-gallery-item strong,
+  .wb-inv-gallery-item small {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  
+  .wb-inv-gallery-item strong {
+    margin-top: 8px;
+    font-size: 12px;
+  }
+  
+  .wb-inv-gallery-item small {
+    margin-top: 4px;
+    color: #7c7c77;
+    font-size: 10px;
+  }
+  
+  /* 7. INVENTORY SEARCH */
+  
+  .wb-inv-search {
+    display: flex;
+    gap: 8px;
+    margin: 0 0 12px;
+  }
+  
+  .wb-inv-search input {
+    flex: 1;
+    min-width: 0;
+    padding: 10px 12px;
+    border: 1px solid #deded7;
+    border-radius: 6px;
+    background: #fff;
+    color: inherit;
+    font: inherit;
+  }
+  
+  .wb-inv-search button {
+    padding: 10px 17px;
+    border: 0;
+    border-radius: 6px;
+    background: #315644;
+    color: #fff;
+    cursor: pointer;
+  }
+  
+  /* 8. INVENTORY FILTERS */
+  
+  .wb-inv-filter-row {
+    display: flex;
+    gap: 7px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+  }
+  
+  .wb-inv-filter-row a {
+    padding: 7px 12px;
+    border: 1px solid #e4e4de;
+    border-radius: 5px;
+    color: #5c655f;
+    font-size: 11px;
+    text-decoration: none;
+  }
+  
+  .wb-inv-filter-row a.is-active {
+    border-color: #315644;
+    background: #315644;
+    color: #fff;
+  }
+  
+  /* 9. INVENTORY TABLE */
+  
+  .wb-inventory-page .wb-inv-table-wrap {
+    overflow-x: auto;
+    border: 1px solid #e7e5df;
+    border-radius: 8px;
+    background: #fff;
+  }
+  
+  .wb-inventory-page .wb-inv-table-wrap table {
+    width: 100%;
+    min-width: 1050px;
+    margin: 0;
+    border-collapse: collapse;
+    border-spacing: 0;
+    background: transparent;
+    color: inherit;
+    font-family: inherit;
+    box-shadow: none;
+  }
+  
+  .wb-inventory-page .wb-inv-table-wrap thead,
+  .wb-inventory-page .wb-inv-table-wrap thead tr {
+    background: #f7f6f2;
+  }
+  
+  .wb-inventory-page .wb-inv-table-wrap th {
+    padding: 13px 12px;
+    border: 0;
+    border-bottom: 1px solid #e7e5df;
+    background: transparent;
+    color: #70776f;
+    font-family: inherit;
+    font-size: 10px;
+    font-weight: 650;
+    letter-spacing: 0.065em;
+    line-height: 1.35;
+    text-align: left;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  
+  .wb-inventory-page .wb-inv-table-wrap td {
+    padding: 11px 12px;
+    border: 0;
+    border-bottom: 1px solid #eeece7;
+    background: transparent;
+    color: #303a33;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.45;
+    vertical-align: middle;
+  }
+  
+  .wb-inventory-page .wb-inv-table-wrap tbody tr {
+    background: #fff;
+    transition: background-color 150ms ease;
+  }
+  
+  .wb-inventory-page .wb-inv-table-wrap tbody tr:hover {
+    background: #faf9f6;
+  }
+  
+  .wb-inventory-page .wb-inv-table-wrap tbody tr:last-child td {
+    border-bottom: 0;
+  }
+  
+  .wb-inventory-page .wb-inv-table-wrap td:nth-child(2) {
+    font-weight: 650;
+    white-space: nowrap;
+  }
+  
+  .wb-inventory-page .wb-inv-table-wrap th:nth-child(3),
+  .wb-inventory-page .wb-inv-table-wrap td:nth-child(3) {
+    width: 132px;
+    min-width: 110px;
+    max-width: 150px;
+    white-space: normal;
+    overflow-wrap: anywhere;
+    word-break: normal;
+  }
+  
+  .wb-inventory-page .wb-inv-table-wrap td:nth-child(7),
+  .wb-inventory-page .wb-inv-table-wrap td:nth-child(8),
+  .wb-inventory-page .wb-inv-table-wrap td:nth-child(9) {
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  
+  /* 10. TABLE IMAGES AND STATUS */
+  
+  .wb-inventory-page .wb-inv-table-wrap .item-image {
+    display: block;
+    width: 45px;
+    height: 57px;
+    border: 1px solid #efede8;
+    border-radius: 4px;
+    object-fit: cover;
+  }
+  
+  .wb-inv-no-photo,
+  .wb-inventory-page .wb-inv-table-wrap .wb-inv-no-photo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f3f2ee;
+    color: #9c9f99;
+  }
+  
+  .wb-inventory-page .wb-inv-table-wrap .status-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 5px 9px;
+    border: 1px solid #e1e5df;
+    border-radius: 5px;
+    background: #f3f5f1;
+    color: #42604c;
+    font-family: inherit;
+    font-size: 10px;
+    font-weight: 600;
+    line-height: 1.3;
+    text-transform: capitalize;
+    white-space: nowrap;
+    box-shadow: none;
+  }
+  
+  /* 11. TABLE ACTIONS */
+  
+  .wb-inventory-page .wb-inv-table-wrap a {
+    color: #315644;
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 600;
+    text-decoration: none;
+  }
+  
+  .wb-inventory-page .wb-inv-table-wrap a:hover {
+    text-decoration: underline;
+  }
+  
+  .wb-inventory-page .wb-inv-table-wrap .sell-link {
+    display: inline-block;
+    padding: 6px 9px;
+    border: 1px solid #cfdbd2;
+    border-radius: 5px;
+    background: #f4f8f4;
+    color: #315644;
+    text-align: center;
+    white-space: nowrap;
+  }
+  
+  .wb-inventory-page .wb-inv-table-wrap .sell-link:hover {
+    background: #eaf1ea;
+    text-decoration: none;
+  }
+  
+  /* 12. INVENTORY LIST FOOTER */
+  
+  .wb-inv-list-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding-top: 16px;
+    color: #777b74;
+    font-size: 11px;
+  }
+  
+  .wb-inv-list-footer form {
+    margin: 0;
+  }
+  
+  .wb-inv-toggle {
+    padding: 10px 14px;
+    border: 1px solid #cfdbd2;
+    border-radius: 6px;
+    background: #f4f8f4;
+    color: #315644;
+    font: inherit;
+    font-size: 11px;
+    font-weight: 650;
+    cursor: pointer;
+  }
+  
+  .wb-inv-toggle:hover {
+    background: #eaf1ea;
+  }
+  
+  /* 13. MOBILE INVENTORY LIST */
+  
+  .wb-inv-mobile-list {
+    display: none;
+  }
+  
+  .wb-inv-mobile-item {
+    padding: 13px 12px;
+    border-bottom: 1px solid #eeece7;
+    background: #fff;
+  }
+  
+  .wb-inv-mobile-item:last-child {
+    border-bottom: 0;
+  }
+  
+  .wb-inv-mobile-main {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    min-width: 0;
+  }
+  
+  .wb-inv-mobile-image {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 0 0 53px;
+    width: 53px;
+    height: 68px;
+    overflow: hidden;
+    border-radius: 5px;
+    background: #f3f2ee;
+    color: #999;
+  }
+  
+  .wb-inv-mobile-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  
+  .wb-inv-mobile-info {
+    display: flex;
+    flex: 1;
     align-items: flex-start;
     flex-direction: column;
+    gap: 5px;
+    min-width: 0;
   }
-
-  .wbi-aging-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  
+  .wb-inv-mobile-info strong {
+    font-size: 12px;
+    font-weight: 650;
+    line-height: 1.35;
+    overflow-wrap: anywhere;
+    white-space: normal;
   }
-
-  .wbi-aging-card {
+  
+  .wb-inv-mobile-info small {
+    color: #7b807a;
+    font-size: 10px;
+  }
+  
+  .wb-inv-mobile-info .status-pill {
+    padding: 3px 7px;
+    border: 1px solid #e1e5df;
+    border-radius: 4px;
+    background: #f3f5f1;
+    color: #42604c;
+    font-size: 9px;
+    text-transform: capitalize;
+  }
+  
+  .wb-inv-mobile-price {
+    align-self: center;
+    color: #303a33;
+    font-size: 12px;
+    font-weight: 650;
+    white-space: nowrap;
+  }
+  
+  .wb-inv-mobile-details {
+    margin: 10px 0 0 64px;
+    font-size: 11px;
+  }
+  
+  .wb-inv-mobile-details summary {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #315644;
+    font-weight: 650;
+    list-style: none;
+    cursor: pointer;
+  }
+  
+  .wb-inv-mobile-details summary::-webkit-details-marker {
+    display: none;
+  }
+  
+  .wb-inv-mobile-details[open] summary span {
+    transform: rotate(180deg);
+  }
+  
+  .wb-inv-mobile-details dl {
+    display: grid;
+    gap: 8px;
+    margin: 12px 0;
+  }
+  
+  .wb-inv-mobile-details dl div {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  
+  .wb-inv-mobile-details dt {
+    color: #7b807a;
+  }
+  
+  .wb-inv-mobile-details dd {
+    margin: 0;
+    text-align: right;
+    overflow-wrap: anywhere;
+  }
+  
+  .wb-inv-mobile-details a {
+    color: #315644;
+  }
+  
+  .wb-inv-mobile-sell {
+    display: inline-block;
+    padding: 8px 12px;
+    border: 1px solid #cfdbd2;
+    border-radius: 5px;
+    background: #f4f8f4;
+    font-weight: 650;
+    text-decoration: none;
+  }
+  
+  /* 14. TYPEAHEAD SEARCH */
+  
+  .wb-inv-search-shell {
+    position: relative;
+    z-index: 5;
+  }
+  
+  .wb-inv-suggestions {
+    position: absolute;
+    top: calc(100% - 8px);
+    left: 0;
+    right: 0;
+    z-index: 15;
+    max-height: 330px;
+    overflow-y: auto;
+    border: 1px solid #deded7;
+    border-radius: 7px;
+    background: #fff;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.11);
+  }
+  
+  .wb-inv-suggestions[hidden] {
+    display: none;
+  }
+  
+  .wb-inv-suggestion {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 10px 12px;
+    border: 0;
+    border-bottom: 1px solid #f0efea;
+    background: #fff;
+    color: #28352c;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+  }
+  
+  .wb-inv-suggestion:hover,
+  .wb-inv-suggestion:focus-visible {
+    background: #f4f7f3;
+    outline: none;
+  }
+  
+  .wb-inv-suggestion-image {
+    flex: none;
+    width: 36px;
+    height: 45px;
+    border-radius: 4px;
+    background: #efeee9;
+    object-fit: cover;
+  }
+  
+  .wb-inv-suggestion-placeholder {
+    display: grid;
+    flex: none;
+    place-items: center;
+    width: 36px;
+    height: 45px;
+    border-radius: 4px;
+    background: #efeee9;
+    color: #999;
+  }
+  
+  .wb-inv-suggestion-copy {
+    flex: 1;
+    min-width: 0;
+  }
+  
+  .wb-inv-suggestion-copy strong {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: normal;
+  }
+  
+  .wb-inv-suggestion-copy small {
+    display: block;
+    color: #777;
+    font-size: 10px;
+    line-height: 1.5;
+  }
+  
+  .wb-inv-suggestion-price {
+    font-size: 11px;
+    white-space: nowrap;
+  }
+  
+  .wb-inv-suggestion-message {
     padding: 12px;
+    color: #777;
+    font-size: 12px;
   }
-
-  .wbi-aging-card-head strong {
-    font-size: 18px;
-  }
-}
-
-/* 8. INVENTORY PRESENTATION REFINEMENTS */
-.wb-inventory-page .wb-inv-stat {
-  background: #fff;
-}
-
-/* 9. WEBSITE PUBLICATION INDICATOR */
-.wb-inv-publication-track {
-  position: relative;
-  padding-top: 23px;
-  margin-bottom: 6px;
-}
-
-.wb-inv-publication-track .wb-inv-progress {
-  display: block;
-  width: 100%;
-}
-
-.wb-inv-publication-label {
-  position: absolute;
-  top: 0;
-  left: 0;
-  transform: translateX(-50%);
-  color: #315644;
-  font-size: 11px;
-  font-weight: 700;
-  line-height: 16px;
-  white-space: nowrap;
-  font-variant-numeric: tabular-nums;
-  pointer-events: none;
-}
-
-/* 10. STANDARDIZED INVENTORY AGING HEADING */
-.wb-inventory-page .wbi-aging {
-  margin: 0 0 20px;
-  padding: 20px;
-  border: 1px solid #e7e5df;
-  border-radius: 10px;
-  background: #fff;
-}
-
-.wb-inventory-page .wbi-aging .wbi-aging-heading {
-  margin-bottom: 7px;
-}
-
-.wb-inventory-page .wbi-aging .wbi-aging-heading h2 {
-  margin: 0;
-  font-size: 13px;
-  font-weight: 700;
-  letter-spacing: .045em;
-  text-transform: uppercase;
-  color: inherit;
-}
-
-.wb-inventory-page .wbi-aging-count {
-  font-size: 11px;
-  color: #66766b;
-}
-
-.wbi-aging-description {
-  margin: 0 0 20px;
-  font-size: 12px;
-  color: #68736a;
-}
-
-/* 11. AGING METRIC LEGIBILITY */
-.wb-inventory-page .wbi-aging-card-head span {
-  color: #35463a;
-  font-size: 11px;
-  font-weight: 600;
-}
-
-.wb-inventory-page .wbi-aging-card-head strong {
-  color: #25382b;
-  font-weight: 700;
-}
-
-.wb-inventory-page .wbi-aging-card-foot span {
-  color: #415247;
-  font-size: 11px;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-}
-
-@media (max-width: 650px) {
+  
+  /* 15. INVENTORY AGING PANEL */
+  
+  .wbi-aging,
   .wb-inventory-page .wbi-aging {
-    padding: 15px;
+    margin: 0 0 10px;
+    padding: 20px;
+    border: 1px solid #e7e5df;
+    border-radius: 10px;
+    background: #fff;
   }
-}
-
-/* INVENTORY LIST — AGING FILTER NAVIGATION */
-#inventory-results {
-  scroll-margin-top: 85px;
-}
-
-</style>
+  
+  .wbi-aging-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 7px;
+  }
+  
+  .wbi-aging-heading h2,
+  .wb-inventory-page .wbi-aging .wbi-aging-heading h2 {
+    margin: 0;
+    color: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.045em;
+    text-transform: uppercase;
+  }
+  
+  .wbi-aging-heading p {
+    margin: 0;
+    color: #808880;
+    font-size: 11px;
+  }
+  
+  .wbi-aging-count,
+  .wb-inventory-page .wbi-aging-count {
+    color: #66766b;
+    font-size: 11px;
+    white-space: nowrap;
+  }
+  
+  .wbi-aging-description {
+    margin: 0 0 20px;
+    color: #68736a;
+    font-size: 12px;
+  }
+  
+  /* 16. INVENTORY AGING CARDS */
+  
+  .wbi-aging-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 11px;
+  }
+  
+  .wbi-aging-card {
+    display: block;
+    min-width: 0;
+    padding: 14px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    background: #f8f8f5;
+    color: #28332b;
+    text-decoration: none;
+    transition: border-color 150ms ease;
+  }
+  
+  .wbi-aging-card:hover {
+    border-color: #c1cdc3;
+  }
+  
+  .wbi-aging-card.is-active {
+    border-color: #315644;
+    background: #f3f7f3;
+  }
+  
+  .wbi-aging-card-head,
+  .wbi-aging-card-foot {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .wbi-aging-card-head {
+    margin-bottom: 17px;
+  }
+  
+  .wbi-aging-card-head span {
+    color: #35463a;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  
+  .wbi-aging-card-head strong {
+    color: #25382b;
+    font-size: 21px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+  
+  .wbi-aging-card-foot {
+    flex-wrap: wrap;
+    margin-top: 12px;
+  }
+  
+  .wbi-aging-card-foot span {
+    color: #415247;
+    font-size: 11px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+  
+  /* 17. INVENTORY AGING COLORS */
+  
+  .wbi-age-0-30 {
+    --age-color: #48745b;
+  }
+  
+  .wbi-age-31-90 {
+    --age-color: #8ea88d;
+  }
+  
+  .wbi-age-91-180 {
+    --age-color: #c6a06a;
+  }
+  
+  .wbi-age-181\+ {
+    --age-color: #b66e62;
+  }
+  
+  .wbi-age-unknown {
+    --age-color: #929991;
+  }
+  
+  /* 18. INVENTORY AGING PROGRESS */
+  
+  .wbi-aging-progress {
+    display: block;
+    width: 100%;
+    height: 7px;
+    overflow: hidden;
+    appearance: none;
+    -webkit-appearance: none;
+    border: 0;
+    border-radius: 8px;
+    background: #e9ece6;
+    color: var(--age-color, #929991);
+  }
+  
+  .wbi-aging-progress::-webkit-progress-bar {
+    border-radius: 8px;
+    background: #e9ece6;
+  }
+  
+  .wbi-aging-progress::-webkit-progress-value {
+    border-radius: 8px;
+    background: var(--age-color, #929991);
+  }
+  
+  .wbi-aging-progress::-moz-progress-bar {
+    background: var(--age-color, #929991);
+  }
+  
+  /* 19. AGING FILTER AND NOTES */
+  
+  .wbi-aging-clear {
+    display: inline-block;
+    margin-top: 15px;
+    color: #315644;
+    font-size: 11px;
+    font-weight: 600;
+    text-decoration: none;
+  }
+  
+  .wbi-aging-note {
+    margin: 14px 0 0;
+    color: #858d85;
+    font-size: 10px;
+    line-height: 1.5;
+  }
+  
+  #inventory-results {
+    scroll-margin-top: 85px;
+  }
+  
+  /* 20. RESPONSIVE — TABLETS */
+  
+  @media (max-width: 1100px) {
+    .wbi-aging-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+  
+  @media (max-width: 850px) {
+    .wb-inv-metrics {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  
+    .wb-inv-gallery {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+  
+  /* 21. RESPONSIVE — MOBILE INVENTORY LIST */
+  
+  @media (max-width: 700px) {
+    .wb-inv-desktop-table {
+      display: none;
+    }
+  
+    .wb-inv-mobile-list {
+      display: block;
+      overflow: hidden;
+      border: 1px solid #e7e5df;
+      border-radius: 8px;
+    }
+  
+    .wb-inv-list-footer {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+  }
+  
+  /* 22. RESPONSIVE — SMALL SCREENS */
+  
+  @media (max-width: 650px) {
+    .wbi-aging,
+    .wb-inventory-page .wbi-aging {
+      padding: 15px;
+    }
+  
+    .wbi-aging-heading {
+      align-items: flex-start;
+      flex-direction: column;
+    }
+  
+    .wbi-aging-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  
+    .wbi-aging-card {
+      padding: 12px;
+    }
+  
+    .wbi-aging-card-head strong {
+      font-size: 18px;
+    }
+  }
+  
+  @media (max-width: 520px) {
+    .wb-inv-heading .page-title {
+      font-size: 23px;
+    }
+  }
+  
+  @media (max-width: 450px) {
+    .wb-inv-heading {
+      align-items: flex-start;
+    }
+  
+    .wb-inv-section {
+      padding: 14px;
+    }
+  
+    .wb-inv-stat {
+      padding: 12px;
+    }
+  
+    .wb-inv-stat strong {
+      font-size: 23px;
+    }
+  
+    .wb-inv-gallery {
+      gap: 7px;
+    }
+  }
+</style>  
 
 <script>
 (() => {
