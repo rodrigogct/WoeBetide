@@ -428,541 +428,577 @@
 </div>
 
 <style>
-/* 1. PAGE BASE */
-
-.wbc-page {
-  font-family: inherit;
-  color: #28332b;
-  max-width: 1380px;
-}
-.wbc-page * {
-  box-sizing: border-box;
-}
-
-/* 2. HEADING */
-
-.wbc-heading {
-  display: flex;
-  justify-content: space-between;
-  align-items: end;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin-bottom: 25px;
-}
-.wbc-heading h1 {
-  font-size: 27px;
-  font-weight: 600;
-  margin: 0 0 5px;
-}
-.wbc-heading p {
-  margin: 0;
-  color: #788078;
-  font-size: 12px;
-}
-.wbc-topnote {
-  font-size: 10px;
-  color: #7d857d;
-  letter-spacing: 0.1em;
-}
-.wbc-breadcrumb {
-  display: inline-block;
-  font-size: 11px;
-  color: #728477;
-  text-decoration: none;
-  margin-bottom: 8px;
-}
-a.wbc-breadcrumb:hover {
-  text-decoration: underline;
-}
-
-/* 3. TITLES */
-
-.wbc-section-title {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-bottom: 14px;
-}
-.wbc-section-title h2 {
-  margin: 0;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: .085em;
-}
-.wbc-section-title small {
-  font-size: 11px;
-  color: #848b83;
-}
-
-/* 4. KPIs */
-
-.wbc-kpis {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 13px;
-  margin-bottom: 24px;
-}
-.wbc-kpi, .wbc-panel {
-  background: #fff;
-  border: 1px solid #e8e7e1;
-  border-radius: 11px;
-}
-.wbc-kpi {
-  padding: 19px 16px;
-  min-width: 0;
-}
-.wbc-priority {
-  background: #f6f8f5;
-}
-.wbc-kpi small, .wbc-insights small {
-  display: block;
-  font-size: 10px;
-  letter-spacing: .055em;
-  font-weight: 700;
-  color: #737e75;
-  margin-bottom: 11px;
-}
-.wbc-kpi strong, .wbc-insights strong {
-  display: block;
-  font-size: 24px;
-  font-weight: 600;
-  letter-spacing: -.025em;
-  font-variant-numeric: tabular-nums;
-  overflow-wrap: anywhere;
-  margin-bottom: 8px;
-}
-.wbc-kpi span, .wbc-insights p {
-  display: block;
-  font-size: 11px;
-  color: #788078;
-  line-height: 1.5;
-  margin: 0;
-}
-
-/* 5. COLLECTIONS / GARMENT TABLE */
-
-.wbc-panel {
-  padding: 21px;
-  margin-bottom: 18px;
-}
-.wbc-table-wrap {
-  overflow-x: auto;
-}
-.wbc-table {
-  width: 100%;
-  min-width: 1060px;
-  border-collapse: collapse;
-  border: 0 !important;
-  font: inherit;
-}
-.wbc-table th, .wbc-table td {
-  padding: 13px 11px !important;
-  border: 0 !important;
-  border-bottom: 1px solid #eeefe9 !important;
-  background: #fff !important;
-  text-align: right;
-  font-size: 11px;
-  white-space: nowrap;
-  font-variant-numeric: tabular-nums;
-}
-.wbc-table th {
-  background: #f8f8f5 !important;
-  color: #7b837b;
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: .05em;
-}
-.wbc-table th:first-child, .wbc-table td:first-child, .wbc-table th:nth-child(2), .wbc-table td:nth-child(2) {
-  text-align: left;
-}
-.wbc-table tbody tr:last-child td {
-  border-bottom: 0 !important;
-}
-.wbc-collection-id {
-  font-weight: 600;
-  color: #315644;
-}
-.wbc-collection-id a {
-  color: #315644;
-  text-decoration: none;
-}
-.wbc-collection-id a:hover {
-  text-decoration: underline;
-}
-.wbc-item-name {
-  max-width: 260px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.wbc-empty {
-  text-align: center !important;
-  padding: 25px 12px !important;
-  color: #858b85;
-}
-.wbc-status {
-  display: inline-block;
-  padding: 4px 7px;
-  border-radius: 10px;
-  background: #eef3ed;
-  color: #315644;
-  font-size: 10px;
-}
-.wbc-status.is-sold {
-  background: #f1f2ef;
-  color: #606d61;
-}
-.wbc-status.is-archive {
-  background: #f5eeee;
-  color: #a56b66;
-}
-
-/* 6. INSIGHTS AND NOTES */
-
-.wbc-insights {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 18px;
-}
-.wbc-muted {
-  margin: 17px 0;
-  font-size: 11px;
-  line-height: 1.6;
-  color: #80877f;
-}
-.wbc-footerlink {
-  display: flex;
-  gap: 22px;
-  margin: 22px 0;
-}
-.wbc-footerlink a {
-  color: #315644;
-  text-decoration: none;
-  font-size: 12px;
-  font-weight: 600;
-}
-.wbc-footerlink a:hover {
-  text-decoration: underline;
-}
-
-
-/* 7. INVENTORY CAPITAL ALLOCATION */
-.wbc-capital {
-  background: #fff;
-  border: 1px solid #e8e7e1;
-  border-radius: 11px;
-  padding: 22px;
-  margin: 22px 0;
-}
-
-/* 8. SECTION HEADING */
-.wbc-capital-heading {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 20px;
-  margin-bottom: 24px;
-}
-
-.wbc-capital-heading h2 {
-  margin: 0 0 7px;
-  font-size: 12px;
-  font-weight: 700;
-  letter-spacing: 0.075em;
-  color: #28332b;
-}
-
-.wbc-capital-heading p {
-  margin: 0;
-  font-size: 11px;
-  color: #808880;
-}
-
-.wbc-capital-total {
-  text-align: right;
-  flex-shrink: 0;
-}
-
-.wbc-capital-total small {
-  display: block;
-  font-size: 10px;
-  color: #7b857c;
-  margin-bottom: 6px;
-}
-
-.wbc-capital-total strong {
-  font-size: 22px;
-  font-weight: 600;
-  color: #28332b;
-  font-variant-numeric: tabular-nums;
-}
-
-/* 9. ALLOCATION BAR */
-.wbc-capital-chart {
-  display: flex;
-  width: 100%;
-  height: 9px;
-  border-radius: 8px;
-  overflow: hidden;
-  background: #eff1ec;
-  margin-bottom: 20px;
-}
-
-.wbc-capital-segment {
-  width: 0;
-  height: 100%;
-  flex-shrink: 0;
-  transition: width 250ms ease;
-}
-
-.wbc-capital-sold {
-  background: #315644;
-}
-
-.wbc-capital-remaining {
-  background: #b7c8bb;
-}
-
-.wbc-capital-other {
-  background: #c1b4a3;
-}
-
-/* 10. ALLOCATION BREAKDOWN */
-.wbc-capital-breakdown {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 18px;
-}
-
-.wbc-capital-breakdown > div {
-  min-width: 0;
-}
-
-.wbc-capital-label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 11px;
-  color: #747e75;
-  margin-bottom: 9px;
-}
-
-.wbc-dot {
-  display: inline-block;
-  width: 9px;
-  height: 9px;
-  flex-shrink: 0;
-  border-radius: 2px;
-}
-
-.wbc-dot-sold {
-  background: #315644;
-}
-
-.wbc-dot-remaining {
-  background: #b7c8bb;
-}
-
-.wbc-dot-other {
-  background: #c1b4a3;
-}
-
-.wbc-capital-breakdown strong {
-  display: block;
-  font-size: 20px;
-  font-weight: 600;
-  color: #28332b;
-  font-variant-numeric: tabular-nums;
-}
-
-.wbc-capital-breakdown small {
-  display: block;
-  margin-top: 5px;
-  font-size: 11px;
-  color: #808880;
-}
-
-.wbc-capital-note {
-  margin: 19px 0 0;
-  font-size: 10px;
-  color: #858d85;
-  line-height: 1.5;
-}
-
-/* 11. RESPONSIVE LAYOUT */
-@media (max-width: 650px) {
-  .wbc-capital {
-    padding: 16px;
+  /* 1. PAGE BASE */
+  
+  .wbc-page {
+    font-family: inherit;
+    color: #28332b;
+    max-width: 1380px;
   }
-
-  .wbc-capital-heading {
-    flex-direction: column;
+  
+  .wbc-page * {
+    box-sizing: border-box;
+  }
+  
+  /* 2. PAGE HEADING */
+  
+  .wbc-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    flex-wrap: wrap;
     gap: 12px;
+    margin-bottom: 10px;
   }
-
-  .wbc-capital-total {
+  
+  .wbc-heading h1 {
+    margin: 0 0 5px;
+    font-size: 27px;
+    font-weight: 600;
+  }
+  
+  .wbc-heading p {
+    margin: 0;
+    color: #788078;
+    font-size: 12px;
+  }
+  
+  .wbc-topnote {
+    color: #7d857d;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+  }
+  
+  .wbc-breadcrumb {
+    display: inline-block;
+    margin-bottom: 8px;
+    color: #728477;
+    font-size: 11px;
+    text-decoration: none;
+  }
+  
+  a.wbc-breadcrumb:hover {
+    text-decoration: underline;
+  }
+  
+  /* 3. SECTION TITLES */
+  
+  .wbc-section-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  
+  .wbc-section-title h2 {
+    margin: 0;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.085em;
+  }
+  
+  .wbc-section-title small {
+    color: #848b83;
+    font-size: 11px;
+  }
+  
+  /* 4. KPI GRID */
+  
+  .wbc-kpis {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  
+  .wbc-kpi,
+  .wbc-panel {
+    background: #fff;
+    border: 1px solid #e8e7e1;
+    border-radius: 11px;
+  }
+  
+  .wbc-kpi {
+    min-width: 0;
+    padding: 19px 16px;
+  }
+  
+  .wbc-priority {
+    background: #f6f8f5;
+  }
+  
+  .wbc-kpi small,
+  .wbc-insights small {
+    display: block;
+    margin-bottom: 11px;
+    color: #737e75;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.055em;
+  }
+  
+  .wbc-kpi strong,
+  .wbc-insights strong {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 24px;
+    font-weight: 600;
+    letter-spacing: -0.025em;
+    font-variant-numeric: tabular-nums;
+    overflow-wrap: anywhere;
+  }
+  
+  .wbc-kpi span,
+  .wbc-insights p {
+    display: block;
+    margin: 0;
+    color: #788078;
+    font-size: 11px;
+    line-height: 1.5;
+  }
+  
+  /* 5. COLLECTION PANELS */
+  
+  .wbc-panel {
+    padding: 21px;
+    margin-bottom: 10px;
+  }
+  
+  .wbc-table-wrap {
+    width: 100%;
+    overflow-x: auto;
+    border: 1px solid #e7e5df;
+    border-radius: 8px;
+    background: #fff;
+  }
+  
+  /* 6. COLLECTION TABLE */
+  
+  .wbc-page .wbc-table-wrap .wbc-table {
+    width: 100%;
+    min-width: 1060px;
+    margin: 0;
+    border: 0 !important;
+    border-collapse: collapse !important;
+    border-spacing: 0 !important;
+    background: #fff;
+    color: inherit;
+    font-family: inherit;
+    box-shadow: none !important;
+  }
+  
+  .wbc-page .wbc-table-wrap thead,
+  .wbc-page .wbc-table-wrap thead tr {
+    background: #f7f6f2;
+  }
+  
+  .wbc-page .wbc-table-wrap .wbc-table th {
+    padding: 13px 12px !important;
+    border: 0 !important;
+    border-bottom: 1px solid #e7e5df !important;
+    background: #f7f6f2 !important;
+    color: #70776f !important;
+    font-family: inherit;
+    font-size: 10px;
+    font-weight: 650;
+    letter-spacing: 0.065em;
+    line-height: 1.35;
+    text-align: right;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  
+  .wbc-page .wbc-table-wrap .wbc-table td {
+    padding: 11px 12px !important;
+    border: 0 !important;
+    border-bottom: 1px solid #eeece7 !important;
+    background: transparent !important;
+    color: #303a33;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 400;
+    line-height: 1.45;
+    text-align: right;
+    vertical-align: middle;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+  
+  .wbc-page .wbc-table-wrap .wbc-table th:first-child,
+  .wbc-page .wbc-table-wrap .wbc-table td:first-child,
+  .wbc-page .wbc-table-wrap .wbc-table th:nth-child(2),
+  .wbc-page .wbc-table-wrap .wbc-table td:nth-child(2) {
     text-align: left;
   }
-
-  .wbc-capital-breakdown {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  
+  .wbc-page .wbc-table-wrap .wbc-table tbody tr {
+    background: #fff;
+    transition: background-color 150ms ease;
   }
-
-  .wbc-capital-breakdown strong {
-    font-size: 17px;
+  
+  .wbc-page .wbc-table-wrap .wbc-table tbody tr:hover {
+    background: #faf9f6;
   }
-}
-
-/* 12. RESPONSIVE */
-@media (max-width: 1000px) {
-  .wbc-kpis {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  
+  .wbc-page .wbc-table-wrap .wbc-table tbody tr:last-child td {
+    border-bottom: 0 !important;
   }
+  
+  .wbc-page .wbc-table-wrap .wbc-table tr[hidden] {
+    display: none !important;
+  }
+  
+  /* 7. COLLECTION TABLE CONTENT */
+  
+  .wbc-collection-id,
+  .wbc-page .wbc-table-wrap .wbc-table td.wbc-collection-id {
+    color: #315644;
+    font-weight: 600;
+  }
+  
+  .wbc-collection-id a {
+    color: #315644;
+    text-decoration: none;
+  }
+  
+  .wbc-collection-id a:hover {
+    text-decoration: underline;
+  }
+  
+  .wbc-item-name {
+    max-width: 260px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .wbc-empty {
+    padding: 25px 12px !important;
+    color: #858b85;
+    text-align: center !important;
+  }
+  
+  .wbc-status {
+    display: inline-block;
+    padding: 4px 7px;
+    border-radius: 10px;
+    background: #eef3ed;
+    color: #315644;
+    font-size: 10px;
+  }
+  
+  .wbc-status.is-sold {
+    background: #f1f2ef;
+    color: #606d61;
+  }
+  
+  .wbc-status.is-archive {
+    background: #f5eeee;
+    color: #a56b66;
+  }
+  
+  /* 8. TABLE EXPANSION */
+  
+  .wbc-expand {
+    display: block;
+    width: 100%;
+    margin: 16px auto 0;
+    padding: 12px;
+    border: 1px solid #cbd8cd;
+    border-radius: 7px;
+    background: #fff;
+    color: #315644;
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.045em;
+    text-align: center;
+    cursor: pointer;
+  }
+  
+  .wbc-expand:hover {
+    background: #f4f7f3;
+  }
+  
+  /* 9. INSIGHTS AND NOTES */
+  
   .wbc-insights {
-    grid-template-columns: 1fr;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
   }
-}
-@media (max-width: 520px) {
-  .wbc-heading h1 {
-    font-size: 23px;
+  
+  .wbc-muted {
+    margin: 10px 0;
+    color: #80877f;
+    font-size: 11px;
+    line-height: 1.6;
   }
-  .wbc-kpis {
-    grid-template-columns: 1fr;
+  
+  .wbc-footerlink {
+    display: flex;
+    gap: 22px;
+    margin: 10px 0;
   }
-  .wbc-kpi {
-    padding: 15px 12px;
+  
+  .wbc-footerlink a {
+    color: #315644;
+    font-size: 12px;
+    font-weight: 600;
+    text-decoration: none;
   }
-  .wbc-kpi strong {
-    font-size: 21px;
+  
+  .wbc-footerlink a:hover {
+    text-decoration: underline;
   }
-  .wbc-panel {
-    padding: 15px;
+  
+  /* 10. INVENTORY CAPITAL ALLOCATION AND EFFICIENCY */
+  
+  .wbc-capital {
+    margin: 0 0 10px;
+    padding: 22px;
+    border: 1px solid #e8e7e1;
+    border-radius: 11px;
+    background: #fff;
   }
-}
-
-/* Standard table appearance — aligned with Inventory / Recent Expenses. */
-.wbc-page .wbc-table-wrap {
-  width: 100%;
-  overflow-x: auto;
-  border: 1px solid #e7e5df;
-  border-radius: 8px;
-  background: #ffffff;
-}
-.wbc-page .wbc-table-wrap table {
-  width: 100%;
-  margin: 0;
-  border: 0 !important;
-  border-collapse: collapse !important;
-  border-spacing: 0 !important;
-  background: #ffffff;
-  font-family: inherit;
-  box-shadow: none !important;
-}
-.wbc-page .wbc-table-wrap thead,
-.wbc-page .wbc-table-wrap thead tr {
-  background: #f7f6f2;
-}
-.wbc-page .wbc-table-wrap th {
-  padding: 13px 12px !important;
-  border: 0 !important;
-  border-bottom: 1px solid #e7e5df !important;
-  background: #f7f6f2 !important;
-  color: #70776f !important;
-  font-family: inherit;
-  font-size: 10px;
-  font-weight: 650;
-  letter-spacing: 0.065em;
-  line-height: 1.35;
-  text-transform: uppercase;
-  white-space: nowrap;
-}
-.wbc-page .wbc-table-wrap td {
-  padding: 11px 12px !important;
-  border: 0 !important;
-  border-bottom: 1px solid #eeece7 !important;
-  background: transparent !important;
-  color: #303a33;
-  font-family: inherit;
-  font-size: 12px;
-  font-weight: 400;
-  line-height: 1.45;
-  vertical-align: middle;
-}
-.wbc-page .wbc-table-wrap tbody tr {
-  background: #ffffff;
-  transition: background-color 150ms ease;
-}
-.wbc-page .wbc-table-wrap tbody tr:hover {
-  background: #faf9f6;
-}
-.wbc-page .wbc-table-wrap tbody tr:last-child td {
-  border-bottom: 0 !important;
-}
-
-.wbc-page .wbc-table-wrap .wbc-table th:first-child,
-.wbc-page .wbc-table-wrap .wbc-table td:first-child,
-.wbc-page .wbc-table-wrap .wbc-table th:nth-child(2),
-.wbc-page .wbc-table-wrap .wbc-table td:nth-child(2) {
-  text-align: left;
-}
-.wbc-page .wbc-table-wrap .wbc-table th:nth-child(n+3),
-.wbc-page .wbc-table-wrap .wbc-table td:nth-child(n+3) {
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-}
-.wbc-page .wbc-table-wrap .wbc-table td.wbc-collection-id {
-  color: #315644;
-  font-weight: 600;
-}
-.wbc-page .wbc-table-wrap .wbc-table tr[hidden] {
-  display: none !important;
-}
-.wbc-expand {
-  display: block;
-  width: 100%;
-  margin: 16px auto 0;
-  padding: 12px;
-  border: 1px solid #cbd8cd;
-  border-radius: 7px;
-  background: #ffffff;
-  color: #315644;
-  font-family: inherit;
-  font-size: 11px;
-  font-weight: 700;
-  letter-spacing: 0.045em;
-  text-align: center;
-  cursor: pointer;
-}
-.wbc-expand:hover {
-  background: #f4f7f3;
-}
-
-/* COLLECTIONS — REPORTING PERIOD */
-.wbc-reporting {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 6px;
-}
-
-.wbc-reporting-form {
-  margin: 0;
-}
-
-.wbc-reporting-range {
-  color: #7d857d;
-  font-size: 10px;
-  white-space: nowrap;
-}
-
-@media (max-width: 520px) {
-  .wbc-reporting {
+  
+  .wbc-capital-heading {
+    display: flex;
+    justify-content: space-between;
     align-items: flex-start;
+    gap: 20px;
+    margin-bottom: 24px;
   }
-}
-
-</style>
+  
+  .wbc-capital-heading h2 {
+    margin: 0 0 7px;
+    color: #28332b;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.075em;
+  }
+  
+  .wbc-capital-heading p {
+    margin: 0;
+    color: #808880;
+    font-size: 11px;
+  }
+  
+  .wbc-capital-total {
+    flex-shrink: 0;
+    text-align: right;
+  }
+  
+  .wbc-capital-total small {
+    display: block;
+    margin-bottom: 6px;
+    color: #7b857c;
+    font-size: 10px;
+  }
+  
+  .wbc-capital-total strong {
+    color: #28332b;
+    font-size: 22px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+  
+  /* 11. CAPITAL ALLOCATION BAR */
+  
+  .wbc-capital-chart {
+    display: flex;
+    width: 100%;
+    height: 9px;
+    margin-bottom: 20px;
+    overflow: hidden;
+    border-radius: 8px;
+    background: #eff1ec;
+  }
+  
+  .wbc-capital-segment {
+    width: 0;
+    height: 100%;
+    flex-shrink: 0;
+    transition: width 250ms ease;
+  }
+  
+  .wbc-capital-sold {
+    background: #315644;
+  }
+  
+  .wbc-capital-remaining {
+    background: #b7c8bb;
+  }
+  
+  .wbc-capital-other {
+    background: #c1b4a3;
+  }
+  
+  /* 12. CAPITAL BREAKDOWN */
+  
+  .wbc-capital-breakdown {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 18px;
+  }
+  
+  .wbc-capital-breakdown > div {
+    min-width: 0;
+  }
+  
+  .wbc-capital-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 9px;
+    color: #747e75;
+    font-size: 11px;
+  }
+  
+  .wbc-dot {
+    display: inline-block;
+    width: 9px;
+    height: 9px;
+    flex-shrink: 0;
+    border-radius: 2px;
+  }
+  
+  .wbc-dot-sold {
+    background: #315644;
+  }
+  
+  .wbc-dot-remaining {
+    background: #b7c8bb;
+  }
+  
+  .wbc-dot-other {
+    background: #c1b4a3;
+  }
+  
+  .wbc-capital-breakdown strong {
+    display: block;
+    color: #28332b;
+    font-size: 20px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+  }
+  
+  .wbc-capital-breakdown small {
+    display: block;
+    margin-top: 5px;
+    color: #808880;
+    font-size: 11px;
+  }
+  
+  .wbc-capital-note {
+    margin: 19px 0 0;
+    color: #858d85;
+    font-size: 10px;
+    line-height: 1.5;
+  }
+  
+  /* 13. REPORTING PERIOD */
+  
+  .wbc-reporting {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+  }
+  
+  .wbc-reporting-form {
+    margin: 0;
+  }
+  
+  .wbc-reporting-range {
+    color: #7d857d;
+    font-size: 10px;
+    white-space: nowrap;
+  }
+  
+  /* 14. RESPONSIVE — TABLETS */
+  
+  @media (max-width: 1000px) {
+    .wbc-kpis {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  
+    .wbc-insights {
+      grid-template-columns: 1fr;
+    }
+  }
+  
+  /* 15. RESPONSIVE — MOBILE */
+  
+  @media (max-width: 650px) {
+    .wbc-capital {
+      padding: 16px;
+    }
+  
+    .wbc-capital-heading {
+      flex-direction: column;
+      gap: 12px;
+    }
+  
+    .wbc-capital-total {
+      text-align: left;
+    }
+  
+    .wbc-capital-breakdown {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  
+    .wbc-capital-breakdown strong {
+      font-size: 17px;
+    }
+  }
+  
+  @media (max-width: 520px) {
+    .wbc-heading h1 {
+      font-size: 23px;
+    }
+  
+    .wbc-kpis {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 9px;
+      margin-bottom: 10px;
+    }
+  
+    .wbc-kpi {
+      min-width: 0;
+      min-height: 116px;
+      padding: 13px 11px;
+    }
+  
+    .wbc-kpi small {
+      margin-bottom: 9px;
+      font-size: 9px;
+      line-height: 1.35;
+      letter-spacing: 0.035em;
+    }
+  
+    .wbc-kpi strong {
+      margin-bottom: 7px;
+      font-size: 19px;
+      line-height: 1.2;
+      overflow-wrap: anywhere;
+    }
+  
+    .wbc-kpi span {
+      font-size: 10px;
+      line-height: 1.4;
+    }
+  
+    .wbc-panel {
+      padding: 15px;
+    }
+  
+    .wbc-reporting {
+      align-items: flex-start;
+    }
+  }
+</style>  
 
 <script>
   document.querySelectorAll(
